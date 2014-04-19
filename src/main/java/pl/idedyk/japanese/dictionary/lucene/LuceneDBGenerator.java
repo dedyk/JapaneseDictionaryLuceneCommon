@@ -46,14 +46,17 @@ import com.csvreader.CsvReader;
 
 public class LuceneDBGenerator {	
 
-	public void generate(
-			String dictionaryFilePath,
-			String kanjiFilePath,
-			String radicalFilePath,
-			boolean addSugestionList,
-			String dbOutDir) throws Exception {
-
-		// parametry pliku
+	
+	public static void main(String[] args) throws Exception {
+	
+		// parametry
+		String dictionaryFilePath = args[0];
+		String kanjiFilePath = args[1];
+		String radicalFilePath = args[2];
+		
+		boolean addSugestionList = Boolean.parseBoolean(args[3]);
+		
+		String dbOutDir = args[4];
 				
 		final File dbOutDirFile = new File(dbOutDir);
 		
