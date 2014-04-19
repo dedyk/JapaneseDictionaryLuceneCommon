@@ -47,6 +47,8 @@ import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
 public class LuceneDatabase implements IDatabaseConnector {
 
 	private String dbDir;
+	
+	private boolean useSuggester;
 
 	private Directory index;
 	private SimpleAnalyzer analyzer;
@@ -59,8 +61,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 	private LuceneDictionary kanjiEntryDictionary;
 	private AnalyzingSuggester kanjiEntryAnalyzingSuggester;
 	
-	public LuceneDatabase(String dbDir) {
+	public LuceneDatabase(String dbDir, boolean useSuggester) {
 		this.dbDir = dbDir;		
+		
+		this.useSuggester = useSuggester;
 	}
 
 	public void open() throws IOException {
@@ -69,16 +73,18 @@ public class LuceneDatabase implements IDatabaseConnector {
 		analyzer = new SimpleAnalyzer(Version.LUCENE_47);
 		reader = DirectoryReader.open(index);
 		searcher = new IndexSearcher(reader);
+		
+		if (useSuggester == true) {
+			wordDictionaryEntryDictionary = new LuceneDictionary(reader, LuceneStatic.dictionaryEntry_sugestionList);				
+			wordDictionaryEntryAnalyzingSuggester = new AnalyzingSuggester(analyzer);
 
-		wordDictionaryEntryDictionary = new LuceneDictionary(reader, LuceneStatic.dictionaryEntry_sugestionList);				
-		wordDictionaryEntryAnalyzingSuggester = new AnalyzingSuggester(analyzer);
+			wordDictionaryEntryAnalyzingSuggester.build(wordDictionaryEntryDictionary);
 
-		wordDictionaryEntryAnalyzingSuggester.build(wordDictionaryEntryDictionary);
+			kanjiEntryDictionary = new LuceneDictionary(reader, LuceneStatic.kanjiEntry_sugestionList);				
+			kanjiEntryAnalyzingSuggester = new AnalyzingSuggester(analyzer);
 
-		kanjiEntryDictionary = new LuceneDictionary(reader, LuceneStatic.kanjiEntry_sugestionList);				
-		kanjiEntryAnalyzingSuggester = new AnalyzingSuggester(analyzer);
-
-		kanjiEntryAnalyzingSuggester.build(kanjiEntryDictionary);
+			kanjiEntryAnalyzingSuggester.build(kanjiEntryDictionary);			
+		}
 	}
 
 	public void close() throws IOException {
