@@ -681,7 +681,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 				Integer strokeCountFrom = findKanjiRequest.strokeCountFrom;
 				Integer strokeCountTo = findKanjiRequest.strokeCountTo;
 								
-				if (strokeCountFrom != null && strokeCountTo != null) {
+				if (strokeCountFrom != null || strokeCountTo != null) {
 					query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry_kanjiDic2Entry_strokeCount, 
 							strokeCountFrom != null ? strokeCountFrom.intValue() : 0,
 							strokeCountTo != null ? strokeCountTo.intValue() : 999999, true, true), Occur.MUST);					
