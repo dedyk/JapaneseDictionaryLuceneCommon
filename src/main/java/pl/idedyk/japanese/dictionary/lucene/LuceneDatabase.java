@@ -153,7 +153,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 							findWordRequest.wordPlaceSearch), Occur.SHOULD);
 				}
 
-				createDictionaryEntryListFilter(wordBooleanQuery, findWordRequest.dictionaryEntryList);			
+				createDictionaryEntryListFilter(wordBooleanQuery, findWordRequest.dictionaryEntryTypeList);
 
 				query.add(wordBooleanQuery, Occur.MUST);
 
@@ -221,91 +221,113 @@ public class LuceneDatabase implements IDatabaseConnector {
 					String infoString = document.get(LuceneStatic.dictionaryEntry_info);
 
 					if (findWordRequest.wordPlaceSearch == WordPlaceSearch.ANY_PLACE) {
-
-						if (findWordRequest.searchKanji == true) {
-
-							if (kanjiString.indexOf(findWordRequest.word) != -1) {
-								addDictionaryEntry = true;
+						
+						boolean goodDictionaryEntryType = false;
+						
+						if (findWordRequest.dictionaryEntryTypeList == null || findWordRequest.dictionaryEntryTypeList.size() == 0) {
+							goodDictionaryEntryType = true;
+							
+						} else {
+							
+							List<String> findWordRequestDictionaryEntryTypeStringList = DictionaryEntryType.convertToValues(findWordRequest.dictionaryEntryTypeList);
+							
+							for (String currentFoundDictionaryEntryType : dictionaryEntryTypeList) {
+								
+								if (findWordRequestDictionaryEntryTypeStringList.contains(currentFoundDictionaryEntryType) == true) {
+									goodDictionaryEntryType = true;
+									
+									break;
+								}								
 							}
 						}
+						
+						if (goodDictionaryEntryType == true) {
 
-						if (addDictionaryEntry == false && findWordRequest.searchKana == true) {
+							if (findWordRequest.searchKanji == true) {
 
-							for (String currentKana : kanaList) {							
-								if (currentKana.indexOf(findWordRequest.word) != -1) {
+								if (kanjiString.indexOf(findWordRequest.word) != -1) {
 									addDictionaryEntry = true;
-
-									break;
-								}							
-							}						
-						}
-
-						if (addDictionaryEntry == false && findWordRequest.searchRomaji == true) {
-
-							for (String currentRomaji : romajiList) {
-								if (currentRomaji.indexOf(findWordRequest.word) != -1) {
-									addDictionaryEntry = true;
-
-									break;
-								}							
+								}
 							}
-						}
 
-						if (addDictionaryEntry == false && findWordRequest.searchTranslate == true) {
+							if (addDictionaryEntry == false && findWordRequest.searchKana == true) {
 
-							for (String currentTranslate : translateList) {
-
-								if (currentTranslate.toLowerCase(Locale.getDefault()).indexOf(wordToLowerCase) != -1) {
-									addDictionaryEntry = true;
-
-									break;
-								}							
-							}						
-
-							List<String> translateListWithoutPolishChars = Arrays.asList(document.getValues(LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars));
-
-							if (translateListWithoutPolishChars != null && translateListWithoutPolishChars.size() > 0) {
-
-								for (String currentTranslateListWithoutPolishChars : translateListWithoutPolishChars) {
-
-									if (currentTranslateListWithoutPolishChars.toLowerCase(Locale.getDefault()).indexOf(wordWithoutPolishCharsToLowerCase) != -1) {
+								for (String currentKana : kanaList) {							
+									if (currentKana.indexOf(findWordRequest.word) != -1) {
 										addDictionaryEntry = true;
 
 										break;
+									}							
+								}						
+							}
+
+							if (addDictionaryEntry == false && findWordRequest.searchRomaji == true) {
+
+								for (String currentRomaji : romajiList) {
+									if (currentRomaji.indexOf(findWordRequest.word) != -1) {
+										addDictionaryEntry = true;
+
+										break;
+									}							
+								}
+							}
+
+							if (addDictionaryEntry == false && findWordRequest.searchTranslate == true) {
+
+								for (String currentTranslate : translateList) {
+
+									if (currentTranslate.toLowerCase(Locale.getDefault()).indexOf(wordToLowerCase) != -1) {
+										addDictionaryEntry = true;
+
+										break;
+									}							
+								}						
+
+								List<String> translateListWithoutPolishChars = Arrays.asList(document.getValues(LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars));
+
+								if (translateListWithoutPolishChars != null && translateListWithoutPolishChars.size() > 0) {
+
+									for (String currentTranslateListWithoutPolishChars : translateListWithoutPolishChars) {
+
+										if (currentTranslateListWithoutPolishChars.toLowerCase(Locale.getDefault()).indexOf(wordWithoutPolishCharsToLowerCase) != -1) {
+											addDictionaryEntry = true;
+
+											break;
+										}
+									}
+								}						
+							}
+
+							if (addDictionaryEntry == false && findWordRequest.searchInfo == true) {
+
+								if (infoString != null) {
+
+									if (infoString.toLowerCase(Locale.getDefault()).indexOf(wordToLowerCase) != -1) {
+										addDictionaryEntry = true;
+									}
+
+									if (addDictionaryEntry == false) {								
+										String infoStringWithoutPolishChars = document.get(LuceneStatic.dictionaryEntry_infoWithoutPolishChars);
+
+										if (infoStringWithoutPolishChars != null) {
+											if (infoStringWithoutPolishChars.toLowerCase(Locale.getDefault()).indexOf(wordWithoutPolishCharsToLowerCase) != -1) {
+												addDictionaryEntry = true;
+											}									
+										}
 									}
 								}
 							}						
-						}
 
-						if (addDictionaryEntry == false && findWordRequest.searchInfo == true) {
+							if (addDictionaryEntry == true) {
+								DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
+										groupsList, prefixKanaString, kanjiString, kanaList, prefixRomajiString, romajiList,
+										translateList, infoString);
 
-							if (infoString != null) {
+								findWordResult.result.add(new FindWordResult.ResultItem(entry));
 
-								if (infoString.toLowerCase(Locale.getDefault()).indexOf(wordToLowerCase) != -1) {
-									addDictionaryEntry = true;
+								if (findWordResult.result.size() > maxResult) {
+									break;
 								}
-
-								if (addDictionaryEntry == false) {								
-									String infoStringWithoutPolishChars = document.get(LuceneStatic.dictionaryEntry_infoWithoutPolishChars);
-
-									if (infoStringWithoutPolishChars != null) {
-										if (infoStringWithoutPolishChars.toLowerCase(Locale.getDefault()).indexOf(wordWithoutPolishCharsToLowerCase) != -1) {
-											addDictionaryEntry = true;
-										}									
-									}
-								}
-							}
-						}
-
-						if (addDictionaryEntry == true) {
-							DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
-									groupsList, prefixKanaString, kanjiString, kanaList, prefixRomajiString, romajiList,
-									translateList, infoString);
-
-							findWordResult.result.add(new FindWordResult.ResultItem(entry));
-
-							if (findWordResult.result.size() > maxResult) {
-								break;
 							}
 						}
 					}
