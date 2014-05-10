@@ -363,7 +363,7 @@ public class LuceneDBGenerator {
 
 			// update radical info
 			if (entry.getKanjiDic2Entry() != null) {
-				updateRadicalInfoUse(radicalListMapCache, entry.getKanjiDic2Entry().getRadicals());
+				//updateRadicalInfoUse(radicalListMapCache, entry.getKanjiDic2Entry().getRadicals());
 				
 				allAvailableRadicalSet.addAll(entry.getKanjiDic2Entry().getRadicals());
 			}
@@ -377,7 +377,8 @@ public class LuceneDBGenerator {
 
 		csvReader.close();
 	}
-
+	
+	/*
 	private static void updateRadicalInfoUse(Map<String, RadicalInfo> radicalListMapCache, List<String> radicals) {
 
 		for (String currentRadical : radicals) {
@@ -391,6 +392,7 @@ public class LuceneDBGenerator {
 			//currentRadicalInfo.incrementUse();			
 		}
 	}
+	*/
 
 	public static void addKanjiEntry(IndexWriter indexWriter, KanjiEntry kanjiEntry, boolean addSugestionList) throws IOException {
 
