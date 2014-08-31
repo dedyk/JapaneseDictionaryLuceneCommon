@@ -1125,7 +1125,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 
 	@Override
-	public List<KanjiEntry> getAllKanjis(boolean withDetails, boolean addGenerated) throws DictionaryException {
+	public List<KanjiEntry> getAllKanjis(boolean withDetails, boolean addGenerated, boolean onlyWithKanjivgEntry) throws DictionaryException {
 
 		BooleanQuery query = new BooleanQuery();
 
@@ -1171,6 +1171,14 @@ public class LuceneDatabase implements IDatabaseConnector {
 					kunReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_kunReadingList));
 
 					strokePathsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths));
+				}
+				
+				if (onlyWithKanjivgEntry == true && withDetails == false) {
+					strokePathsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths));					
+				}
+				
+				if (onlyWithKanjivgEntry == true && (strokePathsList == null || strokePathsList.size() == 0)) {
+					continue;
 				}				
 
 				List<String> polishTranslateList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_polishTranslatesList));
