@@ -38,6 +38,7 @@ import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.lucene.LuceneStatic;
+import pl.idedyk.japanese.dictionary.api.dto.AttributeType;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
@@ -120,11 +121,20 @@ public class LuceneDatabase implements IDatabaseConnector {
 				BooleanQuery query = new BooleanQuery();
 
 				// object type
-				PhraseQuery phraseQuery = new PhraseQuery();
-				phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_objectType));
+				PhraseQuery objectTypeQuery = new PhraseQuery();
+				objectTypeQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_objectType));
 
-				query.add(phraseQuery, Occur.MUST);
+				query.add(objectTypeQuery, Occur.MUST);
 
+				// common word				
+				if (findWordRequest.searchOnlyCommonWord == true) {	
+					PhraseQuery onlyCommonWordQuery = new PhraseQuery();
+					
+					onlyCommonWordQuery.add(new Term(LuceneStatic.dictionaryEntry_attributeList, AttributeType.COMMON_WORD.toString()));
+					
+					query.add(onlyCommonWordQuery, Occur.MUST);
+				}
+				
 				BooleanQuery wordBooleanQuery = new BooleanQuery();
 
 				if (findWordRequest.searchKanji == true) {
