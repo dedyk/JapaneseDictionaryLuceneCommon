@@ -191,9 +191,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 					String infoString = foundDocument.get(LuceneStatic.dictionaryEntry_info);
 
+					List<String> exampleSentenceGroupIdsList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList));
+					
 					DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
 							groupsList, prefixKanaString, kanjiString, kanaList, prefixRomajiString, romajiList,
-							translateList, infoString);
+							translateList, infoString, exampleSentenceGroupIdsList);
 
 					findWordResult.result.add(new FindWordResult.ResultItem(entry));
 				}
@@ -329,9 +331,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 							}						
 
 							if (addDictionaryEntry == true) {
+								
+								List<String> exampleSentenceGroupIdsList = Arrays.asList(document.getValues(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList));
+								
 								DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
 										groupsList, prefixKanaString, kanjiString, kanaList, prefixRomajiString, romajiList,
-										translateList, infoString);
+										translateList, infoString, exampleSentenceGroupIdsList);
 
 								findWordResult.result.add(new FindWordResult.ResultItem(entry));
 
@@ -397,10 +402,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 			List<String> translateList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_translatesList));
 
 			String infoString = foundDocument.get(LuceneStatic.dictionaryEntry_info);
+			
+			List<String> exampleSentenceGroupIdsList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList));
 
 			return Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
 					groupsList, prefixKanaString, kanjiString, kanaList, prefixRomajiString, romajiList,
-					translateList, infoString);
+					translateList, infoString, exampleSentenceGroupIdsList);
 
 		} catch (IOException e) {
 			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
@@ -444,10 +451,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 			List<String> translateList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_translatesList));
 
 			String infoString = foundDocument.get(LuceneStatic.dictionaryEntry_info);
+			
+			List<String> exampleSentenceGroupIdsList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList));
 
 			return Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
 					groupsList, prefixKanaString, kanjiString, kanaList, prefixRomajiString, romajiList,
-					translateList, infoString);
+					translateList, infoString, exampleSentenceGroupIdsList);
 
 		} catch (IOException e) {
 			throw new DictionaryException("Błąd podczas pobierania n-tego słowa: " + e);
@@ -648,10 +657,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 				List<String> translateList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_translatesList));
 
 				String infoString = foundDocument.get(LuceneStatic.dictionaryEntry_info);
+				
+				List<String> exampleSentenceGroupIdsList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList));
 
 				DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
 						groupsList, prefixKanaString, kanjiString, kanaList, prefixRomajiString, romajiList,
-						translateList, infoString);
+						translateList, infoString, exampleSentenceGroupIdsList);
 
 				result.add(entry);
 			}

@@ -35,6 +35,7 @@ import pl.idedyk.japanese.dictionary.api.dto.KanjiDic2Entry;
 import pl.idedyk.japanese.dictionary.api.dto.KanjiEntry;
 import pl.idedyk.japanese.dictionary.api.dto.KanjivgEntry;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
+import pl.idedyk.japanese.dictionary.api.dto.TatoebaSentence;
 import pl.idedyk.japanese.dictionary.api.example.ExampleManager;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
 import pl.idedyk.japanese.dictionary.api.gramma.GrammaConjugaterManager;
@@ -51,12 +52,14 @@ public class LuceneDBGenerator {
 	
 		// parametry
 		String dictionaryFilePath = args[0];
-		String kanjiFilePath = args[1];
-		String radicalFilePath = args[2];
+		String sentencesFilePath = args[1];
+		String sentencesGroupsFilePath = args[2];		
+		String kanjiFilePath = args[3];
+		String radicalFilePath = args[4];
 		
-		boolean addSugestionList = Boolean.parseBoolean(args[3]);
+		boolean addSugestionList = Boolean.parseBoolean(args[5]);
 		
-		String dbOutDir = args[4];
+		String dbOutDir = args[6];
 				
 		final File dbOutDirFile = new File(dbOutDir);
 		
@@ -92,6 +95,14 @@ public class LuceneDBGenerator {
 		readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList);
 
 		dictionaryInputStream.close();
+		
+		// otwarcie pliku ze zdaniami
+		FileInputStream sentencesInputStream = new FileInputStream(sentencesFilePath);
+		
+		// wczytanie zdan
+		readSentenceFile(indexWriter, sentencesInputStream);
+		
+		sentencesInputStream.close();
 		
 		// otwarcie pliku ze znakami podstawowymi
 		FileInputStream radicalInputStream = new FileInputStream(radicalFilePath);
@@ -139,10 +150,12 @@ public class LuceneDBGenerator {
 			String romajiListString = csvReader.get(9);
 			String translateListString = csvReader.get(10);
 			String infoString = csvReader.get(11);
-
+			
+			String exampleSentenceGroupIdsListString = csvReader.get(13);
+			
 			DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeString, attributesString,
 					groupsString, prefixKanaString, kanjiString, kanaListString, prefixRomajiString, romajiListString,
-					translateListString, infoString);
+					translateListString, infoString, exampleSentenceGroupIdsListString);
 
 			// count form for dictionary entry
 			Map<GrammaFormConjugateResultType, GrammaFormConjugateResult> grammaFormCache = new HashMap<GrammaFormConjugateResultType, GrammaFormConjugateResult>();
@@ -260,6 +273,54 @@ public class LuceneDBGenerator {
 		String infoWithoutPolishChars = Utils.removePolishChars(info);
 			
 		document.add(new TextField(LuceneStatic.dictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.YES));
+		
+		// example sentence groupIds
+		List<String> exampleSentenceGroupIdsList = dictionaryEntry.getExampleSentenceGroupIdsList();
+				
+		for (String currentExampleSenteceGroupId : exampleSentenceGroupIdsList) {
+			document.add(new TextField(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList, currentExampleSenteceGroupId, Field.Store.YES));
+		}
+		
+		indexWriter.addDocument(document);
+	}
+	
+	private static void readSentenceFile(IndexWriter indexWriter, FileInputStream sentencesInputStream) throws IOException {
+		
+		CsvReader csvReader = new CsvReader(new InputStreamReader(sentencesInputStream), ',');
+		
+		while (csvReader.readRecord()) {
+			
+			String id = csvReader.get(0);
+			String lang = csvReader.get(1);
+			String sentence = csvReader.get(2);
+			
+			TatoebaSentence tatoebaSentence = new TatoebaSentence();
+			
+			tatoebaSentence.setId(id);
+			tatoebaSentence.setLang(lang);
+			tatoebaSentence.setSentence(sentence);
+			
+			addTatoebaSentence(indexWriter, tatoebaSentence);
+		}		
+		
+		csvReader.close();
+	}
+
+	private static void addTatoebaSentence(IndexWriter indexWriter, TatoebaSentence tatoebaSentence) throws IOException {
+		
+		Document document = new Document();
+		
+		// object type
+		document.add(new StringField(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_exampleSentence_objectType, Field.Store.YES));
+		
+		// id
+		document.add(new StringField(LuceneStatic.dictionaryEntry_exampleSentence_id, tatoebaSentence.getId(), Field.Store.YES));
+
+		// lang
+		document.add(new StringField(LuceneStatic.dictionaryEntry_exampleSentence_lang, tatoebaSentence.getLang(), Field.Store.YES));
+		
+		// sentence
+		document.add(new StringField(LuceneStatic.dictionaryEntry_exampleSentence_sentence, tatoebaSentence.getSentence(), Field.Store.YES));
 		
 		indexWriter.addDocument(document);
 	}
