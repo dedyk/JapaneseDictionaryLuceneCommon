@@ -31,6 +31,7 @@ import pl.idedyk.japanese.dictionary.api.dictionary.lucene.LuceneStatic;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
+import pl.idedyk.japanese.dictionary.api.dto.GroupWithTatoebaSentenceList;
 import pl.idedyk.japanese.dictionary.api.dto.KanjiDic2Entry;
 import pl.idedyk.japanese.dictionary.api.dto.KanjiEntry;
 import pl.idedyk.japanese.dictionary.api.dto.KanjivgEntry;
@@ -103,6 +104,14 @@ public class LuceneDBGenerator {
 		readSentenceFile(indexWriter, sentencesInputStream);
 		
 		sentencesInputStream.close();
+		
+		// otwarcie pliku z przydzialem zdan do grup
+		FileInputStream sentencesGroupsInputStream = new FileInputStream(sentencesGroupsFilePath);
+		
+		// wczytanie przydzialu zdan do grup
+		readSentenceGroupsFile(indexWriter, sentencesGroupsInputStream);
+		
+		sentencesGroupsInputStream.close();
 		
 		// otwarcie pliku ze znakami podstawowymi
 		FileInputStream radicalInputStream = new FileInputStream(radicalFilePath);
@@ -340,6 +349,58 @@ public class LuceneDBGenerator {
 		
 		indexWriter.addDocument(document);
 	}	
+	
+	private static void readSentenceGroupsFile(IndexWriter indexWriter, FileInputStream sentencesGroupsInputStream) throws IOException {
+		
+		CsvReader csvReader = new CsvReader(new InputStreamReader(sentencesGroupsInputStream), ',');
+		
+		while (csvReader.readRecord()) {
+			
+			String groupId = csvReader.get(0);
+			String sentenceIdListString = csvReader.get(1);
+			
+			List<String> sentenceIdList = Utils.parseStringIntoList(sentenceIdListString, false);
+			
+			GroupWithTatoebaSentenceList groupWithTatoebaSentenceList = new GroupWithTatoebaSentenceList();
+
+			List<TatoebaSentence> tatoebaSentenceLazyList = new ArrayList<TatoebaSentence>();
+			
+			for (String currentSentenceId : sentenceIdList) {
+				TatoebaSentence tatoebaSentence = new TatoebaSentence();
+				
+				tatoebaSentence.setId(currentSentenceId);
+				
+				tatoebaSentenceLazyList.add(tatoebaSentence);
+			}
+			
+			groupWithTatoebaSentenceList.setGroupId(groupId);
+			groupWithTatoebaSentenceList.setTatoebaSentenceList(tatoebaSentenceLazyList);
+			
+			addGroupWithTatoebaSentenceList(indexWriter, groupWithTatoebaSentenceList);
+		}		
+		
+		csvReader.close();	
+	}
+	
+	private static void addGroupWithTatoebaSentenceList(IndexWriter indexWriter, GroupWithTatoebaSentenceList groupWithTatoebaSentenceList) throws IOException {
+		
+		Document document = new Document();
+		
+		// object type
+		document.add(new StringField(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_exampleSentenceGroups_objectType, Field.Store.YES));
+		
+		// id
+		document.add(new StringField(LuceneStatic.dictionaryEntry_exampleSentenceGroups_groupId, groupWithTatoebaSentenceList.getGroupId(), Field.Store.YES));
+
+		// lang
+		List<TatoebaSentence> tatoebaSentenceList = groupWithTatoebaSentenceList.getTatoebaSentenceList();
+		
+		for (TatoebaSentence currentTatoebaSentence : tatoebaSentenceList) {
+			document.add(new StringField(LuceneStatic.dictionaryEntry_exampleSentenceGroups_sentenceIdList, currentTatoebaSentence.getId(), Field.Store.YES));
+		}
+				
+		indexWriter.addDocument(document);
+	}
 	
 	private static List<RadicalInfo> readRadicalEntriesFromCsv(InputStream radicalInputStream) throws IOException,
 			DictionaryException {
