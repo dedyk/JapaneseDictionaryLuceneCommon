@@ -42,7 +42,9 @@ import pl.idedyk.japanese.dictionary.api.dto.AttributeType;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
+import pl.idedyk.japanese.dictionary.api.dto.GroupWithTatoebaSentenceList;
 import pl.idedyk.japanese.dictionary.api.dto.KanjiEntry;
+import pl.idedyk.japanese.dictionary.api.dto.TatoebaSentence;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
 
 public class LuceneDatabase implements IDatabaseConnector {
@@ -1246,5 +1248,83 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 
 		return result;
+	}
+
+	@Override
+	public GroupWithTatoebaSentenceList getTatoebaSentenceGroup(String groupId) throws DictionaryException {
+				
+		// znajdowanie identyfikatorow zdan		
+		BooleanQuery groupQuery = new BooleanQuery();
+
+		// object type
+		PhraseQuery groupPhraseQuery = new PhraseQuery();
+		groupPhraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_exampleSentenceGroups_objectType));
+
+		groupQuery.add(groupPhraseQuery, Occur.MUST);
+
+		groupQuery.add(createQuery(groupId, LuceneStatic.dictionaryEntry_exampleSentenceGroups_groupId, WordPlaceSearch.EXACT), Occur.MUST);
+
+		List<String> sentencesIdList = null;
+
+		try {
+			// szukanie
+			ScoreDoc[] scoreDocs = searcher.search(groupQuery, null, 1).scoreDocs;
+
+			for (ScoreDoc scoreDoc : scoreDocs) {
+
+				Document foundDocument = searcher.doc(scoreDoc.doc);
+
+				sentencesIdList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_exampleSentenceGroups_sentenceIdList));
+			}		
+
+			if (sentencesIdList != null && sentencesIdList.size() > 0) {	
+
+				GroupWithTatoebaSentenceList result = new GroupWithTatoebaSentenceList();
+
+				result.setGroupId(groupId);
+				result.setTatoebaSentenceList(new ArrayList<TatoebaSentence>());
+
+				for (String currentSentenceId : sentencesIdList) {
+
+					// znajdowanie tresci zdan
+					BooleanQuery sentenceQuery = new BooleanQuery();
+
+					// object type
+					PhraseQuery sentencePhraseQuery = new PhraseQuery();
+					sentencePhraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_exampleSentence_objectType));
+
+					sentenceQuery.add(sentencePhraseQuery, Occur.MUST);
+
+					sentenceQuery.add(createQuery(currentSentenceId, LuceneStatic.dictionaryEntry_exampleSentence_id, WordPlaceSearch.EXACT), Occur.MUST);
+
+					// szukanie
+					scoreDocs = searcher.search(sentenceQuery, null, 1).scoreDocs;
+
+					for (ScoreDoc scoreDoc : scoreDocs) {
+
+						Document foundDocument = searcher.doc(scoreDoc.doc);
+
+						String sentenceId = foundDocument.get(LuceneStatic.dictionaryEntry_exampleSentence_id);
+						String sentencelang = foundDocument.get(LuceneStatic.dictionaryEntry_exampleSentence_lang);
+						String sentenceSentence = foundDocument.get(LuceneStatic.dictionaryEntry_exampleSentence_sentence);
+
+						TatoebaSentence tatoebaSentence = new TatoebaSentence();
+
+						tatoebaSentence.setId(sentenceId);
+						tatoebaSentence.setLang(sentencelang);
+						tatoebaSentence.setSentence(sentenceSentence);
+
+						result.getTatoebaSentenceList().add(tatoebaSentence);
+					}
+				}
+
+				return result;
+			}		
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas wyszukiwania przykładów zdań: " + e);
+		}	
+
+		return null;
 	}
 }
