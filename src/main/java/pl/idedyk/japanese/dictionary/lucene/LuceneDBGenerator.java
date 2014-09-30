@@ -405,7 +405,7 @@ public class LuceneDBGenerator {
 		List<String> romajiList = grammaFormConjugateResult.getRomajiList();
 		
 		for (String currentRomaji : romajiList) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
+			document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
 		}
 		
 		if (grammaFormConjugateResult.getAlternative() != null) {
@@ -431,7 +431,7 @@ public class LuceneDBGenerator {
 		List<String> romajiList = exampleResult.getRomajiList();
 		
 		for (String currentRomaji : romajiList) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
+			document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
 		}
 		
 		if (exampleResult.getAlternative() != null) {
