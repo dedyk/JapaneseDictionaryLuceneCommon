@@ -170,6 +170,10 @@ public class LuceneDBGenerator {
 					groupsString, prefixKanaString, kanjiString, kanaListString, prefixRomajiString, romajiListString,
 					translateListString, infoString, exampleSentenceGroupIdsListString);
 
+			addDictionaryEntry(indexWriter, entry, addSugestionList);
+
+			uniqueDictionaryEntryGroupEnumSet.addAll(entry.getGroups());
+			
 			// count form for dictionary entry
 			Map<GrammaFormConjugateResultType, GrammaFormConjugateResult> grammaFormCache = new HashMap<GrammaFormConjugateResultType, GrammaFormConjugateResult>();
 
@@ -196,12 +200,12 @@ public class LuceneDBGenerator {
 			}			
 			
 			for (DictionaryEntryType currentDictionaryEntryType : entry.getDictionaryEntryTypeList()) {
-				ExampleManager.getExamples(keigoHelper, entry, grammaFormCache, currentDictionaryEntryType);
+				examples = ExampleManager.getExamples(keigoHelper, entry, grammaFormCache, currentDictionaryEntryType);
+				
+				if (addGrammaAndExample == true) {
+					addExampleGroupTypeList(indexWriter, entry, examples);
+				}
 			}
-
-			addDictionaryEntry(indexWriter, entry, addSugestionList);
-
-			uniqueDictionaryEntryGroupEnumSet.addAll(entry.getGroups());
 		}
 
 		addDictionaryEntryUniqueGroupEnum(indexWriter, uniqueDictionaryEntryGroupEnumSet);
