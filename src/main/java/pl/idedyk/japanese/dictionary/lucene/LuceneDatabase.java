@@ -38,6 +38,7 @@ import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.lucene.LuceneStatic;
+import pl.idedyk.japanese.dictionary.api.dictionary.sqlite.SQLiteStatic;
 import pl.idedyk.japanese.dictionary.api.dto.AttributeType;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
@@ -957,8 +958,14 @@ public class LuceneDatabase implements IDatabaseConnector {
 		if (findWordResult.moreElemetsExists == true) {
 			return;
 		}
+		
+		if (findWordRequest.getWordPlaceSearch() == WordPlaceSearch.ANY_PLACE) {
+			return;
+		}
+		
+		final int maxResult = 50 - findWordResult.result.size();
 
-		throw new UnsupportedOperationException();
+		System.out.println("AAAAAA");
 	}
 
 	@Override
