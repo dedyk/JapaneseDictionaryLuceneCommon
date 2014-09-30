@@ -1039,9 +1039,23 @@ public class LuceneDatabase implements IDatabaseConnector {
 				}
 				
 				if (addDictionaryEntry == true) {
-					findWordResult.foundGrammaAndExamples = true;
 					
-					findWordResult.result.add(new FindWordResult.ResultItem(dictionaryEntry));
+					boolean alreadyInResult = false;
+					
+					for (FindWordResult.ResultItem currentResultItem : findWordResult.result) {
+						
+						if (currentResultItem.getDictionaryEntry().getId() == dictionaryEntry.getId()) {
+							alreadyInResult = true;
+							
+							break;
+						}						
+					}
+					
+					if (alreadyInResult == false) {
+						findWordResult.foundGrammaAndExamples = true;
+						
+						findWordResult.result.add(new FindWordResult.ResultItem(dictionaryEntry));						
+					}					
 				}
 			}			
 			
