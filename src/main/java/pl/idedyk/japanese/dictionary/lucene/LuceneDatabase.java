@@ -38,7 +38,6 @@ import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.lucene.LuceneStatic;
-import pl.idedyk.japanese.dictionary.api.dictionary.sqlite.SQLiteStatic;
 import pl.idedyk.japanese.dictionary.api.dto.AttributeType;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
@@ -965,7 +964,90 @@ public class LuceneDatabase implements IDatabaseConnector {
 		
 		final int maxResult = 50 - findWordResult.result.size();
 
-		System.out.println("AAAAAA");
+		String[] wordSplited = findWordRequest.word.split("\\s+");
+
+		String wordToLowerCase = findWordRequest.word.toLowerCase(Locale.getDefault());
+		String wordWithoutPolishCharsToLowerCase = Utils.removePolishChars(wordToLowerCase);
+
+		//String[] wordSplitedToLowerCase = wordToLowerCase.split("\\s+");
+		String[] wordSplitedWithoutPolishCharsToLowerCase = wordWithoutPolishCharsToLowerCase.split("\\s+");
+
+		try {
+			
+			BooleanQuery query = new BooleanQuery();
+
+			// object type
+			PhraseQuery objectTypeQuery = new PhraseQuery();
+			objectTypeQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_objectType));
+
+			query.add(objectTypeQuery, Occur.MUST);
+			
+			BooleanQuery wordBooleanQuery = new BooleanQuery();
+
+			if (findWordRequest.searchKanji == true) {
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanji, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+			}
+
+			if (findWordRequest.searchKana == true) {
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+			}
+
+			if (findWordRequest.searchRomaji == true) {
+				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+			}
+
+			query.add(wordBooleanQuery, Occur.MUST);
+
+			ScoreDoc[] scoreDocs = searcher.search(query, null, maxResult + 1).scoreDocs;
+
+			for (ScoreDoc scoreDoc : scoreDocs) {
+
+				Document foundDocument = searcher.doc(scoreDoc.doc);
+
+				String dictionaryEntryId = foundDocument.get(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_dictionaryEntry_id);
+				
+				DictionaryEntry dictionaryEntry = getDictionaryEntryById(dictionaryEntryId);
+				
+				boolean addDictionaryEntry = true;
+				
+				// common word				
+				if (findWordRequest.searchOnlyCommonWord == true && dictionaryEntry.getAttributeList().contains(AttributeType.COMMON_WORD) == false) {					
+					addDictionaryEntry = false;
+				}
+				
+				if (addDictionaryEntry == true) {
+					
+					if (findWordRequest.dictionaryEntryTypeList != null && findWordRequest.dictionaryEntryTypeList.size() > 0) {
+						
+						boolean isInNeededDictionaryEntryTypeList = false;
+						
+						List<DictionaryEntryType> dictionaryEntryTypeList = dictionaryEntry.getDictionaryEntryTypeList();
+					
+						for (DictionaryEntryType dictionaryEntryType : dictionaryEntryTypeList) {
+							
+							if (findWordRequest.dictionaryEntryTypeList.contains(dictionaryEntryType) == true) {
+								isInNeededDictionaryEntryTypeList = true;
+								
+								break;
+							}
+						}
+						
+						if (isInNeededDictionaryEntryTypeList == false) {
+							addDictionaryEntry = false;
+						}					
+					}
+				}
+				
+				if (addDictionaryEntry == true) {
+					findWordResult.foundGrammaAndExamples = true;
+					
+					findWordResult.result.add(new FindWordResult.ResultItem(dictionaryEntry));
+				}
+			}			
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas wyszukiwania odmian gramatycznych i przykładów: " + e);
+		}
 	}
 
 	@Override
