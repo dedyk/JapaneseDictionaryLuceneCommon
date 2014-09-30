@@ -97,8 +97,11 @@ public class LuceneDBGenerator {
 		FileInputStream dictionaryInputStream = new FileInputStream(dictionaryFilePath);
 
 		// wczytywanie slownika
-		readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList, addGrammaAndExample);
+		List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList);
 
+		// przeliczenie form
+		countGrammaFormAndExamples(dictionaryEntryList, indexWriter, addGrammaAndExample);
+		
 		dictionaryInputStream.close();
 		
 		// otwarcie pliku ze zdaniami
@@ -139,10 +142,9 @@ public class LuceneDBGenerator {
 		System.out.println("DB Generator - done");
 	}
 
-	private static void readDictionaryFile(IndexWriter indexWriter, InputStream dictionaryInputStream, boolean addSugestionList,
-			boolean addGrammaAndExample) throws IOException, DictionaryException, SQLException {
-
-		KeigoHelper keigoHelper = new KeigoHelper();
+	private static List<DictionaryEntry> readDictionaryFile(IndexWriter indexWriter, InputStream dictionaryInputStream, boolean addSugestionList) throws IOException, DictionaryException, SQLException {
+		
+		List<DictionaryEntry> dictionaryEntryList = new ArrayList<DictionaryEntry>();
 
 		CsvReader csvReader = new CsvReader(new InputStreamReader(dictionaryInputStream), ',');
 
@@ -174,13 +176,14 @@ public class LuceneDBGenerator {
 
 			uniqueDictionaryEntryGroupEnumSet.addAll(entry.getGroups());
 			
-			// count form for dictionary entry
-			countGrammaFormAndExamples(indexWriter, entry, keigoHelper, addGrammaAndExample);			
+			dictionaryEntryList.add(entry);			
 		}
 
 		addDictionaryEntryUniqueGroupEnum(indexWriter, uniqueDictionaryEntryGroupEnumSet);
 
 		csvReader.close();
+		
+		return dictionaryEntryList;
 	}
 
 	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList) throws IOException {
@@ -282,6 +285,16 @@ public class LuceneDBGenerator {
 		}
 		
 		indexWriter.addDocument(document);
+	}
+	
+	private static void countGrammaFormAndExamples(List<DictionaryEntry> dictionaryEntryList, IndexWriter indexWriter, boolean addGrammaAndExample) throws IOException {
+		
+		KeigoHelper keigoHelper = new KeigoHelper();
+		
+		for (DictionaryEntry dictionaryEntry : dictionaryEntryList) {
+			// count form for dictionary entry
+			countGrammaFormAndExamples(indexWriter, dictionaryEntry, keigoHelper, addGrammaAndExample);	
+		}
 	}
 	
 	private static void countGrammaFormAndExamples(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, KeigoHelper keigoHelper, boolean addGrammaAndExample) throws IOException {
