@@ -60,12 +60,13 @@ public class LuceneDBGenerator {
 		String sentencesGroupsFilePath = args[2];		
 		String kanjiFilePath = args[3];
 		String radicalFilePath = args[4];
+		String nameFilePath = args[5];
 		
-		boolean addSugestionList = Boolean.parseBoolean(args[5]);
-		boolean addGrammaAndExample = Boolean.parseBoolean(args[6]);
+		boolean addSugestionList = Boolean.parseBoolean(args[6]);
+		boolean addGrammaAndExample = Boolean.parseBoolean(args[7]);
 		
-		String dbOutDir = args[7];
-				
+		String dbOutDir = args[8];
+						
 		final File dbOutDirFile = new File(dbOutDir);
 		
 		if (dbOutDirFile.exists() == false) {
@@ -136,12 +137,48 @@ public class LuceneDBGenerator {
 
 		kanjiInputStream.close();
 		
+		// wczytywanie pliku z nazwami
+		if (new File(nameFilePath).canRead() == true) {		
+			FileInputStream namesInputStream = new FileInputStream(nameFilePath);
+	
+			// wczytywanie slownika
+			readNamesFile(indexWriter, namesInputStream, addSugestionList);
+	
+			// zamkniecie pliku
+			namesInputStream.close();
+		}
+		
 		// zakonczenie zapisywania indeksu
 		indexWriter.close();
 				
 		System.out.println("DB Generator - done");
 	}
 
+	private static DictionaryEntry parseDictionaryEntry(CsvReader csvReader) throws DictionaryException, IOException {
+		
+		String idString = csvReader.get(0);
+		String dictionaryEntryTypeString = csvReader.get(1);
+		String attributesString = csvReader.get(2);
+		String groupsString = csvReader.get(4);
+		String prefixKanaString = csvReader.get(5);
+		String kanjiString = csvReader.get(6);
+
+		String kanaListString = csvReader.get(7);
+		String prefixRomajiString = csvReader.get(8);
+
+		String romajiListString = csvReader.get(9);
+		String translateListString = csvReader.get(10);
+		String infoString = csvReader.get(11);
+		
+		String exampleSentenceGroupIdsListString = csvReader.get(13);
+		
+		DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeString, attributesString,
+				groupsString, prefixKanaString, kanjiString, kanaListString, prefixRomajiString, romajiListString,
+				translateListString, infoString, exampleSentenceGroupIdsListString);
+
+		return entry;		
+	}
+	
 	private static List<DictionaryEntry> readDictionaryFile(IndexWriter indexWriter, InputStream dictionaryInputStream, boolean addSugestionList) throws IOException, DictionaryException, SQLException {
 		
 		List<DictionaryEntry> dictionaryEntryList = new ArrayList<DictionaryEntry>();
@@ -152,25 +189,7 @@ public class LuceneDBGenerator {
 
 		while (csvReader.readRecord()) {
 
-			String idString = csvReader.get(0);
-			String dictionaryEntryTypeString = csvReader.get(1);
-			String attributesString = csvReader.get(2);
-			String groupsString = csvReader.get(4);
-			String prefixKanaString = csvReader.get(5);
-			String kanjiString = csvReader.get(6);
-
-			String kanaListString = csvReader.get(7);
-			String prefixRomajiString = csvReader.get(8);
-
-			String romajiListString = csvReader.get(9);
-			String translateListString = csvReader.get(10);
-			String infoString = csvReader.get(11);
-			
-			String exampleSentenceGroupIdsListString = csvReader.get(13);
-			
-			DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeString, attributesString,
-					groupsString, prefixKanaString, kanjiString, kanaListString, prefixRomajiString, romajiListString,
-					translateListString, infoString, exampleSentenceGroupIdsListString);
+			DictionaryEntry entry = parseDictionaryEntry(csvReader);
 
 			addDictionaryEntry(indexWriter, entry, addSugestionList);
 
@@ -771,6 +790,100 @@ public class LuceneDBGenerator {
 		
 
 		indexWriter.addDocument(document);		
+	}
+	
+	private static List<DictionaryEntry> readNamesFile(IndexWriter indexWriter, InputStream namesInputStream, boolean addSugestionList) throws IOException, DictionaryException, SQLException {
+		
+		List<DictionaryEntry> namesDictionaryEntryList = new ArrayList<DictionaryEntry>();
+
+		CsvReader csvReader = new CsvReader(new InputStreamReader(namesInputStream), ',');
+
+		while (csvReader.readRecord()) {
+
+			DictionaryEntry entry = parseDictionaryEntry(csvReader);
+
+			addNameDictionaryEntry(indexWriter, entry, addSugestionList);
+			
+			namesDictionaryEntryList.add(entry);			
+		}
+
+		csvReader.close();
+		
+		return namesDictionaryEntryList;
+	}
+	
+	private static void addNameDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList) throws IOException {
+		
+		Document document = new Document();
+		
+		// object type
+		document.add(new StringField(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry_objectType, Field.Store.YES));
+		
+		// id
+		document.add(new IntField(LuceneStatic.nameDictionaryEntry_id, dictionaryEntry.getId(), Field.Store.YES));
+		
+		// dictionary entry type list
+		List<String> dictionaryEntryTypeStringList = DictionaryEntryType.convertToValues(dictionaryEntry.getDictionaryEntryTypeList());
+		
+		for (String dictionaryEntryTypeString : dictionaryEntryTypeStringList) {
+			document.add(new StringField(LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList, dictionaryEntryTypeString, Field.Store.YES));
+		}
+				
+		// kanji
+		document.add(new StringField(LuceneStatic.nameDictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
+		
+		if (addSugestionList == true) {
+			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
+		}
+		
+		// kanaList
+		List<String> kanaList = dictionaryEntry.getKanaList();
+		
+		for (String currentKana : kanaList) {
+			document.add(new StringField(LuceneStatic.nameDictionaryEntry_kanaList, currentKana, Field.Store.YES));
+			
+			if (addSugestionList == true) {
+				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, currentKana, Field.Store.YES));
+			}
+		}
+				
+		// romajiList
+		List<String> romajiList = dictionaryEntry.getRomajiList();
+		
+		for (String currentRomaji : romajiList) {
+			document.add(new TextField(LuceneStatic.nameDictionaryEntry_romajiList, currentRomaji, Field.Store.YES));
+			
+			if (addSugestionList == true) {
+				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, currentRomaji, Field.Store.YES));
+			}
+		}
+		
+		// translatesList
+		List<String> translates = dictionaryEntry.getTranslates();
+		
+		for (String currentTranslate : translates) {
+			
+			document.add(new TextField(LuceneStatic.nameDictionaryEntry_translatesList, currentTranslate, Field.Store.YES));
+			
+			if (addSugestionList == true) {
+				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, currentTranslate, Field.Store.YES));
+			}
+			
+			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
+				
+			document.add(new TextField(LuceneStatic.nameDictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.YES));
+		}
+		
+		// info
+		String info = emptyIfNull(dictionaryEntry.getInfo());
+		
+		document.add(new TextField(LuceneStatic.nameDictionaryEntry_info, info, Field.Store.YES));
+			
+		String infoWithoutPolishChars = Utils.removePolishChars(info);
+			
+		document.add(new TextField(LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.YES));
+				
+		indexWriter.addDocument(document);
 	}
 	
 	private static void addAvailableRadicalList(IndexWriter indexWriter, Set<String> allAvailableRadicalSet) throws IOException {
