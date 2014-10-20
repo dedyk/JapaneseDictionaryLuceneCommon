@@ -1330,11 +1330,14 @@ public class LuceneDatabase implements IDatabaseConnector {
 	public List<String> getWordAutocomplete(String term, int limit) throws DictionaryException {
 
 		List<String> result = new ArrayList<String>();
+		
+		if (wordDictionaryEntryAnalyzingSuggester != null) {
+			
+			List<LookupResult> lookupResult = wordDictionaryEntryAnalyzingSuggester.lookup(term, false, limit);
 
-		List<LookupResult> lookupResult = wordDictionaryEntryAnalyzingSuggester.lookup(term, false, limit);
-
-		for (LookupResult currentLookupResult : lookupResult) {
-			result.add(currentLookupResult.key.toString());
+			for (LookupResult currentLookupResult : lookupResult) {
+				result.add(currentLookupResult.key.toString());
+			}			
 		}
 
 		return result;
@@ -1343,11 +1346,14 @@ public class LuceneDatabase implements IDatabaseConnector {
 	public List<String> getKanjiAutocomplete(String term, int limit) {
 		
 		List<String> result = new ArrayList<String>();
+		
+		if (kanjiEntryAnalyzingSuggester != null) {
+			
+			List<LookupResult> lookupResult = kanjiEntryAnalyzingSuggester.lookup(term, false, limit);
 
-		List<LookupResult> lookupResult = kanjiEntryAnalyzingSuggester.lookup(term, false, limit);
-
-		for (LookupResult currentLookupResult : lookupResult) {
-			result.add(currentLookupResult.key.toString());
+			for (LookupResult currentLookupResult : lookupResult) {
+				result.add(currentLookupResult.key.toString());
+			}
 		}
 
 		return result;
