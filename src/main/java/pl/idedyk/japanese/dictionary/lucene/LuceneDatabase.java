@@ -165,7 +165,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 							findWordRequest.wordPlaceSearch), Occur.SHOULD);
 				}
 
-				createDictionaryEntryListFilter(wordBooleanQuery, findWordRequest.dictionaryEntryTypeList);
+				createDictionaryEntryListFilter(wordBooleanQuery, LuceneStatic.dictionaryEntry_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
 
 				query.add(wordBooleanQuery, Occur.MUST);
 
@@ -545,7 +545,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		return booleanQuery;
 	}
 
-	private void createDictionaryEntryListFilter(BooleanQuery wordBooleanQuery, List<DictionaryEntryType> dictionaryEntryList) {
+	private void createDictionaryEntryListFilter(BooleanQuery wordBooleanQuery, String typeFieldName, List<DictionaryEntryType> dictionaryEntryList) {
 
 		if (dictionaryEntryList != null && dictionaryEntryList.size() > 0) {
 
@@ -562,7 +562,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			List<String> mustNotDictionaryEntryStringList = DictionaryEntryType.convertToValues(mustNotDictionaryEntryList);
 
 			for (String currentMustNotDictionaryEntryStringList : mustNotDictionaryEntryStringList) {
-				wordBooleanQuery.add(createQuery(currentMustNotDictionaryEntryStringList, LuceneStatic.dictionaryEntry_dictionaryEntryTypeList, WordPlaceSearch.EXACT), Occur.MUST_NOT);
+				wordBooleanQuery.add(createQuery(currentMustNotDictionaryEntryStringList, typeFieldName, WordPlaceSearch.EXACT), Occur.MUST_NOT);
 			}
 		}	
 	}
@@ -1062,6 +1062,113 @@ public class LuceneDatabase implements IDatabaseConnector {
 		} catch (IOException e) {
 			throw new DictionaryException("Błąd podczas wyszukiwania odmian gramatycznych i przykładów: " + e);
 		}
+	}
+	
+	@Override
+	public void findDictionaryEntriesInNames(FindWordRequest findWordRequest, FindWordResult findWordResult) throws DictionaryException {
+		
+		if (findWordRequest.searchName == false) {
+			return;
+		}
+
+		if (findWordResult.moreElemetsExists == true) {
+			return;
+		}
+		
+		if (findWordRequest.getWordPlaceSearch() == WordPlaceSearch.ANY_PLACE) {
+			return;
+		}
+		
+		final int maxResult = 50 - findWordResult.result.size();
+
+		String[] wordSplited = findWordRequest.word.split("\\s+");
+
+		String wordToLowerCase = findWordRequest.word.toLowerCase(Locale.getDefault());
+		String wordWithoutPolishCharsToLowerCase = Utils.removePolishChars(wordToLowerCase);
+
+		//String[] wordSplitedToLowerCase = wordToLowerCase.split("\\s+");
+		String[] wordSplitedWithoutPolishCharsToLowerCase = wordWithoutPolishCharsToLowerCase.split("\\s+");
+		
+		try {
+			
+			BooleanQuery query = new BooleanQuery();
+
+			// object type
+			PhraseQuery objectTypeQuery = new PhraseQuery();
+			objectTypeQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry_objectType));
+
+			query.add(objectTypeQuery, Occur.MUST);
+			
+			BooleanQuery wordBooleanQuery = new BooleanQuery();
+
+			if (findWordRequest.searchKanji == true) {
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.nameDictionaryEntry_kanji, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+			}
+
+			if (findWordRequest.searchKana == true) {
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.nameDictionaryEntry_kanaList, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+			}
+
+			if (findWordRequest.searchRomaji == true) {
+				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.nameDictionaryEntry_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+			}
+
+			if (findWordRequest.searchTranslate == true) {
+				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_translatesList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
+
+				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.nameDictionaryEntry_translatesListWithoutPolishChars, 
+						findWordRequest.wordPlaceSearch), Occur.SHOULD);
+			}
+
+			if (findWordRequest.searchInfo == true) {
+				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_info, findWordRequest.wordPlaceSearch), Occur.SHOULD);
+
+				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, 
+						findWordRequest.wordPlaceSearch), Occur.SHOULD);
+			}
+
+			createDictionaryEntryListFilter(wordBooleanQuery, LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
+
+			query.add(wordBooleanQuery, Occur.MUST);			
+			
+			ScoreDoc[] scoreDocs = searcher.search(query, null, maxResult).scoreDocs;
+
+			for (ScoreDoc scoreDoc : scoreDocs) {
+
+				Document foundDocument = searcher.doc(scoreDoc.doc);
+				
+				String idString = foundDocument.get(LuceneStatic.nameDictionaryEntry_id);
+
+				List<String> dictionaryEntryTypeList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList));
+				List<String> attributeList = new ArrayList<String>();
+				List<String> groupsList = new ArrayList<String>();
+
+				String prefixKanaString = "";
+
+				String kanjiString = foundDocument.get(LuceneStatic.nameDictionaryEntry_kanji);
+				List<String> kanaList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_kanaList));
+
+				String prefixRomajiString = "";
+
+				List<String> romajiList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_romajiList));				
+				List<String> translateList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_translatesList));
+
+				String infoString = foundDocument.get(LuceneStatic.nameDictionaryEntry_info);
+
+				List<String> exampleSentenceGroupIdsList = new ArrayList<String>();
+				
+				DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
+						groupsList, prefixKanaString, kanjiString, kanaList, prefixRomajiString, romajiList,
+						translateList, infoString, exampleSentenceGroupIdsList);
+
+				entry.setName(true);
+				
+				findWordResult.result.add(new FindWordResult.ResultItem(entry));				
+			}			
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas wyszukiwania odmian gramatycznych i przykładów: " + e);
+		}		
 	}
 
 	@Override
