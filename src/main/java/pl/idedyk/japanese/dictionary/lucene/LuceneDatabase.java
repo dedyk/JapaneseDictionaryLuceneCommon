@@ -1037,6 +1037,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 		
 		final int maxResult = 50 - findWordResult.result.size();
+		
+		if (maxResult <= 0) {
+			return;
+		}
 
 		String[] wordSplited = findWordRequest.word.split("\\s+");
 
@@ -1072,7 +1076,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			query.add(wordBooleanQuery, Occur.MUST);
 
-			ScoreDoc[] scoreDocs = searcher.search(query, null, maxResult + 1).scoreDocs;
+			ScoreDoc[] scoreDocs = searcher.search(query, null, maxResult).scoreDocs;
 
 			for (ScoreDoc scoreDoc : scoreDocs) {
 
@@ -1155,6 +1159,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 		
 		final int maxResult = 50 - findWordResult.result.size();
 
+		if (maxResult <= 0) {
+			return;
+		}
+		
 		String[] wordSplited = findWordRequest.word.split("\\s+");
 
 		String wordToLowerCase = findWordRequest.word.toLowerCase(Locale.getDefault());
