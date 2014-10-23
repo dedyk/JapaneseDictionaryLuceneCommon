@@ -417,6 +417,61 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 
 	@Override
+	public DictionaryEntry getDictionaryEntryNameById(String id) throws DictionaryException {
+
+		BooleanQuery query = new BooleanQuery();
+
+		// object type
+		PhraseQuery phraseQuery = new PhraseQuery();
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry_objectType));
+
+		query.add(phraseQuery, Occur.MUST);
+
+		query.add(NumericRangeQuery.newIntRange(LuceneStatic.nameDictionaryEntry_id, Integer.parseInt(id), Integer.parseInt(id), true, true), Occur.MUST);
+		
+		try {
+			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
+
+			if (scoreDocs.length == 0) {
+				return null;
+			}
+
+			Document foundDocument = searcher.doc(scoreDocs[0].doc);
+
+			String idString = foundDocument.get(LuceneStatic.nameDictionaryEntry_id);
+
+			List<String> dictionaryEntryTypeList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList));
+			List<String> attributeList = new ArrayList<String>();
+			List<String> groupsList = new ArrayList<String>();
+
+			String prefixKanaString = "";
+
+			String kanjiString = foundDocument.get(LuceneStatic.nameDictionaryEntry_kanji);
+			List<String> kanaList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_kanaList));
+
+			String prefixRomajiString = "";
+
+			List<String> romajiList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_romajiList));				
+			List<String> translateList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_translatesList));
+
+			String infoString = foundDocument.get(LuceneStatic.nameDictionaryEntry_info);
+
+			List<String> exampleSentenceGroupIdsList = new ArrayList<String>();
+			
+			DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
+					groupsList, prefixKanaString, kanjiString, kanaList, prefixRomajiString, romajiList,
+					translateList, infoString, exampleSentenceGroupIdsList);
+
+			entry.setName(true);
+			
+			return entry;
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
+		}		
+	}
+	
+	@Override
 	public DictionaryEntry getNthDictionaryEntry(int nth) throws DictionaryException {
 
 		BooleanQuery query = new BooleanQuery();
