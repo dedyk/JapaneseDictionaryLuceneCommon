@@ -642,6 +642,25 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 
 	@Override
+	public int getDictionaryEntriesNameSize() {
+
+		BooleanQuery query = new BooleanQuery();
+
+		// object type
+		PhraseQuery phraseQuery = new PhraseQuery();
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry_objectType));
+
+		query.add(phraseQuery, Occur.MUST);
+
+		try {
+			return searcher.search(query, null, Integer.MAX_VALUE).scoreDocs.length;			
+
+		} catch (IOException e) {
+			throw new RuntimeException("Błąd podczas pobierania liczby słówek: " + e);
+		}		
+	}
+	
+	@Override
 	public List<GroupEnum> getDictionaryEntryGroupTypes() {
 
 		BooleanQuery query = new BooleanQuery();
