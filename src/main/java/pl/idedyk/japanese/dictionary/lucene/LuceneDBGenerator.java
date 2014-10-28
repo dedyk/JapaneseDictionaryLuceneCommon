@@ -1,6 +1,7 @@
 package pl.idedyk.japanese.dictionary.lucene;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,7 +61,7 @@ public class LuceneDBGenerator {
 		String sentencesGroupsFilePath = args[2];		
 		String kanjiFilePath = args[3];
 		String radicalFilePath = args[4];
-		String nameFilePath = args[5];
+		final String nameFilePath = args[5];
 		
 		boolean addSugestionList = Boolean.parseBoolean(args[6]);
 		boolean addGrammaAndExample = Boolean.parseBoolean(args[7]);
@@ -93,7 +94,7 @@ public class LuceneDBGenerator {
 		indexWriterConfig.setOpenMode(OpenMode.CREATE);
 		
 		IndexWriter indexWriter = new IndexWriter(index, indexWriterConfig);
-		
+
 		// otwarcie pliku ze slownikiem
 		FileInputStream dictionaryInputStream = new FileInputStream(dictionaryFilePath);
 
@@ -138,16 +139,25 @@ public class LuceneDBGenerator {
 		kanjiInputStream.close();
 		
 		// wczytywanie pliku z nazwami
-		if (new File(nameFilePath).canRead() == true) {		
-			FileInputStream namesInputStream = new FileInputStream(nameFilePath);
-	
-			// wczytywanie slownika
+		File[] namesList = new File(nameFilePath).getParentFile().listFiles(new FileFilter() {
+			
+			@Override
+			public boolean accept(File pathname) {				
+				return pathname.getPath().startsWith(nameFilePath);
+			}
+		});
+		
+		for (File currentName : namesList) {
+			
+			FileInputStream namesInputStream = new FileInputStream(currentName);
+			
+			// wczytywanie slownika nazw
 			readNamesFile(indexWriter, namesInputStream, addSugestionList);
 	
 			// zamkniecie pliku
 			namesInputStream.close();
-		}
-		
+		}		
+				
 		// zakonczenie zapisywania indeksu
 		indexWriter.close();
 				
