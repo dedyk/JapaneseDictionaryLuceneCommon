@@ -1433,9 +1433,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
-
-		query.add(createQuery(id, LuceneStatic.kanjiEntry_id, FindKanjiRequest.WordPlaceSearch.EXACT), Occur.MUST);
-
+		
+		query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry_id, Integer.parseInt(id), Integer.parseInt(id), true, true), Occur.MUST);
+		
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
 
