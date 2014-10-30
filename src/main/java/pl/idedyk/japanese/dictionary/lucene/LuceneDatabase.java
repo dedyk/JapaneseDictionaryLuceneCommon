@@ -51,23 +51,16 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	private String dbDir;
 	
-	private boolean useSuggester;
-
 	private Directory index;
 	private SimpleAnalyzer analyzer;
 	private IndexReader reader;
 	private IndexSearcher searcher;
 
-	private LuceneDictionary wordDictionaryEntryDictionary;
 	private AnalyzingSuggester wordDictionaryEntryAnalyzingSuggester;
-
-	private LuceneDictionary kanjiEntryDictionary;
 	private AnalyzingSuggester kanjiEntryAnalyzingSuggester;
 	
-	public LuceneDatabase(String dbDir, boolean useSuggester) {
-		this.dbDir = dbDir;		
-		
-		this.useSuggester = useSuggester;
+	public LuceneDatabase(String dbDir) {
+		this.dbDir = dbDir;
 	}
 
 	public void open() throws IOException {
@@ -76,18 +69,24 @@ public class LuceneDatabase implements IDatabaseConnector {
 		analyzer = new SimpleAnalyzer(Version.LUCENE_47);
 		reader = DirectoryReader.open(index);
 		searcher = new IndexSearcher(reader);
+	}
+	
+	public void openSuggester() throws IOException {
 		
-		if (useSuggester == true) {
-			wordDictionaryEntryDictionary = new LuceneDictionary(reader, LuceneStatic.dictionaryEntry_sugestionList);				
-			wordDictionaryEntryAnalyzingSuggester = new AnalyzingSuggester(analyzer);
+		LuceneDictionary wordDictionaryEntryDictionaryLocal = new LuceneDictionary(reader, LuceneStatic.dictionaryEntry_sugestionList);				
+		AnalyzingSuggester wordDictionaryEntryAnalyzingSuggesterLocal = new AnalyzingSuggester(analyzer);
 
-			wordDictionaryEntryAnalyzingSuggester.build(wordDictionaryEntryDictionary);
+		wordDictionaryEntryAnalyzingSuggesterLocal.build(wordDictionaryEntryDictionaryLocal);
 
-			kanjiEntryDictionary = new LuceneDictionary(reader, LuceneStatic.kanjiEntry_sugestionList);				
-			kanjiEntryAnalyzingSuggester = new AnalyzingSuggester(analyzer);
+		LuceneDictionary kanjiEntryDictionaryLocal = new LuceneDictionary(reader, LuceneStatic.kanjiEntry_sugestionList);				
+		AnalyzingSuggester kanjiEntryAnalyzingSuggesterLocal = new AnalyzingSuggester(analyzer);
 
-			kanjiEntryAnalyzingSuggester.build(kanjiEntryDictionary);			
-		}
+		kanjiEntryAnalyzingSuggesterLocal.build(kanjiEntryDictionaryLocal);
+		
+		// ustawienie
+		wordDictionaryEntryAnalyzingSuggester = wordDictionaryEntryAnalyzingSuggesterLocal;
+		
+		kanjiEntryAnalyzingSuggester = kanjiEntryAnalyzingSuggesterLocal;
 	}
 
 	public void close() throws IOException {
