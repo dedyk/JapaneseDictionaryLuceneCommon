@@ -1415,35 +1415,69 @@ public class LuceneDatabase implements IDatabaseConnector {
 			}
 
 			Document foundDocument = searcher.doc(scoreDocs[0].doc);
-
-			String idString = foundDocument.get(LuceneStatic.kanjiEntry_id);
-
-			String kanjiString = foundDocument.get(LuceneStatic.kanjiEntry_kanji);
-
-			String strokeCountString = foundDocument.get(LuceneStatic.kanjiEntry_kanjiDic2Entry_strokeCount);
-
-			List<String> strokePathsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths));
-
-			String generated = foundDocument.get(LuceneStatic.kanjiEntry_generated);
-
-			List<String> radicalsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList));
-
-			List<String> onReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_onReadingList));
-			List<String> kunReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_kunReadingList));
-
-			List<String> polishTranslateList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_polishTranslatesList));
-
-			List<String> groupsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_groupsList));
-
-			String infoString = foundDocument.get(LuceneStatic.kanjiEntry_info);
-
-			return Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
-					onReadingList, kunReadingList, strokePathsList, polishTranslateList, infoString, generated,
-					groupsList);
+			
+			return createKanjiEntry(foundDocument);
 
 		} catch (IOException e) {
 			throw new DictionaryException("Błąd podczas pobierania znaku kanji: " + e);
 		}		
+	}
+	
+	@Override
+	public KanjiEntry getKanjiEntryById(String id) throws DictionaryException {
+
+		BooleanQuery query = new BooleanQuery();
+		
+		// object type
+		PhraseQuery phraseQuery = new PhraseQuery();
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry_objectType));
+
+		query.add(phraseQuery, Occur.MUST);
+
+		query.add(createQuery(id, LuceneStatic.kanjiEntry_id, FindKanjiRequest.WordPlaceSearch.EXACT), Occur.MUST);
+
+		try {
+			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
+
+			if (scoreDocs.length == 0) {
+				return null;
+			}
+
+			Document foundDocument = searcher.doc(scoreDocs[0].doc);
+			
+			return createKanjiEntry(foundDocument);
+
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania znaku kanji: " + e);
+		}		
+	}
+	
+	private KanjiEntry createKanjiEntry(Document document) throws DictionaryException {
+		
+		String idString = document.get(LuceneStatic.kanjiEntry_id);
+
+		String kanjiString = document.get(LuceneStatic.kanjiEntry_kanji);
+
+		String strokeCountString = document.get(LuceneStatic.kanjiEntry_kanjiDic2Entry_strokeCount);
+
+		List<String> strokePathsList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths));
+
+		String generated = document.get(LuceneStatic.kanjiEntry_generated);
+
+		List<String> radicalsList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList));
+
+		List<String> onReadingList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_onReadingList));
+		List<String> kunReadingList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_kunReadingList));
+
+		List<String> polishTranslateList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_polishTranslatesList));
+
+		List<String> groupsList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_groupsList));
+
+		String infoString = document.get(LuceneStatic.kanjiEntry_info);
+
+		return Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
+				onReadingList, kunReadingList, strokePathsList, polishTranslateList, infoString, generated,
+				groupsList);		
 	}
 
 	@Override
