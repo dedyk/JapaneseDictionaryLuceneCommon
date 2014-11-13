@@ -105,6 +105,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		FindWordResult findWordResult = new FindWordResult();
 		findWordResult.result = new ArrayList<FindWordResult.ResultItem>();
+		
+		if (findWordRequest.searchMainDictionary == false) {
+			return findWordResult;
+		}
 
 		final int maxResult = 50;
 
