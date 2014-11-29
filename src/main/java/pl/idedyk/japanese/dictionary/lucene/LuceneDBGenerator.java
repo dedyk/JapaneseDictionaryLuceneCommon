@@ -454,6 +454,13 @@ public class LuceneDBGenerator {
 		for (String currentRomaji : romajiList) {
 			document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
 			
+			if (currentRomaji.contains(" ") == true) {
+				
+				String currentRomajiWithoutSpace = currentRomaji.replaceAll(" ", "");
+				
+				document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomajiWithoutSpace, Field.Store.YES));				
+			}			
+			
 			if (addSugestionList == true) {
 				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(currentRomaji), Field.Store.YES));
 			}
@@ -492,6 +499,13 @@ public class LuceneDBGenerator {
 		
 		for (String currentRomaji : romajiList) {
 			document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
+			
+			if (currentRomaji.contains(" ") == true) {
+				
+				String currentRomajiWithoutSpace = currentRomaji.replaceAll(" ", "");
+				
+				document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomajiWithoutSpace, Field.Store.YES));				
+			}			
 			
 			if (addSugestionList == true) {
 				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(currentRomaji), Field.Store.YES));
@@ -897,6 +911,13 @@ public class LuceneDBGenerator {
 		
 		for (String currentRomaji : romajiList) {
 			document.add(new TextField(LuceneStatic.nameDictionaryEntry_romajiList, currentRomaji, Field.Store.YES));
+			
+			if (currentRomaji.contains(" ") == true) {
+				
+				String currentRomajiWithoutSpace = currentRomaji.replaceAll(" ", "");
+				
+				document.add(new TextField(LuceneStatic.nameDictionaryEntry_virtual_romajiList, currentRomajiWithoutSpace, Field.Store.YES));				
+			}			
 			
 			if (addSugestionList == true) {
 				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, currentRomaji, Field.Store.YES));

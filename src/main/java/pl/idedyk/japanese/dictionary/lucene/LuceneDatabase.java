@@ -1082,6 +1082,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			if (findWordRequest.searchRomaji == true) {
 				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 			}
 
 			query.add(wordBooleanQuery, Occur.MUST);
@@ -1204,7 +1205,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.nameDictionaryEntry_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.nameDictionaryEntry_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.nameDictionaryEntry_virtual_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchTranslate == true) {
