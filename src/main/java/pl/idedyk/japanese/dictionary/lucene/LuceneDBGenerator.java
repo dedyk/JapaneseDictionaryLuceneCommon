@@ -28,7 +28,6 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
-import pl.idedyk.japanese.dictionary.api.dictionary.lucene.LuceneStatic;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
@@ -696,7 +695,7 @@ public class LuceneDBGenerator {
 			String polishTranslateListString = csvReader.get(7);
 			String infoString = csvReader.get(8);
 
-			String generatedString = csvReader.get(9);
+			String usedString = csvReader.get(9);
 
 			String groupString = csvReader.get(10);
 
@@ -704,7 +703,7 @@ public class LuceneDBGenerator {
 					Utils.parseStringIntoList(radicalsString, false),
 					Utils.parseStringIntoList(onReadingString, false),
 					Utils.parseStringIntoList(kunReadingString, false), strokePathString,
-					Utils.parseStringIntoList(polishTranslateListString, false), infoString, generatedString,
+					Utils.parseStringIntoList(polishTranslateListString, false), infoString, usedString,
 					Utils.parseStringIntoList(groupString, false));
 
 			// update radical info
@@ -783,7 +782,7 @@ public class LuceneDBGenerator {
 		document.add(new TextField(LuceneStatic.kanjiEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.YES));
 
 		// generated
-		document.add(new StringField(LuceneStatic.kanjiEntry_generated, String.valueOf(kanjiEntry.isGenerated()), Field.Store.YES));
+		document.add(new StringField(LuceneStatic.kanjiEntry_used, String.valueOf(kanjiEntry.isUsed()), Field.Store.YES));
 				
 		// groupsList
 		List<String> groupsList = GroupEnum.convertToValues(kanjiEntry.getGroups());
