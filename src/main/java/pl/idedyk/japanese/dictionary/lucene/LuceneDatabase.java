@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -51,7 +50,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	private String dbDir;
 	
 	private Directory index;
-	private SimpleAnalyzer analyzer;
+	private LuceneAnalyzer analyzer;
 	private IndexReader reader;
 	private IndexSearcher searcher;
 
@@ -65,7 +64,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	public void open() throws IOException {
 
 		index = FSDirectory.open(new File(dbDir));
-		analyzer = new SimpleAnalyzer(Version.LUCENE_47);
+		analyzer = new LuceneAnalyzer(Version.LUCENE_47);
 		reader = DirectoryReader.open(index);
 		searcher = new IndexSearcher(reader);
 	}

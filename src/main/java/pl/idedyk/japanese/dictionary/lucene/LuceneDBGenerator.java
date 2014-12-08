@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntField;
@@ -54,6 +53,35 @@ public class LuceneDBGenerator {
 	
 	public static void main(String[] args) throws Exception {
 	
+		/*
+		// test tokenizera
+		LuceneAnalyzer analyzerTest = new LuceneAnalyzer(Version.LUCENE_47);
+		
+		//String text = "1";
+		//String text = "1 ala";
+		String text = "Ala ma kota i psa";
+		//String text = "Ala ma kota i psa2 i abc";
+		//String text = "dziesięć lat";
+		//String text = "お早う御座います";
+		
+		TokenStream tokenStream = analyzerTest.tokenStream("a", text);
+		
+		tokenStream.reset();
+		
+		while(true) {
+			
+			boolean incrementTokenResult = tokenStream.incrementToken();
+			
+			if (incrementTokenResult == false) {
+				break;
+			}
+			
+			System.out.println("Token: " + tokenStream.getAttribute(CharTermAttribute.class).toString());			
+		}
+						
+		System.exit(1);
+		*/
+		
 		// parametry
 		String dictionaryFilePath = args[0];
 		String sentencesFilePath = args[1];
@@ -86,7 +114,7 @@ public class LuceneDBGenerator {
 		Directory index = FSDirectory.open(dbOutDirFile);
 		
 		// tworzenie analizatora lucene
-		SimpleAnalyzer analyzer = new SimpleAnalyzer(Version.LUCENE_47);
+		LuceneAnalyzer analyzer = new LuceneAnalyzer(Version.LUCENE_47);
 		
 		// tworzenie zapisywacza konfiguracji
 		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
