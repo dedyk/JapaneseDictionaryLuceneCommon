@@ -284,35 +284,31 @@ public class LuceneDBGenerator {
 		}
 		
 		// kanaList
-		List<String> kanaList = dictionaryEntry.getKanaList();
+		String kana = dictionaryEntry.getKana();
 		
-		for (String currentKana : kanaList) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry_kanaList, currentKana, Field.Store.YES));
-			
-			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, currentKana, Field.Store.YES));
-			}
+		document.add(new StringField(LuceneStatic.dictionaryEntry_kana, kana, Field.Store.YES));
+		
+		if (addSugestionList == true) {
+			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, kana, Field.Store.YES));
 		}
 		
 		// prefixRomaji
 		document.add(new StringField(LuceneStatic.dictionaryEntry_prefixRomaji, emptyIfNull(dictionaryEntry.getPrefixRomaji()), Field.Store.YES));
 		
 		// romajiList
-		List<String> romajiList = dictionaryEntry.getRomajiList();
+		String romaji = dictionaryEntry.getRomaji();
+				
+		document.add(new TextField(LuceneStatic.dictionaryEntry_romaji, romaji, Field.Store.YES));
 		
-		for (String currentRomaji : romajiList) {
-			document.add(new TextField(LuceneStatic.dictionaryEntry_romajiList, currentRomaji, Field.Store.YES));
+		if (romaji.contains(" ") == true) {
 			
-			if (currentRomaji.contains(" ") == true) {
-				
-				String currentRomajiWithoutSpace = currentRomaji.replaceAll(" ", "");
-				
-				document.add(new TextField(LuceneStatic.dictionaryEntry_virtual_romajiList, currentRomajiWithoutSpace, Field.Store.YES));				
-			}			
+			String romajiWithoutSpace = romaji.replaceAll(" ", "");
 			
-			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, currentRomaji, Field.Store.YES));
-			}
+			document.add(new TextField(LuceneStatic.dictionaryEntry_virtual_romaji, romajiWithoutSpace, Field.Store.YES));				
+		}			
+		
+		if (addSugestionList == true) {
+			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, romaji, Field.Store.YES));
 		}
 		
 		// translatesList
@@ -923,32 +919,28 @@ public class LuceneDBGenerator {
 		}
 		
 		// kanaList
-		List<String> kanaList = dictionaryEntry.getKanaList();
+		String kana = dictionaryEntry.getKana();
 		
-		for (String currentKana : kanaList) {
-			document.add(new StringField(LuceneStatic.nameDictionaryEntry_kanaList, currentKana, Field.Store.YES));
-			
-			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, currentKana, Field.Store.YES));
-			}
+		document.add(new StringField(LuceneStatic.nameDictionaryEntry_kana, kana, Field.Store.YES));
+		
+		if (addSugestionList == true) {
+			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, kana, Field.Store.YES));
 		}
 				
 		// romajiList
-		List<String> romajiList = dictionaryEntry.getRomajiList();
+		String romaji = dictionaryEntry.getRomaji();
 		
-		for (String currentRomaji : romajiList) {
-			document.add(new TextField(LuceneStatic.nameDictionaryEntry_romajiList, currentRomaji, Field.Store.YES));
+		document.add(new TextField(LuceneStatic.nameDictionaryEntry_romaji, romaji, Field.Store.YES));
+		
+		if (romaji.contains(" ") == true) {
 			
-			if (currentRomaji.contains(" ") == true) {
-				
-				String currentRomajiWithoutSpace = currentRomaji.replaceAll(" ", "");
-				
-				document.add(new TextField(LuceneStatic.nameDictionaryEntry_virtual_romajiList, currentRomajiWithoutSpace, Field.Store.YES));				
-			}			
+			String romajiWithoutSpace = romaji.replaceAll(" ", "");
 			
-			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, currentRomaji, Field.Store.YES));
-			}
+			document.add(new TextField(LuceneStatic.nameDictionaryEntry_virtual_romaji, romajiWithoutSpace, Field.Store.YES));				
+		}			
+		
+		if (addSugestionList == true) {
+			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, romaji, Field.Store.YES));
 		}
 		
 		// translatesList

@@ -12,10 +12,10 @@ public class LuceneStatic {
 	public static final String dictionaryEntry_groupsList = "dictionaryEntry_groupsList";
 	public static final String dictionaryEntry_prefixKana = "dictionaryEntry_prefixKana";
 	public static final String dictionaryEntry_kanji = "dictionaryEntry_kanji";
-	public static final String dictionaryEntry_kanaList = "dictionaryEntry_kanaList";
+	public static final String dictionaryEntry_kana = "dictionaryEntry_kana";
 	public static final String dictionaryEntry_prefixRomaji = "dictionaryEntry_prefixRomaji";
-	public static final String dictionaryEntry_romajiList = "dictionaryEntry_romajiList";
-	public static final String dictionaryEntry_virtual_romajiList = "dictionaryEntry_virtual_romajiList";
+	public static final String dictionaryEntry_romaji = "dictionaryEntry_romaji";
+	public static final String dictionaryEntry_virtual_romaji = "dictionaryEntry_virtual_romaji";
 	public static final String dictionaryEntry_translatesList = "dictionaryEntry_translatesList";
 	public static final String dictionaryEntry_translatesListWithoutPolishChars = "dictionaryEntry_translatesListWithoutPolishChars";
 	public static final String dictionaryEntry_info = "dictionaryEntry_info";
@@ -48,9 +48,9 @@ public class LuceneStatic {
 	public static final String nameDictionaryEntry_id = "nameDictionaryEntry_id";
 	public static final String nameDictionaryEntry_dictionaryEntryTypeList = "nameDictionaryEntry_dictionaryEntryTypeList";
 	public static final String nameDictionaryEntry_kanji = "nameDictionaryEntry_kanji";
-	public static final String nameDictionaryEntry_kanaList = "nameDictionaryEntry_kanaList";
-	public static final String nameDictionaryEntry_romajiList = "nameDictionaryEntry_romajiList";
-	public static final String nameDictionaryEntry_virtual_romajiList = "nameDictionaryEntry_virtual_romajiList";
+	public static final String nameDictionaryEntry_kana = "nameDictionaryEntry_kana";
+	public static final String nameDictionaryEntry_romaji = "nameDictionaryEntry_romaji";
+	public static final String nameDictionaryEntry_virtual_romaji = "nameDictionaryEntry_virtual_romaji";
 	public static final String nameDictionaryEntry_translatesList = "nameDictionaryEntry_translatesList";
 	public static final String nameDictionaryEntry_translatesListWithoutPolishChars = "nameDictionaryEntry_translatesListWithoutPolishChars";
 	public static final String nameDictionaryEntry_info = "nameDictionaryEntry_info";
