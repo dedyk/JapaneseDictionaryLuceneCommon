@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -1547,7 +1549,27 @@ public class LuceneDatabase implements IDatabaseConnector {
 						groupsList);
 
 				result.add(kanjiEntry);
-			}				
+			}
+			
+			Collections.sort(result, new Comparator<KanjiEntry>() {
+
+				@Override
+				public int compare(KanjiEntry o1, KanjiEntry o2) {
+					
+					int o1id = o1.getId();
+					int o2id = o2.getId();
+					
+					if (o1id < o2id) {
+						return -1;
+						
+					} else if (o1id > o2id) {
+						return 1;
+						
+					} else {
+						return 0;
+					}
+				}
+			});
 
 			return result;
 
