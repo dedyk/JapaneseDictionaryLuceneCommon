@@ -1593,6 +1593,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		return result;
 	}
+	
+	public boolean isWordAutocompleteInitialized() {
+		return wordDictionaryEntryAnalyzingSuggester != null;
+	}
 
 	public List<String> getKanjiAutocomplete(String term, int limit) {
 		
@@ -1608,6 +1612,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 
 		return result;
+	}
+	
+	public boolean isKanjiAutocompleteInitialized() {
+		return kanjiEntryAnalyzingSuggester != null;
 	}
 
 	@Override
