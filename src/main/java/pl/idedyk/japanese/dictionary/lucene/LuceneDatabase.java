@@ -169,10 +169,14 @@ public class LuceneDatabase implements IDatabaseConnector {
 						findWordRequest.wordPlaceSearch), Occur.SHOULD);
 			}
 
-			createDictionaryEntryListFilter(wordBooleanQuery, LuceneStatic.dictionaryEntry_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
-
 			query.add(wordBooleanQuery, Occur.MUST);
 
+			BooleanQuery dictionaryEntryTypeListFilter = createDictionaryEntryTypeListFilter(LuceneStatic.dictionaryEntry_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
+			
+			if (dictionaryEntryTypeListFilter != null) {
+				query.add(dictionaryEntryTypeListFilter, Occur.MUST);
+			}			
+			
 			ScoreDoc[] scoreDocs = searcher.search(query, null, maxResult + 1).scoreDocs;
 
 			for (ScoreDoc scoreDoc : scoreDocs) {
@@ -606,26 +610,19 @@ public class LuceneDatabase implements IDatabaseConnector {
 		return booleanQuery;
 	}
 
-	private void createDictionaryEntryListFilter(BooleanQuery wordBooleanQuery, String typeFieldName, List<DictionaryEntryType> dictionaryEntryList) {
+	private BooleanQuery createDictionaryEntryTypeListFilter(String typeFieldName, List<DictionaryEntryType> dictionaryEntryTypeList) {
 
-		if (dictionaryEntryList != null && dictionaryEntryList.size() > 0) {
+		if (dictionaryEntryTypeList == null) {			
+			return null;
+		}
 
-			DictionaryEntryType[] allDictionaryEntryTypes = DictionaryEntryType.values();
-
-			List<DictionaryEntryType> mustNotDictionaryEntryList = new ArrayList<DictionaryEntryType>();
-
-			for (DictionaryEntryType currentDictionaryEntry : allDictionaryEntryTypes) {
-				if (dictionaryEntryList.contains(currentDictionaryEntry) == false) {
-					mustNotDictionaryEntryList.add(currentDictionaryEntry);
-				}
-			}				
-
-			List<String> mustNotDictionaryEntryStringList = DictionaryEntryType.convertToValues(mustNotDictionaryEntryList);
-
-			for (String currentMustNotDictionaryEntryStringList : mustNotDictionaryEntryStringList) {
-				wordBooleanQuery.add(createQuery(currentMustNotDictionaryEntryStringList, typeFieldName, WordPlaceSearch.EXACT), Occur.MUST_NOT);
-			}
-		}	
+		BooleanQuery booleanQuery = new BooleanQuery();
+		
+		for (DictionaryEntryType dictionaryEntryType : dictionaryEntryTypeList) {
+			booleanQuery.add(createQuery(dictionaryEntryType.toString(), typeFieldName, WordPlaceSearch.EXACT), Occur.SHOULD);
+		}			
+		
+		return booleanQuery;
 	}
 
 	@Override
@@ -1223,8 +1220,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 						findWordRequest.wordPlaceSearch), Occur.SHOULD);
 			}
 
-			createDictionaryEntryListFilter(wordBooleanQuery, LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
-
+			BooleanQuery dictionaryEntryTypeListFilter = createDictionaryEntryTypeListFilter(LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
+			
+			if (dictionaryEntryTypeListFilter != null) {
+				query.add(dictionaryEntryTypeListFilter, Occur.MUST);
+			}			
+			
 			query.add(wordBooleanQuery, Occur.MUST);			
 			
 			ScoreDoc[] scoreDocs = searcher.search(query, null, maxResult).scoreDocs;
