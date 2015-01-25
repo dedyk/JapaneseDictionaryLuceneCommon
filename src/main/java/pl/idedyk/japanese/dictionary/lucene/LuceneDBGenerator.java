@@ -305,7 +305,14 @@ public class LuceneDBGenerator {
 			String romajiWithoutSpace = romaji.replaceAll(" ", "");
 			
 			document.add(new TextField(LuceneStatic.dictionaryEntry_virtual_romaji, romajiWithoutSpace, Field.Store.YES));				
-		}			
+		}
+		
+		if (romaji.contains("'") == true) {
+			
+			String romajiWithoutChar = romaji.replaceAll("'", "");
+			
+			document.add(new TextField(LuceneStatic.dictionaryEntry_virtual_romaji, romajiWithoutChar, Field.Store.YES));							
+		}		
 		
 		if (addSugestionList == true) {
 			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, romaji, Field.Store.YES));
