@@ -91,9 +91,28 @@ public class LuceneDBGenerator {
 		final String nameFilePath = args[5];
 		
 		boolean addSugestionList = Boolean.parseBoolean(args[6]);
-		boolean addGrammaAndExample = Boolean.parseBoolean(args[7]);
+		boolean addGrammaAndExample = Boolean.parseBoolean(args[7]);		
 		
 		String dbOutDir = args[8];
+			
+		////
+		/*
+		int fixme = 1;
+		
+		String dictionaryFilePath = "db/word.csv";
+		String sentencesFilePath = "db/sentences.csv";
+		String sentencesGroupsFilePath = "db/sentences_groups.csv";		
+		String kanjiFilePath = "db/kanji.csv";
+		String radicalFilePath = "db/radical.csv";
+		
+		final String nameFilePath = "db/names.csv";
+		
+		boolean addSugestionList = true;
+		boolean addGrammaAndExample = true;
+		
+		String dbOutDir = "db-lucene";
+		*/
+		////
 						
 		final File dbOutDirFile = new File(dbOutDir);
 		
@@ -227,6 +246,8 @@ public class LuceneDBGenerator {
 		while (csvReader.readRecord()) {
 
 			DictionaryEntry entry = parseDictionaryEntry(csvReader);
+			
+			System.out.println(String.format("DictionaryEntry id = %s", entry.getId()));
 
 			addDictionaryEntry(indexWriter, entry, addSugestionList);
 
@@ -299,20 +320,9 @@ public class LuceneDBGenerator {
 		String romaji = dictionaryEntry.getRomaji();
 				
 		document.add(new TextField(LuceneStatic.dictionaryEntry_romaji, romaji, Field.Store.YES));
-		
-		if (romaji.contains(" ") == true) {
-			
-			String romajiWithoutSpace = romaji.replaceAll(" ", "");
-			
-			document.add(new TextField(LuceneStatic.dictionaryEntry_virtual_romaji, romajiWithoutSpace, Field.Store.YES));				
-		}
-		
-		if (romaji.contains("'") == true) {
-			
-			String romajiWithoutChar = romaji.replaceAll("'", "");
-			
-			document.add(new TextField(LuceneStatic.dictionaryEntry_virtual_romaji, romajiWithoutChar, Field.Store.YES));							
-		}		
+
+		// dodanie alternatyw romaji
+		addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_virtual_romaji, romaji);
 		
 		if (addSugestionList == true) {
 			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, romaji, Field.Store.YES));
@@ -353,11 +363,45 @@ public class LuceneDBGenerator {
 		indexWriter.addDocument(document);
 	}
 	
+	private static void addAlternativeRomaji(Document document, String fieldName, String romaji) {
+		
+		if (romaji.contains(" ") == true) {
+			
+			String romajiWithoutSpace = romaji.replaceAll(" ", "");
+			
+			document.add(new TextField(fieldName, romajiWithoutSpace, Field.Store.YES));				
+		}
+		
+		if (romaji.contains("'") == true) {
+			
+			String romajiWithoutChar = romaji.replaceAll("'", "");
+			
+			document.add(new TextField(fieldName, romajiWithoutChar, Field.Store.YES));							
+		}		
+		
+		if (romaji.contains("du") == true) {
+			
+			String romajiDzu = romaji.replaceAll("du", "dzu");
+			
+			document.add(new TextField(fieldName, romajiDzu, Field.Store.YES));
+		}
+		
+		if (romaji.contains(" o ") == true) {
+			
+			String romajiWo = romaji.replaceAll(" o ", " wo ");
+						
+			document.add(new TextField(fieldName, romajiWo, Field.Store.YES));
+		}
+	}
+	
 	private static void countGrammaFormAndExamples(List<DictionaryEntry> dictionaryEntryList, IndexWriter indexWriter, boolean addGrammaAndExample, boolean addSugestionList) throws IOException {
 		
 		KeigoHelper keigoHelper = new KeigoHelper();
 		
 		for (DictionaryEntry dictionaryEntry : dictionaryEntryList) {
+			
+			System.out.println(String.format("DictionaryEntry(countGrammaFormAndExamples) id = %s", dictionaryEntry.getId()));
+			
 			// count form for dictionary entry
 			countGrammaFormAndExamples(indexWriter, dictionaryEntry, keigoHelper, addGrammaAndExample, addSugestionList);	
 		}
@@ -484,13 +528,9 @@ public class LuceneDBGenerator {
 		for (String currentRomaji : romajiList) {
 			document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
 			
-			if (currentRomaji.contains(" ") == true) {
-				
-				String currentRomajiWithoutSpace = currentRomaji.replaceAll(" ", "");
-				
-				document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomajiWithoutSpace, Field.Store.YES));				
-			}			
-			
+			// dodanie alternatyw romaji
+			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji);
+						
 			if (addSugestionList == true) {
 				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(currentRomaji), Field.Store.YES));
 			}
@@ -530,12 +570,8 @@ public class LuceneDBGenerator {
 		for (String currentRomaji : romajiList) {
 			document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
 			
-			if (currentRomaji.contains(" ") == true) {
-				
-				String currentRomajiWithoutSpace = currentRomaji.replaceAll(" ", "");
-				
-				document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomajiWithoutSpace, Field.Store.YES));				
-			}			
+			// dodanie alternatyw romaji
+			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji);
 			
 			if (addSugestionList == true) {
 				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(currentRomaji), Field.Store.YES));
@@ -556,6 +592,8 @@ public class LuceneDBGenerator {
 			String id = csvReader.get(0);
 			String lang = csvReader.get(1);
 			String sentence = csvReader.get(2);
+			
+			System.out.println(String.format("TatoebaSentence id = %s", id));
 			
 			TatoebaSentence tatoebaSentence = new TatoebaSentence();
 			
@@ -737,6 +775,8 @@ public class LuceneDBGenerator {
 					Utils.parseStringIntoList(polishTranslateListString, false), infoString, usedString,
 					Utils.parseStringIntoList(groupString, false));
 
+			System.out.println(String.format("KanjiEntry id = %s", entry.getId()));
+			
 			// update radical info
 			if (entry.getKanjiDic2Entry() != null) {
 				//updateRadicalInfoUse(radicalListMapCache, entry.getKanjiDic2Entry().getRadicals());
@@ -890,6 +930,8 @@ public class LuceneDBGenerator {
 		while (csvReader.readRecord()) {
 
 			DictionaryEntry entry = parseDictionaryEntry(csvReader);
+			
+			System.out.println(String.format("DictionaryEntry (name) id = %s", entry.getId()));
 
 			addNameDictionaryEntry(indexWriter, entry, addSugestionList);
 			
@@ -939,13 +981,8 @@ public class LuceneDBGenerator {
 		
 		document.add(new TextField(LuceneStatic.nameDictionaryEntry_romaji, romaji, Field.Store.YES));
 		
-		if (romaji.contains(" ") == true) {
-			
-			String romajiWithoutSpace = romaji.replaceAll(" ", "");
-			
-			document.add(new TextField(LuceneStatic.nameDictionaryEntry_virtual_romaji, romajiWithoutSpace, Field.Store.YES));				
-		}			
-		
+		addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry_virtual_romaji, romaji);
+				
 		if (addSugestionList == true) {
 			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, romaji, Field.Store.YES));
 		}
