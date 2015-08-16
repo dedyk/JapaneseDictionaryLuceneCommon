@@ -392,6 +392,28 @@ public class LuceneDBGenerator {
 						
 			document.add(new TextField(fieldName, romajiWo, Field.Store.YES));
 		}
+
+		if (romaji.contains("tsu") == true) {
+			
+			String romajiTu = romaji.replaceAll("tsu", "tu");
+			
+			document.add(new TextField(fieldName, romajiTu, Field.Store.YES));
+		}
+
+		if (romaji.contains("shi") == true) {
+			
+			String romajiSi = romaji.replaceAll("shi", "si");
+						
+			document.add(new TextField(fieldName, romajiSi, Field.Store.YES));
+		}
+
+		if (romaji.contains("fu") == true) {
+			
+			String romajiHu = romaji.replaceAll("fu", "hu");
+						
+			document.add(new TextField(fieldName, romajiHu, Field.Store.YES));
+		}
+		
 	}
 	
 	private static void countGrammaFormAndExamples(List<DictionaryEntry> dictionaryEntryList, IndexWriter indexWriter, boolean addGrammaAndExample, boolean addSugestionList) throws IOException {
