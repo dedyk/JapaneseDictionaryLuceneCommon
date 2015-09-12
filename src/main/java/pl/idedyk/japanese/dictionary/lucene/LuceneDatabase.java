@@ -36,7 +36,7 @@ import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiRequest;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest.WordPlaceSearch;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
 import pl.idedyk.japanese.dictionary.api.dto.AttributeType;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
@@ -532,84 +532,70 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	private Query createQuery(String[] wordSplited, String fieldName, WordPlaceSearch wordPlaceSearch) {
 
-		BooleanQuery booleanQuery = new BooleanQuery();
-
 		if (wordPlaceSearch == WordPlaceSearch.START_WITH) {
-
+			
+			BooleanQuery exactQuery = new BooleanQuery();
+			
 			for (String currentWord : wordSplited) {
-				booleanQuery.add(new PrefixQuery(new Term(fieldName, currentWord)), Occur.MUST);
+				exactQuery.add(new TermQuery(new Term(fieldName, currentWord)), Occur.MUST);
 			}
 
+			BooleanQuery startWithQuery = new BooleanQuery();
+			
+			for (String currentWord : wordSplited) {
+				startWithQuery.add(new PrefixQuery(new Term(fieldName, currentWord)), Occur.MUST);
+			}
+			
+			BooleanQuery booleanQuery = new BooleanQuery();
+			
+			booleanQuery.add(exactQuery, Occur.SHOULD);
+			booleanQuery.add(startWithQuery, Occur.MUST);
+
+			return booleanQuery;
+			
 		} else if (wordPlaceSearch == WordPlaceSearch.EXACT) {
 
+			BooleanQuery booleanQuery = new BooleanQuery();
+			
 			for (String currentWord : wordSplited) {
-				booleanQuery.add(new TermQuery(new Term(fieldName, currentWord)), Occur.MUST);;
+				booleanQuery.add(new TermQuery(new Term(fieldName, currentWord)), Occur.MUST);
 			}
+			
+			return booleanQuery;
 
 		} else {
 			throw new RuntimeException();
 		}
-
-		return booleanQuery;
 	}
 
 	private Query createQuery(String word, String fieldName, WordPlaceSearch wordPlaceSearch) {
 
-		Query query = null;
-
 		if (wordPlaceSearch == WordPlaceSearch.START_WITH) {
-			query = new PrefixQuery(new Term(fieldName, word));
+			
+			BooleanQuery exactQuery = new BooleanQuery();			
+			exactQuery.add(new TermQuery(new Term(fieldName, word)), Occur.MUST);
 
+			BooleanQuery startWithQuery = new BooleanQuery();
+			startWithQuery.add(new PrefixQuery(new Term(fieldName, word)), Occur.MUST);
+			
+			BooleanQuery booleanQuery = new BooleanQuery();
+			
+			booleanQuery.add(exactQuery, Occur.SHOULD);
+			booleanQuery.add(startWithQuery, Occur.MUST);
+
+			return booleanQuery;
+			
 		} else if (wordPlaceSearch == WordPlaceSearch.EXACT) {
-			query = new TermQuery(new Term(fieldName, word));
+			
+			Query query = new TermQuery(new Term(fieldName, word));
+			
+			return query;
 
 		} else {
 			throw new RuntimeException();
 		}
-
-		return query;
 	}
-
-	private Query createQuery(String word, String fieldName, FindKanjiRequest.WordPlaceSearch wordPlaceSearch) {
-
-		Query query = null;
-
-		if (wordPlaceSearch == FindKanjiRequest.WordPlaceSearch.START_WITH) {
-			query = new PrefixQuery(new Term(fieldName, word));
-
-		} else if (wordPlaceSearch == FindKanjiRequest.WordPlaceSearch.EXACT) {
-			query = new TermQuery(new Term(fieldName, word));
-
-		} else {
-			throw new RuntimeException();
-		}
-
-		return query;
-	}
-
-	private Query createQuery(String[] wordSplited, String fieldName, FindKanjiRequest.WordPlaceSearch wordPlaceSearch) {
-
-		BooleanQuery booleanQuery = new BooleanQuery();
-
-		if (wordPlaceSearch == FindKanjiRequest.WordPlaceSearch.START_WITH) {
-
-			for (String currentWord : wordSplited) {
-				booleanQuery.add(new PrefixQuery(new Term(fieldName, currentWord)), Occur.MUST);
-			}
-
-		} else if (wordPlaceSearch == FindKanjiRequest.WordPlaceSearch.EXACT) {
-
-			for (String currentWord : wordSplited) {
-				booleanQuery.add(new TermQuery(new Term(fieldName, currentWord)), Occur.MUST);;
-			}
-
-		} else {
-			throw new RuntimeException();
-		}
-
-		return booleanQuery;
-	}
-
+	
 	private BooleanQuery createDictionaryEntryTypeListFilter(String typeFieldName, List<DictionaryEntryType> dictionaryEntryTypeList) {
 
 		if (dictionaryEntryTypeList == null) {			
@@ -1002,7 +988,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 
 				for (String currentRadical : radicals) {
-					kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList, FindKanjiRequest.WordPlaceSearch.EXACT), Occur.MUST);
+					kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList, WordPlaceSearch.EXACT), Occur.MUST);
 				}
 
 				query.add(kanjiBooleanQuery, Occur.MUST);			
@@ -1284,7 +1270,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		BooleanQuery kanjiBooleanQuery = new BooleanQuery();
 
 		for (String currentRadical : radicals) {
-			kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList, FindKanjiRequest.WordPlaceSearch.EXACT), Occur.MUST);
+			kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList, WordPlaceSearch.EXACT), Occur.MUST);
 		}
 
 		query.add(kanjiBooleanQuery, Occur.MUST);
@@ -1415,7 +1401,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		query.add(phraseQuery, Occur.MUST);
 
-		query.add(createQuery(kanji, LuceneStatic.kanjiEntry_kanji, FindKanjiRequest.WordPlaceSearch.EXACT), Occur.MUST);
+		query.add(createQuery(kanji, LuceneStatic.kanjiEntry_kanji, WordPlaceSearch.EXACT), Occur.MUST);
 
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
@@ -1502,7 +1488,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		query.add(phraseQuery, Occur.MUST);
 
 		if (onlyUsed == true) {
-			query.add(createQuery("true", LuceneStatic.kanjiEntry_used, FindKanjiRequest.WordPlaceSearch.EXACT), Occur.MUST);
+			query.add(createQuery("true", LuceneStatic.kanjiEntry_used, WordPlaceSearch.EXACT), Occur.MUST);
 		}
 
 		try {

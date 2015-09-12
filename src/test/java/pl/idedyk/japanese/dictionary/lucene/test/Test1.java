@@ -20,9 +20,10 @@ public class Test1 {
 
 		FindWordRequest findWordRequest = new FindWordRequest();
 		
-		findWordRequest.searchGrammaFormAndExamples = false;
+		//findWordRequest.searchGrammaFormAndExamples = false;		
+		//findWordRequest.word = "shukujitsu";
 		
-		findWordRequest.word = "shukujitsu";
+		findWordRequest.word = "kot";
 
 		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values();
 		
@@ -33,9 +34,11 @@ public class Test1 {
 		}
 		
 		//dictionaryEntryTypeList.remove(DictionaryEntryType.WORD_NOUN);
-		dictionaryEntryTypeList.remove(DictionaryEntryType.WORD_ADJECTIVE_NO);
+		//..dictionaryEntryTypeList.remove(DictionaryEntryType.WORD_ADJECTIVE_NO);
 		
-		findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
+		//findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
+		
+		//findWordRequest.wordPlaceSearch = WordPlaceSearch.EXACT;
 		
 		FindWordResult findWordResult = luceneDatabase.findDictionaryEntries(findWordRequest);
 		
