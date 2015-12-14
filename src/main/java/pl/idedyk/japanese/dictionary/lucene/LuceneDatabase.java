@@ -25,6 +25,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.spell.LuceneDictionary;
+import org.apache.lucene.search.spell.SpellChecker;
 import org.apache.lucene.search.suggest.Lookup.LookupResult;
 import org.apache.lucene.search.suggest.analyzing.AnalyzingSuggester;
 import org.apache.lucene.store.Directory;
@@ -59,6 +60,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 	private AnalyzingSuggester wordDictionaryEntryAnalyzingSuggester;
 	private AnalyzingSuggester kanjiEntryAnalyzingSuggester;
 	
+	private SpellChecker wordDictionaryEntrySpellChecker;
+	private SpellChecker kanjiEntryDictionarySpellChecker;
+	
 	public LuceneDatabase(String dbDir) {
 		this.dbDir = dbDir;
 	}
@@ -73,22 +77,54 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	public void openSuggester() throws IOException {
 		
-		LuceneDictionary wordDictionaryEntryDictionaryLocal = new LuceneDictionary(reader, LuceneStatic.dictionaryEntry_sugestionList);				
+		LuceneDictionary wordDictionaryEntryDictionaryLocal = new LuceneDictionary(reader, LuceneStatic.dictionaryEntry_sugestionList);
 		AnalyzingSuggester wordDictionaryEntryAnalyzingSuggesterLocal = new AnalyzingSuggester(analyzer);
-
+		
 		wordDictionaryEntryAnalyzingSuggesterLocal.build(wordDictionaryEntryDictionaryLocal);
 
-		LuceneDictionary kanjiEntryDictionaryLocal = new LuceneDictionary(reader, LuceneStatic.kanjiEntry_sugestionList);				
+		//
+		
+		LuceneDictionary kanjiEntryDictionaryLocal = new LuceneDictionary(reader, LuceneStatic.kanjiEntry_sugestionList);
 		AnalyzingSuggester kanjiEntryAnalyzingSuggesterLocal = new AnalyzingSuggester(analyzer);
 
 		kanjiEntryAnalyzingSuggesterLocal.build(kanjiEntryDictionaryLocal);
+				
+		// ustawienie
+		wordDictionaryEntryAnalyzingSuggester = wordDictionaryEntryAnalyzingSuggesterLocal;		
+		kanjiEntryAnalyzingSuggester = kanjiEntryAnalyzingSuggesterLocal;		
+	}
+	
+	public void openSpellChecker() throws IOException {
+		
+		// TESTY !!!		
+		
+		/*
+		LuceneDictionary wordDictionaryEntryDictionaryLocal = new LuceneDictionary(reader, LuceneStatic.dictionaryEntry_translatesList); // testy !!!
+		
+		SpellChecker wordDictionaryEntrySpellCheckerLocal = new SpellChecker(index, new JaroWinklerDistance());
+				
+		IndexWriterConfig wordDictionaryEntrySpellCheckerIndexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
+		
+		wordDictionaryEntrySpellCheckerLocal.indexDictionary(wordDictionaryEntryDictionaryLocal, wordDictionaryEntrySpellCheckerIndexWriterConfig, false);
+		*/
+		
+		//
+		
+		//int fixme = 1;
+		
+		/*
+		SpellChecker kanjiEntryDictionarySpellCheckerLocal = new SpellChecker(index, new JaroWinklerDistance());
+		IndexWriterConfig kanjiEntryDictionarySpellCheckerIndexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
+		
+		kanjiEntryDictionarySpellCheckerLocal.indexDictionary(kanjiEntryDictionaryLocal, kanjiEntryDictionarySpellCheckerIndexWriterConfig, false);
+		
+		kanjiEntryDictionarySpellChecker = kanjiEntryDictionarySpellCheckerLocal;
+		*/
 		
 		// ustawienie
-		wordDictionaryEntryAnalyzingSuggester = wordDictionaryEntryAnalyzingSuggesterLocal;
-		
-		kanjiEntryAnalyzingSuggester = kanjiEntryAnalyzingSuggesterLocal;
+		//wordDictionaryEntrySpellChecker = wordDictionaryEntrySpellCheckerLocal;
 	}
-
+	
 	public void close() throws IOException {
 
 		if (reader != null) {
@@ -1603,6 +1639,62 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	public boolean isKanjiAutocompleteInitialized() {
 		return kanjiEntryAnalyzingSuggester != null;
+	}
+	
+	public boolean isWordDictionaryEntrySpellCheckerInitialized() {
+		return wordDictionaryEntrySpellChecker != null;
+	}
+	
+	public List<String> getWordDictionaryEntrySpellCheckerSuggestion(String term, int limit) throws DictionaryException {
+		
+		try {		
+			List<String> result = new ArrayList<String>();
+			
+			if (wordDictionaryEntrySpellChecker != null) {
+				
+				String[] suggestSimilar = wordDictionaryEntrySpellChecker.suggestSimilar(term, limit);
+				
+				if (suggestSimilar != null) {
+					
+					for (String currentSuggest : suggestSimilar) {
+						result.add(currentSuggest);
+					}				
+				}
+			}		
+			
+			return result;
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania sugestii w poprawiaczu słów" + e);
+		}
+	}	
+	
+	public boolean isKanjiEntryDictionarySpellChecker() {
+		return kanjiEntryDictionarySpellChecker != null;
+	}
+	
+	public List<String> getKanjiEntryDictionarySpellCheckerSuggestion(String term, int limit) throws DictionaryException {
+		
+		try {		
+			List<String> result = new ArrayList<String>();
+			
+			if (kanjiEntryDictionarySpellChecker != null) {
+				
+				String[] suggestSimilar = kanjiEntryDictionarySpellChecker.suggestSimilar(term, limit);
+				
+				if (suggestSimilar != null) {
+					
+					for (String currentSuggest : suggestSimilar) {
+						result.add(currentSuggest);
+					}				
+				}
+			}		
+			
+			return result;
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania sugestii w poprawiaczu słów" + e);
+		}
 	}
 
 	@Override
