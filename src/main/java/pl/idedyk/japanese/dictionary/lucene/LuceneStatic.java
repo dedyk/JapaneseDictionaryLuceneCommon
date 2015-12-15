@@ -41,8 +41,12 @@ public class LuceneStatic {
 	public static final String dictionaryEntry_exampleSentenceGroups_groupId = "dictionaryEntry_exampleSentenceGroups_groupId";
 	public static final String dictionaryEntry_exampleSentenceGroups_sentenceIdList = "dictionaryEntry_exampleSentenceGroups_sentenceIdList";
 	
-	public static final String dictionaryEntry_sugestionList = "dictionaryEntry_sugestionList";
-		
+	public static final String dictionaryEntry_android_sugestionList = "dictionaryEntry_android_sugestionList";
+	public static final String dictionaryEntry_web_sugestionList = "dictionaryEntry_web_sugestionList";
+
+	public static final String dictionaryEntry_android_spellCheckerList = "dictionaryEntry_android_spellCheckerList";
+	public static final String dictionaryEntry_web_spellCheckerList = "dictionaryEntry_web_spellCheckerList";
+	
 	public static final String nameDictionaryEntry_objectType = "nameDictionaryEntry";
 	
 	public static final String nameDictionaryEntry_id = "nameDictionaryEntry_id";
@@ -76,7 +80,11 @@ public class LuceneStatic {
 	
 	public static final String kanjiEntry_kanjivgEntry_strokePaths = "kanjiEntry_kanjivgEntry_strokePaths";	
 	
-	public static final String kanjiEntry_sugestionList = "kanjiEntry_sugestionList";
+	public static final String kanjiEntry_android_sugestionList = "kanjiEntry_android_sugestionList";
+	public static final String kanjiEntry_web_sugestionList = "kanjiEntry_web_sugestionList";
+
+	public static final String kanjiEntry_android_spellCheckerList = "kanjiEntry_android_spellCheckerList";
+	public static final String kanjiEntry_web_spellCheckerList = "kanjiEntry_web_spellCheckerList";
 	
 	public static final String uniqueDictionaryEntryGroupEnumList_objectType = "uniqueDictionaryEntryGroupEnumList";
 	public static final String uniqueDictionaryEntryGroupEnumList_groupsList = "uniqueDictionaryEntryGroupEnumList_groupsList";

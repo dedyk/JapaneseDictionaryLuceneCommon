@@ -10,10 +10,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -24,6 +27,7 @@ import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.spell.JaroWinklerDistance;
 import org.apache.lucene.search.spell.LuceneDictionary;
 import org.apache.lucene.search.spell.SpellChecker;
 import org.apache.lucene.search.suggest.Lookup.LookupResult;
@@ -57,12 +61,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 	private IndexReader reader;
 	private IndexSearcher searcher;
 
-	private AnalyzingSuggester wordDictionaryEntryAnalyzingSuggester;
-	private AnalyzingSuggester kanjiEntryAnalyzingSuggester;
-	
-	private SpellChecker wordDictionaryEntrySpellChecker;
-	private SpellChecker kanjiEntryDictionarySpellChecker;
-	
+	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, AnalyzingSuggester> analyzingSuggesterMap;	
+	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, SpellChecker> spellCheckerMap;
+			
 	public LuceneDatabase(String dbDir) {
 		this.dbDir = dbDir;
 	}
@@ -77,53 +78,54 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	public void openSuggester() throws IOException {
 		
-		LuceneDictionary wordDictionaryEntryDictionaryLocal = new LuceneDictionary(reader, LuceneStatic.dictionaryEntry_sugestionList);
-		AnalyzingSuggester wordDictionaryEntryAnalyzingSuggesterLocal = new AnalyzingSuggester(analyzer);
+		analyzingSuggesterMap = new ConcurrentHashMap<LuceneDatabaseSuggesterAndSpellCheckerSource, AnalyzingSuggester>();
 		
-		wordDictionaryEntryAnalyzingSuggesterLocal.build(wordDictionaryEntryDictionaryLocal);
+		initializeSuggester(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_WEB);
+		initializeSuggester(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_ANDROID);
+
+		initializeSuggester(LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_WEB);
+		initializeSuggester(LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_ANDROID);
+	}
+	
+	private void initializeSuggester(LuceneDatabaseSuggesterAndSpellCheckerSource source) throws IOException {
+		
+		LuceneDictionary luceneDictionary = new LuceneDictionary(reader, source.getSuggestionListFieldName());		
+		AnalyzingSuggester analyzingSuggester = new AnalyzingSuggester(analyzer);
+		
+		analyzingSuggester.build(luceneDictionary);
 
 		//
 		
-		LuceneDictionary kanjiEntryDictionaryLocal = new LuceneDictionary(reader, LuceneStatic.kanjiEntry_sugestionList);
-		AnalyzingSuggester kanjiEntryAnalyzingSuggesterLocal = new AnalyzingSuggester(analyzer);
-
-		kanjiEntryAnalyzingSuggesterLocal.build(kanjiEntryDictionaryLocal);
-				
-		// ustawienie
-		wordDictionaryEntryAnalyzingSuggester = wordDictionaryEntryAnalyzingSuggesterLocal;		
-		kanjiEntryAnalyzingSuggester = kanjiEntryAnalyzingSuggesterLocal;		
+		analyzingSuggesterMap.put(source, analyzingSuggester);		
 	}
 	
 	public void openSpellChecker() throws IOException {
 		
-		// TESTY !!!		
+		spellCheckerMap = new ConcurrentHashMap<LuceneDatabaseSuggesterAndSpellCheckerSource, SpellChecker>();
 		
-		/*
-		LuceneDictionary wordDictionaryEntryDictionaryLocal = new LuceneDictionary(reader, LuceneStatic.dictionaryEntry_translatesList); // testy !!!
+		initializeSpellChecker(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_WEB);
+		initializeSpellChecker(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_ANDROID);
+
+		initializeSpellChecker(LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_WEB);
+		initializeSpellChecker(LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_ANDROID);
+	}
+	
+	private void initializeSpellChecker(LuceneDatabaseSuggesterAndSpellCheckerSource source) throws IOException {
 		
-		SpellChecker wordDictionaryEntrySpellCheckerLocal = new SpellChecker(index, new JaroWinklerDistance());
+		// UWAGA: Podobna metoda jest w klasie LuceneDBDatabase.initializeSpellChecker
+		
+		LuceneDictionary luceneDictionary = new LuceneDictionary(reader, source.getSpellCheckerListFieldName());
+		
+		SpellChecker spellChecker = new SpellChecker(index, new JaroWinklerDistance());
 				
-		IndexWriterConfig wordDictionaryEntrySpellCheckerIndexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
+		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
 		
-		wordDictionaryEntrySpellCheckerLocal.indexDictionary(wordDictionaryEntryDictionaryLocal, wordDictionaryEntrySpellCheckerIndexWriterConfig, false);
-		*/
-		
+		spellChecker.indexDictionary(luceneDictionary, indexWriterConfig, true);
+
 		//
 		
-		//int fixme = 1;
-		
-		/*
-		SpellChecker kanjiEntryDictionarySpellCheckerLocal = new SpellChecker(index, new JaroWinklerDistance());
-		IndexWriterConfig kanjiEntryDictionarySpellCheckerIndexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
-		
-		kanjiEntryDictionarySpellCheckerLocal.indexDictionary(kanjiEntryDictionaryLocal, kanjiEntryDictionarySpellCheckerIndexWriterConfig, false);
-		
-		kanjiEntryDictionarySpellChecker = kanjiEntryDictionarySpellCheckerLocal;
-		*/
-		
-		// ustawienie
-		//wordDictionaryEntrySpellChecker = wordDictionaryEntrySpellCheckerLocal;
-	}
+		spellCheckerMap.put(source, spellChecker);
+	}	
 	
 	public void close() throws IOException {
 
@@ -1601,13 +1603,19 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}		
 	}
 
-	public List<String> getWordAutocomplete(String term, int limit) throws DictionaryException {
+	public List<String> getAutocomplete(LuceneDatabaseSuggesterAndSpellCheckerSource source, String term, int limit) throws DictionaryException {
 
 		List<String> result = new ArrayList<String>();
 		
-		if (wordDictionaryEntryAnalyzingSuggester != null) {
+		if (analyzingSuggesterMap == null) {
+			return result;
+		}
+		
+		AnalyzingSuggester analyzingSuggester = analyzingSuggesterMap.get(source);
+		
+		if (analyzingSuggester != null) {
 			
-			List<LookupResult> lookupResult = wordDictionaryEntryAnalyzingSuggester.lookup(term, false, limit);
+			List<LookupResult> lookupResult = analyzingSuggester.lookup(term, false, limit);
 
 			for (LookupResult currentLookupResult : lookupResult) {
 				result.add(currentLookupResult.key.toString());
@@ -1617,42 +1625,42 @@ public class LuceneDatabase implements IDatabaseConnector {
 		return result;
 	}
 	
-	public boolean isWordAutocompleteInitialized() {
-		return wordDictionaryEntryAnalyzingSuggester != null;
-	}
-
-	public List<String> getKanjiAutocomplete(String term, int limit) {
+	public boolean isAutocompleteInitialized(LuceneDatabaseSuggesterAndSpellCheckerSource source) {
 		
-		List<String> result = new ArrayList<String>();
-		
-		if (kanjiEntryAnalyzingSuggester != null) {
-			
-			List<LookupResult> lookupResult = kanjiEntryAnalyzingSuggester.lookup(term, false, limit);
-
-			for (LookupResult currentLookupResult : lookupResult) {
-				result.add(currentLookupResult.key.toString());
-			}
+		if (analyzingSuggesterMap == null) {
+			return false;
 		}
-
-		return result;
+		
+		AnalyzingSuggester analyzingSuggester = analyzingSuggesterMap.get(source);
+				
+		return analyzingSuggester != null;
 	}
 	
-	public boolean isKanjiAutocompleteInitialized() {
-		return kanjiEntryAnalyzingSuggester != null;
+	public boolean isSpellCheckerInitialized(LuceneDatabaseSuggesterAndSpellCheckerSource source) {
+		
+		if (spellCheckerMap == null) {
+			return false;
+		}
+		
+		SpellChecker spellChecker = spellCheckerMap.get(source);
+		
+		return spellChecker != null;
 	}
 	
-	public boolean isWordDictionaryEntrySpellCheckerInitialized() {
-		return wordDictionaryEntrySpellChecker != null;
-	}
-	
-	public List<String> getWordDictionaryEntrySpellCheckerSuggestion(String term, int limit) throws DictionaryException {
+	public List<String> getSpellCheckerSuggestion(LuceneDatabaseSuggesterAndSpellCheckerSource source, String term, int limit) throws DictionaryException {
 		
 		try {		
 			List<String> result = new ArrayList<String>();
 			
-			if (wordDictionaryEntrySpellChecker != null) {
+			if (spellCheckerMap == null) {
+				return result;
+			}
+			
+			SpellChecker spellChecker = spellCheckerMap.get(source);
+			
+			if (spellChecker != null) {
 				
-				String[] suggestSimilar = wordDictionaryEntrySpellChecker.suggestSimilar(term, limit);
+				String[] suggestSimilar = spellChecker.suggestSimilar(term, limit);
 				
 				if (suggestSimilar != null) {
 					
@@ -1669,34 +1677,6 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 	}	
 	
-	public boolean isKanjiEntryDictionarySpellChecker() {
-		return kanjiEntryDictionarySpellChecker != null;
-	}
-	
-	public List<String> getKanjiEntryDictionarySpellCheckerSuggestion(String term, int limit) throws DictionaryException {
-		
-		try {		
-			List<String> result = new ArrayList<String>();
-			
-			if (kanjiEntryDictionarySpellChecker != null) {
-				
-				String[] suggestSimilar = kanjiEntryDictionarySpellChecker.suggestSimilar(term, limit);
-				
-				if (suggestSimilar != null) {
-					
-					for (String currentSuggest : suggestSimilar) {
-						result.add(currentSuggest);
-					}				
-				}
-			}		
-			
-			return result;
-			
-		} catch (IOException e) {
-			throw new DictionaryException("Błąd podczas pobierania sugestii w poprawiaczu słów" + e);
-		}
-	}
-
 	@Override
 	public GroupWithTatoebaSentenceList getTatoebaSentenceGroup(String groupId) throws DictionaryException {
 				
@@ -1773,5 +1753,5 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}	
 
 		return null;
-	}
+	}		
 }

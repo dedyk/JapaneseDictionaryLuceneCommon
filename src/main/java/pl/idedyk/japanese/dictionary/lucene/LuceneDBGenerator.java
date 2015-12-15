@@ -19,9 +19,14 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.search.spell.JaroWinklerDistance;
+import org.apache.lucene.search.spell.LuceneDictionary;
+import org.apache.lucene.search.spell.SpellChecker;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -206,6 +211,9 @@ public class LuceneDBGenerator {
 				
 		// zakonczenie zapisywania indeksu
 		indexWriter.close();
+		
+		// dodatkowo jeszcze, generowanie poprawiacza slow
+		generateSpellChecker(dbOutDirFile, addSugestionList);
 				
 		System.out.println("DB Generator - done");
 	}
@@ -301,7 +309,12 @@ public class LuceneDBGenerator {
 		document.add(new StringField(LuceneStatic.dictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
 		
 		if (addSugestionList == true) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
+			
+			document.add(new StringField(LuceneStatic.dictionaryEntry_android_sugestionList, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
+			
+			document.add(new StringField(LuceneStatic.dictionaryEntry_android_spellCheckerList, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry_web_spellCheckerList, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
 		}
 		
 		// kanaList
@@ -310,7 +323,12 @@ public class LuceneDBGenerator {
 		document.add(new StringField(LuceneStatic.dictionaryEntry_kana, kana, Field.Store.YES));
 		
 		if (addSugestionList == true) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, kana, Field.Store.YES));
+			
+			document.add(new StringField(LuceneStatic.dictionaryEntry_android_sugestionList, kana, Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, kana, Field.Store.YES));
+			
+			document.add(new StringField(LuceneStatic.dictionaryEntry_android_spellCheckerList, kana, Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry_web_spellCheckerList, kana, Field.Store.YES));			
 		}
 		
 		// prefixRomaji
@@ -325,7 +343,12 @@ public class LuceneDBGenerator {
 		addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_virtual_romaji, romaji);
 		
 		if (addSugestionList == true) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, romaji, Field.Store.YES));
+			
+			document.add(new StringField(LuceneStatic.dictionaryEntry_android_sugestionList, romaji, Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, romaji, Field.Store.YES));
+			
+			document.add(new StringField(LuceneStatic.dictionaryEntry_android_spellCheckerList, romaji, Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry_web_spellCheckerList, romaji, Field.Store.YES));			
 		}
 		
 		// translatesList
@@ -336,7 +359,12 @@ public class LuceneDBGenerator {
 			document.add(new TextField(LuceneStatic.dictionaryEntry_translatesList, currentTranslate, Field.Store.YES));
 			
 			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, currentTranslate, Field.Store.YES));
+				
+				document.add(new StringField(LuceneStatic.dictionaryEntry_android_sugestionList, currentTranslate, Field.Store.YES));
+				document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, currentTranslate, Field.Store.YES));
+				
+				document.add(new StringField(LuceneStatic.dictionaryEntry_android_spellCheckerList, currentTranslate, Field.Store.YES));
+				document.add(new StringField(LuceneStatic.dictionaryEntry_web_spellCheckerList, currentTranslate, Field.Store.YES));				
 			}
 			
 			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
@@ -529,7 +557,7 @@ public class LuceneDBGenerator {
 			document.add(new StringField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanji, grammaFormConjugateResult.getKanji(), Field.Store.YES));
 			
 			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(grammaFormConjugateResult.getKanji()), Field.Store.YES));
+				document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(grammaFormConjugateResult.getKanji()), Field.Store.YES));
 			}
 		}
 				
@@ -540,7 +568,7 @@ public class LuceneDBGenerator {
 			document.add(new StringField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList, currentKana, Field.Store.YES));
 			
 			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(currentKana), Field.Store.YES));
+				document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentKana), Field.Store.YES));
 			}
 		}
 		
@@ -554,7 +582,7 @@ public class LuceneDBGenerator {
 			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji);
 						
 			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(currentRomaji), Field.Store.YES));
+				document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentRomaji), Field.Store.YES));
 			}
 		}
 		
@@ -571,7 +599,7 @@ public class LuceneDBGenerator {
 			document.add(new StringField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanji, exampleResult.getKanji(), Field.Store.YES));
 			
 			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(exampleResult.getKanji()), Field.Store.YES));
+				document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(exampleResult.getKanji()), Field.Store.YES));
 			}
 		}
 		
@@ -582,7 +610,7 @@ public class LuceneDBGenerator {
 			document.add(new StringField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList, currentKana, Field.Store.YES));
 			
 			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(currentKana), Field.Store.YES));
+				document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentKana), Field.Store.YES));
 			}
 		}
 		
@@ -596,7 +624,7 @@ public class LuceneDBGenerator {
 			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji);
 			
 			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(currentRomaji), Field.Store.YES));
+				document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentRomaji), Field.Store.YES));
 			}
 		}
 		
@@ -846,7 +874,12 @@ public class LuceneDBGenerator {
 		document.add(new StringField(LuceneStatic.kanjiEntry_kanji, emptyIfNull(kanjiEntry.getKanji()), Field.Store.YES));
 		
 		if (addSugestionList == true) {
-			document.add(new StringField(LuceneStatic.kanjiEntry_sugestionList, emptyIfNull(kanjiEntry.getKanji()), Field.Store.YES));
+			
+			document.add(new StringField(LuceneStatic.kanjiEntry_android_sugestionList, emptyIfNull(kanjiEntry.getKanji()), Field.Store.YES));
+			document.add(new StringField(LuceneStatic.kanjiEntry_web_sugestionList, emptyIfNull(kanjiEntry.getKanji()), Field.Store.YES));
+			
+			document.add(new StringField(LuceneStatic.kanjiEntry_android_spellCheckerList, emptyIfNull(kanjiEntry.getKanji()), Field.Store.YES));
+			document.add(new StringField(LuceneStatic.kanjiEntry_web_spellCheckerList, emptyIfNull(kanjiEntry.getKanji()), Field.Store.YES));
 		}
 			
 		// polishTranslatesList
@@ -857,7 +890,12 @@ public class LuceneDBGenerator {
 			document.add(new TextField(LuceneStatic.kanjiEntry_polishTranslatesList, currentTranslate, Field.Store.YES));
 			
 			if (addSugestionList == true) {
-				document.add(new TextField(LuceneStatic.kanjiEntry_sugestionList, currentTranslate, Field.Store.YES));
+				
+				document.add(new TextField(LuceneStatic.kanjiEntry_android_sugestionList, currentTranslate, Field.Store.YES));
+				document.add(new TextField(LuceneStatic.kanjiEntry_web_sugestionList, currentTranslate, Field.Store.YES));
+				
+				document.add(new TextField(LuceneStatic.kanjiEntry_android_spellCheckerList, currentTranslate, Field.Store.YES));
+				document.add(new TextField(LuceneStatic.kanjiEntry_web_spellCheckerList, currentTranslate, Field.Store.YES));				
 			}
 			
 			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
@@ -986,7 +1024,7 @@ public class LuceneDBGenerator {
 		document.add(new StringField(LuceneStatic.nameDictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
 		
 		if (addSugestionList == true) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
 		}
 		
 		// kanaList
@@ -995,7 +1033,7 @@ public class LuceneDBGenerator {
 		document.add(new StringField(LuceneStatic.nameDictionaryEntry_kana, kana, Field.Store.YES));
 		
 		if (addSugestionList == true) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, kana, Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, kana, Field.Store.YES));
 		}
 				
 		// romajiList
@@ -1006,7 +1044,7 @@ public class LuceneDBGenerator {
 		addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry_virtual_romaji, romaji);
 				
 		if (addSugestionList == true) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, romaji, Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, romaji, Field.Store.YES));
 		}
 		
 		// translatesList
@@ -1017,7 +1055,7 @@ public class LuceneDBGenerator {
 			document.add(new TextField(LuceneStatic.nameDictionaryEntry_translatesList, currentTranslate, Field.Store.YES));
 			
 			if (addSugestionList == true) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry_sugestionList, currentTranslate, Field.Store.YES));
+				document.add(new StringField(LuceneStatic.dictionaryEntry_web_sugestionList, currentTranslate, Field.Store.YES));
 			}
 			
 			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
@@ -1052,6 +1090,42 @@ public class LuceneDBGenerator {
 		
 		indexWriter.addDocument(document);
 	}
+	
+	private static void generateSpellChecker(File dbDir, boolean addSugestionList) throws IOException {
+		
+		if (addSugestionList == true) {
+						
+			Directory index = FSDirectory.open(dbDir);
+			IndexReader reader = DirectoryReader.open(index);
+			LuceneAnalyzer analyzer = new LuceneAnalyzer(Version.LUCENE_47);
+			
+			initializeSpellChecker(index, reader, analyzer, LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_WEB);
+			initializeSpellChecker(index, reader, analyzer, LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_ANDROID);
+
+			initializeSpellChecker(index, reader, analyzer, LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_WEB);
+			initializeSpellChecker(index, reader, analyzer, LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_ANDROID);
+			
+			reader.close();
+			index.close();
+		}
+	}
+	
+	private static void initializeSpellChecker(Directory index, IndexReader reader, LuceneAnalyzer analyzer, LuceneDatabaseSuggesterAndSpellCheckerSource source) throws IOException {
+		
+		System.out.println("Spell Checker: " + source);
+		
+		// UWAGA: Podobna metoda jest w klasie LuceneDatabase.initializeSpellChecker
+		
+		LuceneDictionary luceneDictionary = new LuceneDictionary(reader, source.getSpellCheckerListFieldName());
+		
+		SpellChecker spellChecker = new SpellChecker(index, new JaroWinklerDistance());
+				
+		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
+		
+		spellChecker.indexDictionary(luceneDictionary, indexWriterConfig, true);
+		
+		spellChecker.close();
+	}	
 	
 	private static String emptyIfNull(String text) {
 		if (text == null) {
