@@ -86,7 +86,7 @@ public class LuceneDBGenerator {
 						
 		System.exit(1);
 		*/
-		
+
 		// parametry
 		String dictionaryFilePath = args[0];
 		String sentencesFilePath = args[1];
@@ -99,8 +99,8 @@ public class LuceneDBGenerator {
 		boolean addGrammaAndExample = Boolean.parseBoolean(args[7]);		
 		
 		String dbOutDir = args[8];
-			
 		////
+		
 		/*
 		int fixme = 1;
 		
@@ -117,6 +117,7 @@ public class LuceneDBGenerator {
 		
 		String dbOutDir = "db-lucene";
 		*/
+		
 		////
 						
 		final File dbOutDirFile = new File(dbOutDir);
@@ -213,7 +214,7 @@ public class LuceneDBGenerator {
 		indexWriter.close();
 		
 		// dodatkowo jeszcze, generowanie poprawiacza slow
-		generateSpellChecker(dbOutDirFile, addSugestionList);
+		generateSpellChecker(dbOutDirFile, analyzer, addSugestionList);
 				
 		System.out.println("DB Generator - done");
 	}
@@ -1091,22 +1092,50 @@ public class LuceneDBGenerator {
 		indexWriter.addDocument(document);
 	}
 	
-	private static void generateSpellChecker(File dbDir, boolean addSugestionList) throws IOException {
+	private static void generateSpellChecker(File dbDir, LuceneAnalyzer analyzer, boolean addSugestionList) throws IOException {
 		
 		if (addSugestionList == true) {
-						
-			Directory index = FSDirectory.open(dbDir);
-			IndexReader reader = DirectoryReader.open(index);
-			LuceneAnalyzer analyzer = new LuceneAnalyzer(Version.LUCENE_47);
 			
-			initializeSpellChecker(index, reader, analyzer, LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_WEB);
-			initializeSpellChecker(index, reader, analyzer, LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_ANDROID);
+			Directory mainIndex = FSDirectory.open(dbDir);			
+			IndexReader mainIndexReader = DirectoryReader.open(mainIndex);
+			
+			//
+			
+			List<LuceneDatabaseSuggesterAndSpellCheckerSource> luceneDatabaseSuggesterAndSpellCheckerSourceList = new ArrayList<LuceneDatabaseSuggesterAndSpellCheckerSource>();
+			
+			luceneDatabaseSuggesterAndSpellCheckerSourceList.add(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_WEB);
+			luceneDatabaseSuggesterAndSpellCheckerSourceList.add(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_ANDROID);
+			
+			luceneDatabaseSuggesterAndSpellCheckerSourceList.add(LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_WEB);
+			luceneDatabaseSuggesterAndSpellCheckerSourceList.add(LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_ANDROID);
 
-			initializeSpellChecker(index, reader, analyzer, LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_WEB);
-			initializeSpellChecker(index, reader, analyzer, LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_ANDROID);
+			for (LuceneDatabaseSuggesterAndSpellCheckerSource luceneDatabaseSuggesterAndSpellCheckerSource : luceneDatabaseSuggesterAndSpellCheckerSourceList) {
+				
+				// tworzenie podindeksu lucene
+				File subDbOutDirFile = new File(dbDir, "subindex_" + luceneDatabaseSuggesterAndSpellCheckerSource.getSpellCheckerListFieldName());
+				
+				if (subDbOutDirFile.isDirectory() == true) {
+					
+					File[] dbOutDirFileListFiles = subDbOutDirFile.listFiles();
+					
+					for (File file : dbOutDirFileListFiles) {
+						file.delete();
+					}
+				}
+				
+				// tworzenie indeksu lucene
+				Directory subIndex = FSDirectory.open(subDbOutDirFile);
+				
+				// wypelnianie podindeksu
+				initializeSpellChecker(subIndex, mainIndexReader, analyzer, luceneDatabaseSuggesterAndSpellCheckerSource);
+				
+				subIndex.close();
+			}
+
+			//
 			
-			reader.close();
-			index.close();
+			mainIndexReader.close();
+			mainIndex.close();
 		}
 	}
 	
@@ -1122,7 +1151,7 @@ public class LuceneDBGenerator {
 				
 		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
 		
-		spellChecker.indexDictionary(luceneDictionary, indexWriterConfig, true);
+		spellChecker.indexDictionary(luceneDictionary, indexWriterConfig, false);
 		
 		spellChecker.close();
 	}	

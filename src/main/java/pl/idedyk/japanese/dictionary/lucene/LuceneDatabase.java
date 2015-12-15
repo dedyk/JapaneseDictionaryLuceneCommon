@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -62,7 +63,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	private IndexSearcher searcher;
 
 	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, AnalyzingSuggester> analyzingSuggesterMap;	
-	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, SpellChecker> spellCheckerMap;
+	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, SpellCheckerIndex> spellCheckerMap;
 			
 	public LuceneDatabase(String dbDir) {
 		this.dbDir = dbDir;
@@ -101,7 +102,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	public void openSpellChecker() throws IOException {
 		
-		spellCheckerMap = new ConcurrentHashMap<LuceneDatabaseSuggesterAndSpellCheckerSource, SpellChecker>();
+		spellCheckerMap = new ConcurrentHashMap<LuceneDatabaseSuggesterAndSpellCheckerSource, SpellCheckerIndex>();
 		
 		initializeSpellChecker(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_WEB);
 		initializeSpellChecker(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_ANDROID);
@@ -114,17 +115,30 @@ public class LuceneDatabase implements IDatabaseConnector {
 		
 		// UWAGA: Podobna metoda jest w klasie LuceneDBDatabase.initializeSpellChecker
 		
+		// otwieranie podindeksu
+		File subDbOutDirFile = new File(dbDir, "subindex_" + source.getSpellCheckerListFieldName());
+
+		Directory subIndex = FSDirectory.open(subDbOutDirFile);
+		
+		//
+		
 		LuceneDictionary luceneDictionary = new LuceneDictionary(reader, source.getSpellCheckerListFieldName());
 		
-		SpellChecker spellChecker = new SpellChecker(index, new JaroWinklerDistance());
+		@SuppressWarnings("resource")
+		SpellChecker spellChecker = new SpellChecker(subIndex, new JaroWinklerDistance());
 				
 		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
 		
-		spellChecker.indexDictionary(luceneDictionary, indexWriterConfig, true);
+		spellChecker.indexDictionary(luceneDictionary, indexWriterConfig, false);
 
 		//
 		
-		spellCheckerMap.put(source, spellChecker);
+		SpellCheckerIndex spellCheckerIndex = new SpellCheckerIndex();
+		
+		spellCheckerIndex.spellChecker = spellChecker;
+		spellCheckerIndex.index = subIndex;		
+		
+		spellCheckerMap.put(source, spellCheckerIndex);
 	}	
 	
 	public void close() throws IOException {
@@ -135,6 +149,18 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		if (index != null) {
 			index.close();
+		}
+		
+		if (spellCheckerMap != null) {
+			
+			Collection<SpellCheckerIndex> spellCheckerMapValues = spellCheckerMap.values();
+			
+			for (SpellCheckerIndex spellCheckerIndex : spellCheckerMapValues) {
+				
+				spellCheckerIndex.spellChecker.close();
+				
+				spellCheckerIndex.index.close();				
+			}			
 		}
 	}
 
@@ -1642,9 +1668,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 			return false;
 		}
 		
-		SpellChecker spellChecker = spellCheckerMap.get(source);
+		SpellCheckerIndex spellCheckerIndex = spellCheckerMap.get(source);
 		
-		return spellChecker != null;
+		return spellCheckerIndex != null;
 	}
 	
 	public List<String> getSpellCheckerSuggestion(LuceneDatabaseSuggesterAndSpellCheckerSource source, String term, int limit) throws DictionaryException {
@@ -1656,11 +1682,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 				return result;
 			}
 			
-			SpellChecker spellChecker = spellCheckerMap.get(source);
+			SpellCheckerIndex spellCheckerIndex = spellCheckerMap.get(source);
 			
-			if (spellChecker != null) {
+			if (spellCheckerIndex != null) {
 				
-				String[] suggestSimilar = spellChecker.suggestSimilar(term, limit);
+				String[] suggestSimilar = spellCheckerIndex.spellChecker.suggestSimilar(term, limit);
 				
 				if (suggestSimilar != null) {
 					
@@ -1753,5 +1779,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}	
 
 		return null;
-	}		
+	}	
+	
+	private static class SpellCheckerIndex {
+		
+		private SpellChecker spellChecker;
+		
+		private Directory index;		
+	}
 }
