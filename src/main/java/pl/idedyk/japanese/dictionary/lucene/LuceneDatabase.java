@@ -1633,7 +1633,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		List<String> result = new ArrayList<String>();
 		
-		if (analyzingSuggesterMap == null) {
+		if (analyzingSuggesterMap == null || term == null || term.length() == 0) {
 			return result;
 		}
 		
@@ -1678,7 +1678,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		try {		
 			List<String> result = new ArrayList<String>();
 			
-			if (spellCheckerMap == null) {
+			if (spellCheckerMap == null || term == null || term.length() == 0) {
 				return result;
 			}
 			
