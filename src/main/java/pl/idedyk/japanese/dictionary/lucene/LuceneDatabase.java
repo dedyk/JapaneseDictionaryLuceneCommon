@@ -175,7 +175,13 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 
 		final int maxResult = 50;
-
+		
+        final String replaceChars = "`~!@#$%^&*()-=_+[]\\{}|;':\",./<>?";
+        
+        for (int idx = 0; idx < replaceChars.length(); ++idx) {
+        	findWordRequest.word = findWordRequest.word.replaceAll("\\" + replaceChars.charAt(idx), "");
+		}
+        
 		String[] wordSplited = findWordRequest.word.split("\\s+");
 
 		String wordToLowerCase = findWordRequest.word.toLowerCase(Locale.getDefault());
