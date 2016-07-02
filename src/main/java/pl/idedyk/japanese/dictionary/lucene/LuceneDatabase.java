@@ -175,16 +175,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 
 		final int maxResult = 50;
-		
-        final String replaceChars = "`~!@#$%^&*()-=_+[]\\{}|;':\",./<>?";
-        
-        for (int idx = 0; idx < replaceChars.length(); ++idx) {
-        	findWordRequest.word = findWordRequest.word.replaceAll("\\" + replaceChars.charAt(idx), "");
-		}
-        
-		String[] wordSplited = findWordRequest.word.split("\\s+");
+		                
+		String[] wordSplited = removeSpecialChars(findWordRequest.word).split("\\s+");
 
-		String wordToLowerCase = findWordRequest.word.toLowerCase(Locale.getDefault());
+		String wordToLowerCase = removeSpecialChars(findWordRequest.word).toLowerCase(Locale.getDefault());
 		String wordWithoutPolishCharsToLowerCase = Utils.removePolishChars(wordToLowerCase);
 
 		//String[] wordSplitedToLowerCase = wordToLowerCase.split("\\s+");
@@ -443,6 +437,17 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 
 		return findWordResult;
+	}
+	
+	private String removeSpecialChars(String word) {
+		
+		final String replaceChars = "`~!@#$%^&*()-=_+[]\\{}|;':\",./<>?";
+		
+        for (int idx = 0; idx < replaceChars.length(); ++idx) {
+        	word = word.replaceAll("\\" + replaceChars.charAt(idx), "");
+		}
+
+		return word;		
 	}
 
 	@Override
@@ -817,9 +822,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		final int maxResult = 50;
 
-		String[] wordSplited = findKanjiRequest.word.split("\\s+");
+		String[] wordSplited = removeSpecialChars(findKanjiRequest.word).split("\\s+");
 
-		String wordToLowerCase = findKanjiRequest.word.toLowerCase(Locale.getDefault());
+		String wordToLowerCase = removeSpecialChars(findKanjiRequest.word).toLowerCase(Locale.getDefault());
 		String wordWithoutPolishCharsToLowerCase = Utils.removePolishChars(wordToLowerCase);
 
 		//String[] wordSplitedToLowerCase = wordToLowerCase.split("\\s+");
@@ -1105,9 +1110,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 			return;
 		}
 
-		String[] wordSplited = findWordRequest.word.split("\\s+");
+		String[] wordSplited = removeSpecialChars(findWordRequest.word).split("\\s+");
 
-		String wordToLowerCase = findWordRequest.word.toLowerCase(Locale.getDefault());
+		String wordToLowerCase = removeSpecialChars(findWordRequest.word).toLowerCase(Locale.getDefault());
 		String wordWithoutPolishCharsToLowerCase = Utils.removePolishChars(wordToLowerCase);
 
 		//String[] wordSplitedToLowerCase = wordToLowerCase.split("\\s+");
@@ -1229,9 +1234,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 			return;
 		}
 		
-		String[] wordSplited = findWordRequest.word.split("\\s+");
+		String[] wordSplited = removeSpecialChars(findWordRequest.word).split("\\s+");
 
-		String wordToLowerCase = findWordRequest.word.toLowerCase(Locale.getDefault());
+		String wordToLowerCase = removeSpecialChars(findWordRequest.word).toLowerCase(Locale.getDefault());
 		String wordWithoutPolishCharsToLowerCase = Utils.removePolishChars(wordToLowerCase);
 
 		//String[] wordSplitedToLowerCase = wordToLowerCase.split("\\s+");
