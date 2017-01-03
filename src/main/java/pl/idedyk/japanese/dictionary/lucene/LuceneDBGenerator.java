@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,22 +90,25 @@ public class LuceneDBGenerator {
 
 		// parametry
 		String dictionaryFilePath = args[0];
-		String sentencesFilePath = args[1];
-		String sentencesGroupsFilePath = args[2];		
-		String kanjiFilePath = args[3];
-		String radicalFilePath = args[4];
-		final String nameFilePath = args[5];
+		String dictionaryGroupFilePath = args[1];
+		String sentencesFilePath = args[2];
+		String sentencesGroupsFilePath = args[3];		
+		String kanjiFilePath = args[4];
+		String radicalFilePath = args[5];
+		final String nameFilePath = args[6];
 		
-		boolean addSugestionList = Boolean.parseBoolean(args[6]);
-		boolean addGrammaAndExample = Boolean.parseBoolean(args[7]);		
+		boolean addDictionaryGroup = Boolean.parseBoolean(args[7]);
+		boolean addSugestionList = Boolean.parseBoolean(args[8]);
+		boolean addGrammaAndExample = Boolean.parseBoolean(args[9]);		
 		
 		String dbOutDir = args[8];
+
 		////
-		
 		/*
 		int fixme = 1;
 		
 		String dictionaryFilePath = "db/word.csv";
+		String dictionaryGroupFilePath = "db/word_group.csv";
 		String sentencesFilePath = "db/sentences.csv";
 		String sentencesGroupsFilePath = "db/sentences_groups.csv";		
 		String kanjiFilePath = "db/kanji.csv";
@@ -112,12 +116,12 @@ public class LuceneDBGenerator {
 		
 		final String nameFilePath = "db/names.csv";
 		
+		boolean addDictionaryGroup = true;
 		boolean addSugestionList = true;
 		boolean addGrammaAndExample = true;
 		
 		String dbOutDir = "db-lucene";
 		*/
-		
 		////
 						
 		final File dbOutDirFile = new File(dbOutDir);
@@ -157,6 +161,13 @@ public class LuceneDBGenerator {
 		countGrammaFormAndExamples(dictionaryEntryList, indexWriter, addGrammaAndExample, addSugestionList);
 		
 		dictionaryInputStream.close();
+		
+		// wczytanie i zapisanie grup slow
+		FileInputStream dictionaryGroupInputStream = new FileInputStream(dictionaryGroupFilePath);
+		
+		readDictionaryGroupFile(indexWriter, dictionaryEntryList, dictionaryGroupInputStream, addDictionaryGroup);
+		
+		dictionaryGroupInputStream.close();
 		
 		// otwarcie pliku ze zdaniami
 		FileInputStream sentencesInputStream = new FileInputStream(sentencesFilePath);
@@ -1139,6 +1150,127 @@ public class LuceneDBGenerator {
 		}
 	}
 	
+	private static void readDictionaryGroupFile(IndexWriter indexWriter, List<DictionaryEntry> dictionaryEntryList, FileInputStream dictionaryGroupInputStream, boolean addDictionaryGroup) throws NumberFormatException, IOException {
+		
+		if (addDictionaryGroup == true) {
+			
+			// utworzenie mapowania id'kow na slowa
+			Map<Integer, DictionaryEntry> dictionaryEntryMap = new HashMap<Integer, DictionaryEntry>();
+			
+			for (DictionaryEntry dictionaryEntry : dictionaryEntryList) {
+				dictionaryEntryMap.put(dictionaryEntry.getId(), dictionaryEntry);
+			}
+			
+			// wczytanie pliku z grupami
+			CsvReader csvReader = new CsvReader(new InputStreamReader(dictionaryGroupInputStream), ',');
+
+			while (csvReader.readRecord()) {
+
+				Integer groupId = Integer.parseInt(csvReader.get(0));
+
+				List<String> groupEntryIdList = Utils.parseStringIntoList(csvReader.get(1), false);
+				
+				//
+				
+				System.out.println(String.format("DictionaryGroupEntry id = %s", groupId));
+				
+				//
+				
+				// mapowanie id'kow z elementami grupa na pelne slowa
+				List<DictionaryEntry> groupEntryDictionaryEntryList = new ArrayList<DictionaryEntry>();				
+				
+				for (String groupEntryId : groupEntryIdList) {					
+					groupEntryDictionaryEntryList.add(dictionaryEntryMap.get(Integer.parseInt(groupEntryId)));					
+				}
+				
+				// dodanie wpisu do indeksu
+				addDictionaryGroup(indexWriter, groupId, groupEntryDictionaryEntryList);
+			}
+		}
+	}
+	
+	private static void addDictionaryGroup(IndexWriter indexWriter, Integer groupId, List<DictionaryEntry> groupEntryDictionaryEntryList) throws IOException {
+		
+		// tworzymy nowy dokument do lucene
+		Document document = new Document();
+		
+		// object type
+		document.add(new StringField(LuceneStatic.objectType, LuceneStatic.dictionaryGroupEntry_objectType, Field.Store.YES));
+		
+		// id
+		document.add(new IntField(LuceneStatic.dictionaryGroupEntry_id, groupId, Field.Store.YES));
+		
+		// dictionaryEntryIdList
+		for (DictionaryEntry groupDictionaryEntry : groupEntryDictionaryEntryList) {
+			document.add(new IntField(LuceneStatic.dictionaryGroupEntry_dictionaryEntryIdList, groupDictionaryEntry.getId(), Field.Store.YES));			
+		}
+
+		// kanjiList
+		LinkedHashSet<String> uniqueKanjiList = new LinkedHashSet<String>();
+		
+		for (DictionaryEntry groupDictionaryEntry : groupEntryDictionaryEntryList) {			
+			uniqueKanjiList.add(emptyIfNull(groupDictionaryEntry.getKanji()));
+		}
+		
+		for (String kanji : uniqueKanjiList) {
+			document.add(new StringField(LuceneStatic.dictionaryGroupEntry_kanjiList, kanji, Field.Store.YES));
+		}		
+		
+		// kanaList
+		LinkedHashSet<String> uniqueKanaList = new LinkedHashSet<String>();
+		
+		for (DictionaryEntry groupDictionaryEntry : groupEntryDictionaryEntryList) {
+			uniqueKanaList.add(groupDictionaryEntry.getKana());
+		}
+		
+		for (String kana : uniqueKanaList) {			
+			document.add(new StringField(LuceneStatic.dictionaryGroupEntry_kanaList, kana, Field.Store.YES));
+		}
+		
+		// romajiList
+		LinkedHashSet<String> uniqueRomajiList = new LinkedHashSet<String>();
+		
+		for (DictionaryEntry groupDictionaryEntry : groupEntryDictionaryEntryList) {
+			uniqueRomajiList.add(groupDictionaryEntry.getRomaji());
+		}
+		
+		for (String romaji : uniqueRomajiList) {
+			document.add(new TextField(LuceneStatic.dictionaryGroupEntry_romajiList, romaji, Field.Store.YES));			
+		}
+		
+		// alternatywy romajiList		
+		for (String romaji : uniqueRomajiList) {			
+			addAlternativeRomaji(document, LuceneStatic.dictionaryGroupEntry_virtual_romajiList, romaji);			
+		}
+
+		// translatesList
+		List<String> translates = groupEntryDictionaryEntryList.get(0).getTranslates(); // wszystkie elementy maja to samo tlumaczenie
+		
+		for (String currentTranslate : translates) {
+			
+			document.add(new TextField(LuceneStatic.dictionaryGroupEntry_translatesList, currentTranslate, Field.Store.YES));
+						
+			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
+				
+			document.add(new TextField(LuceneStatic.dictionaryGroupEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.YES));
+		}
+		
+		// info
+		String info = emptyIfNull(groupEntryDictionaryEntryList.get(0).getInfo()); // wszystkie elementy maja to samo tlumaczenie
+		
+		document.add(new TextField(LuceneStatic.dictionaryGroupEntry_info, info, Field.Store.YES));
+		
+		//
+		
+		String infoWithoutPolishChars = Utils.removePolishChars(info);
+			
+		document.add(new TextField(LuceneStatic.dictionaryGroupEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.YES));
+		
+		// dodanie do indeksu
+		
+		indexWriter.addDocument(document);
+	}
+		
 	private static void initializeSpellChecker(Directory index, IndexReader reader, LuceneAnalyzer analyzer, LuceneDatabaseSuggesterAndSpellCheckerSource source) throws IOException {
 		
 		System.out.println("Spell Checker: " + source);
