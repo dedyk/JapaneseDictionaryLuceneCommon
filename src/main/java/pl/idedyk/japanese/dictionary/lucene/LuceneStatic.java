@@ -46,25 +46,6 @@ public class LuceneStatic {
 
 	public static final String dictionaryEntry_android_spellCheckerList = "dictionaryEntry_android_spellCheckerList";
 	public static final String dictionaryEntry_web_spellCheckerList = "dictionaryEntry_web_spellCheckerList";
-
-	//
-	
-	public static final String dictionaryGroupEntry_objectType = "dictionaryGroupEntry";
-
-	public static final String dictionaryGroupEntry_id = "dictionaryGroupEntry_id";
-	public static final String dictionaryGroupEntry_dictionaryEntryIdList = "dictionaryGroupEntry_dictionaryEntryIdList";
-	public static final String dictionaryGroupEntry_dictionaryEntryTypeList = "dictionaryGroupEntry_dictionaryEntryTypeList";
-	public static final String dictionaryGroupEntry_attributeList = "dictionaryGroupEntry_attributeList";
-	public static final String dictionaryGroupEntry_kanjiList = "dictionaryGroupEntry_kanjiList";
-	public static final String dictionaryGroupEntry_kanaList = "dictionaryGroupEntry_kanaList";
-	public static final String dictionaryGroupEntry_romajiList = "dictionaryGroupEntry_romajiList";
-	public static final String dictionaryGroupEntry_virtual_romajiList = "dictionaryGroupEntry_virtual_romajiList";
-	public static final String dictionaryGroupEntry_translatesList = "dictionaryGroupEntry_translatesList";
-	public static final String dictionaryGroupEntry_translatesListWithoutPolishChars = "dictionaryGroupEntry_translatesListWithoutPolishChars";
-	public static final String dictionaryGroupEntry_info = "dictionaryGroupEntry_info";
-	public static final String dictionaryGroupEntry_infoWithoutPolishChars = "dictionaryGroupEntry_infoWithoutPolishChars";
-
-	//
 	
 	public static final String nameDictionaryEntry_objectType = "nameDictionaryEntry";
 	
@@ -78,8 +59,6 @@ public class LuceneStatic {
 	public static final String nameDictionaryEntry_translatesListWithoutPolishChars = "nameDictionaryEntry_translatesListWithoutPolishChars";
 	public static final String nameDictionaryEntry_info = "nameDictionaryEntry_info";
 	public static final String nameDictionaryEntry_infoWithoutPolishChars = "nameDictionaryEntry_infoWithoutPolishChars";
-	
-	//
 	
 	public static final String kanjiEntry_objectType = "kanjiEntry";
 	
@@ -107,12 +86,8 @@ public class LuceneStatic {
 	public static final String kanjiEntry_android_spellCheckerList = "kanjiEntry_android_spellCheckerList";
 	public static final String kanjiEntry_web_spellCheckerList = "kanjiEntry_web_spellCheckerList";
 	
-	//
-	
 	public static final String uniqueDictionaryEntryGroupEnumList_objectType = "uniqueDictionaryEntryGroupEnumList";
 	public static final String uniqueDictionaryEntryGroupEnumList_groupsList = "uniqueDictionaryEntryGroupEnumList_groupsList";
-	
-	//
 	
 	public static final String allAvailableKanjiRadicals_objectType = "allAvailableKanjiRadicals";
 	public static final String allAvailableKanjiRadicals_radicalsList = "allAvailableKanjiRadicals_radicalsList";
