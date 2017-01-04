@@ -102,7 +102,7 @@ public class LuceneDBGenerator {
 		boolean addSugestionList = Boolean.parseBoolean(args[8]);
 		boolean addGrammaAndExample = Boolean.parseBoolean(args[9]);		
 		
-		String dbOutDir = args[8];
+		String dbOutDir = args[10];
 
 		////
 		/*
