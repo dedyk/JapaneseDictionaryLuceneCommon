@@ -53,6 +53,8 @@ public class LuceneStatic {
 
 	public static final String dictionaryGroupEntry_id = "dictionaryGroupEntry_id";
 	public static final String dictionaryGroupEntry_dictionaryEntryIdList = "dictionaryGroupEntry_dictionaryEntryIdList";
+	public static final String dictionaryGroupEntry_dictionaryEntryTypeList = "dictionaryGroupEntry_dictionaryEntryTypeList";
+	public static final String dictionaryGroupEntry_attributeList = "dictionaryGroupEntry_attributeList";
 	public static final String dictionaryGroupEntry_kanjiList = "dictionaryGroupEntry_kanjiList";
 	public static final String dictionaryGroupEntry_kanaList = "dictionaryGroupEntry_kanaList";
 	public static final String dictionaryGroupEntry_romajiList = "dictionaryGroupEntry_romajiList";

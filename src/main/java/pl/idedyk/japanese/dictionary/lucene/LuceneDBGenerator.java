@@ -89,6 +89,7 @@ public class LuceneDBGenerator {
 		*/
 
 		// parametry
+
 		String dictionaryFilePath = args[0];
 		String dictionaryGroupFilePath = args[1];
 		String sentencesFilePath = args[2];
@@ -1204,7 +1205,31 @@ public class LuceneDBGenerator {
 		for (DictionaryEntry groupDictionaryEntry : groupEntryDictionaryEntryList) {
 			document.add(new IntField(LuceneStatic.dictionaryGroupEntry_dictionaryEntryIdList, groupDictionaryEntry.getId(), Field.Store.YES));			
 		}
-
+		
+		// dictionaryEntryTypeList
+		LinkedHashSet<DictionaryEntryType> uniqueDictionaryEntryTypeList = new LinkedHashSet<DictionaryEntryType>();
+		
+		for (DictionaryEntry groupDictionaryEntry : groupEntryDictionaryEntryList) {
+			uniqueDictionaryEntryTypeList.add(groupDictionaryEntry.getDictionaryEntryType());
+		}
+				
+		List<String> dictionaryEntryTypeStringList = DictionaryEntryType.convertToValues(new ArrayList<DictionaryEntryType>(uniqueDictionaryEntryTypeList));
+		
+		for (String dictionaryEntryTypeString : dictionaryEntryTypeStringList) {
+			document.add(new StringField(LuceneStatic.dictionaryGroupEntry_dictionaryEntryTypeList, dictionaryEntryTypeString, Field.Store.YES));
+		}
+		
+		// attributeList
+		LinkedHashSet<String> uniqueAttributeList = new LinkedHashSet<String>();
+		
+		for (DictionaryEntry groupDictionaryEntry : groupEntryDictionaryEntryList) {
+			uniqueAttributeList.addAll(groupDictionaryEntry.getAttributeList().convertAttributeListToListString());
+		}
+		
+		for (String currentAttribute : uniqueAttributeList) {
+			document.add(new StringField(LuceneStatic.dictionaryGroupEntry_attributeList, currentAttribute, Field.Store.YES));
+		}
+		
 		// kanjiList
 		LinkedHashSet<String> uniqueKanjiList = new LinkedHashSet<String>();
 		
