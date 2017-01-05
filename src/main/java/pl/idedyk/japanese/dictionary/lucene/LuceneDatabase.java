@@ -64,7 +64,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, AnalyzingSuggester> analyzingSuggesterMap;	
 	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, SpellCheckerIndex> spellCheckerMap;
-			
+	
+	private static final int MAX_DICTIONARY_RESULT = 50;
+	
+	private static final int MAX_KANJI_RESULT = 50;
+	private static final int MAX_KANJI_STROKE_COUNT_RESULT = 200;
+	
 	public LuceneDatabase(String dbDir) {
 		this.dbDir = dbDir;
 	}
@@ -174,7 +179,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			return findWordResult;
 		}
 
-		final int maxResult = 50;
+		final int maxResult = MAX_DICTIONARY_RESULT;
 		                
 		String[] wordSplited = removeSpecialChars(findWordRequest.word).split("\\s+");
 
@@ -820,7 +825,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		FindKanjiResult findKanjiResult = new FindKanjiResult();
 		findKanjiResult.result = new ArrayList<KanjiEntry>();
 
-		final int maxResult = 50;
+		final int maxResult = MAX_KANJI_RESULT;
 
 		String[] wordSplited = removeSpecialChars(findKanjiRequest.word).split("\\s+");
 
@@ -1104,7 +1109,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 		*/
 		
-		final int maxResult = 50 - findWordResult.result.size();
+		final int maxResult = MAX_DICTIONARY_RESULT - findWordResult.result.size();
 		
 		if (maxResult <= 0) {
 			return;
@@ -1228,7 +1233,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 		*/
 		
-		final int maxResult = 50 - findWordResult.result.size();
+		final int maxResult = MAX_DICTIONARY_RESULT - findWordResult.result.size();
 
 		if (maxResult <= 0) {
 			return;
@@ -1408,7 +1413,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry_kanjiDic2Entry_strokeCount, from, to, true, true), Occur.MUST);
 
-		final int maxResult = 200;
+		final int maxResult = MAX_KANJI_STROKE_COUNT_RESULT;
 
 		try {
 
