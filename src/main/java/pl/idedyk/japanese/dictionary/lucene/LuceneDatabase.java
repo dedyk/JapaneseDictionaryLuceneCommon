@@ -31,6 +31,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.spell.JaroWinklerDistance;
 import org.apache.lucene.search.spell.LuceneDictionary;
 import org.apache.lucene.search.spell.SpellChecker;
+import org.apache.lucene.search.suggest.Lookup;
 import org.apache.lucene.search.suggest.Lookup.LookupResult;
 import org.apache.lucene.search.suggest.analyzing.AnalyzingSuggester;
 import org.apache.lucene.store.Directory;
@@ -62,7 +63,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	private IndexReader reader;
 	private IndexSearcher searcher;
 
-	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, AnalyzingSuggester> analyzingSuggesterMap;	
+	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, Lookup> lookupSuggesterMap;
 	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, SpellCheckerIndex> spellCheckerMap;
 	
 	private static final int MAX_DICTIONARY_RESULT = 50;
@@ -84,7 +85,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	public void openSuggester() throws IOException {
 		
-		analyzingSuggesterMap = new ConcurrentHashMap<LuceneDatabaseSuggesterAndSpellCheckerSource, AnalyzingSuggester>();
+		lookupSuggesterMap = new ConcurrentHashMap<LuceneDatabaseSuggesterAndSpellCheckerSource, Lookup>();
 		
 		initializeSuggester(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_WEB);
 		initializeSuggester(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_ANDROID);
@@ -96,13 +97,13 @@ public class LuceneDatabase implements IDatabaseConnector {
 	private void initializeSuggester(LuceneDatabaseSuggesterAndSpellCheckerSource source) throws IOException {
 		
 		LuceneDictionary luceneDictionary = new LuceneDictionary(reader, source.getSuggestionListFieldName());		
-		AnalyzingSuggester analyzingSuggester = new AnalyzingSuggester(analyzer);
+		Lookup lookup = new AnalyzingSuggester(analyzer);
 		
-		analyzingSuggester.build(luceneDictionary);
+		lookup.build(luceneDictionary);
 
 		//
 		
-		analyzingSuggesterMap.put(source, analyzingSuggester);		
+		lookupSuggesterMap.put(source, lookup);
 	}
 	
 	public void openSpellChecker() throws IOException {
@@ -1649,15 +1650,15 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		List<String> result = new ArrayList<String>();
 		
-		if (analyzingSuggesterMap == null || term == null || term.length() == 0) {
-			return result;
+		if (lookupSuggesterMap == null || term == null || term.length() == 0) {
+			return new ArrayList<String>();
 		}
 		
-		AnalyzingSuggester analyzingSuggester = analyzingSuggesterMap.get(source);
+		Lookup lookup = lookupSuggesterMap.get(source);
 		
-		if (analyzingSuggester != null) {
+		if (lookup != null) {
 			
-			List<LookupResult> lookupResult = analyzingSuggester.lookup(term, false, limit);
+			List<LookupResult> lookupResult = lookup.lookup(term, false, limit);
 
 			for (LookupResult currentLookupResult : lookupResult) {
 				result.add(currentLookupResult.key.toString());
@@ -1669,13 +1670,13 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	public boolean isAutocompleteInitialized(LuceneDatabaseSuggesterAndSpellCheckerSource source) {
 		
-		if (analyzingSuggesterMap == null) {
+		if (lookupSuggesterMap == null) {
 			return false;
 		}
 		
-		AnalyzingSuggester analyzingSuggester = analyzingSuggesterMap.get(source);
+		Lookup lookup = lookupSuggesterMap.get(source);
 				
-		return analyzingSuggester != null;
+		return lookup != null;
 	}
 	
 	public boolean isSpellCheckerInitialized(LuceneDatabaseSuggesterAndSpellCheckerSource source) {

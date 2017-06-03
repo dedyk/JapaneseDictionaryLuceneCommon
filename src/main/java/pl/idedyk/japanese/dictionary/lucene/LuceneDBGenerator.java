@@ -1179,9 +1179,9 @@ public class LuceneDBGenerator {
 			String fieldValueWithoutPolishChars = Utils.removePolishChars(fieldValue);
 			
 			if (fieldValue.equals(fieldValueWithoutPolishChars) == false) {
-				document.add(new StringField(fieldName, fieldValueWithoutPolishChars, Field.Store.YES));
+				document.add(new StringField(fieldName, fieldValueWithoutPolishChars + " ___ " / * LuceneDatabaseSuggesterAndSpellCheckerSource.SUGGESTER_SEPARATOR * / + fieldValue, Field.Store.YES));
 			}
-			*/			
+			*/
 		}
 	}
 	
