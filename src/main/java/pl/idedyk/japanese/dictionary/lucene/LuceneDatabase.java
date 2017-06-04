@@ -60,6 +60,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	private Directory index;
 	private LuceneAnalyzer analyzer;
+	private LuceneAnalyzer analyzerWithoutPolishChars;
 	private IndexReader reader;
 	private IndexSearcher searcher;
 
@@ -79,6 +80,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		index = FSDirectory.open(new File(dbDir));
 		analyzer = new LuceneAnalyzer(Version.LUCENE_47);
+		analyzerWithoutPolishChars = new LuceneAnalyzer(Version.LUCENE_47, true);
 		reader = DirectoryReader.open(index);
 		searcher = new IndexSearcher(reader);
 	}
@@ -97,7 +99,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	private void initializeSuggester(LuceneDatabaseSuggesterAndSpellCheckerSource source) throws IOException {
 		
 		LuceneDictionary luceneDictionary = new LuceneDictionary(reader, source.getSuggestionListFieldName());		
-		Lookup lookup = new AnalyzingSuggester(analyzer);
+		Lookup lookup = new AnalyzingSuggester(analyzerWithoutPolishChars);
 		
 		lookup.build(luceneDictionary);
 

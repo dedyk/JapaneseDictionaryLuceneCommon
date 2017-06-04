@@ -60,14 +60,16 @@ public class LuceneDBGenerator {
 	
 		/*
 		// test tokenizera
-		LuceneAnalyzer analyzerTest = new LuceneAnalyzer(Version.LUCENE_47);
+		LuceneAnalyzer analyzerTest = new LuceneAnalyzer(Version.LUCENE_47, true);
 		
 		//String text = "1";
 		//String text = "1 ala";
-		String text = "Ala ma kota i psa";
+		//String text = "Ala ma kota i psa";
 		//String text = "Ala ma kota i psa2 i abc";
 		//String text = "dziesięć lat";
 		//String text = "お早う御座います";
+		//String text = "Mały, skromny japoński pomocnik";
+		String text = "sprawiedliwoŚĆ";
 		
 		TokenStream tokenStream = analyzerTest.tokenStream("a", text);
 		
