@@ -88,6 +88,8 @@ public class LuceneDBGenerator {
 						
 		System.exit(1);
 		*/
+		
+		// db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv true true db-lucene
 
 		// parametry
 		String dictionaryFilePath = args[0];
@@ -311,6 +313,8 @@ public class LuceneDBGenerator {
 		// kanji
 		document.add(new StringField(LuceneStatic.dictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
 		
+		addPrefixes(document, LuceneStatic.dictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()));
+		
 		if (addSugestionList == true) {
 			
 			addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, emptyIfNull(dictionaryEntry.getKanji()), false);
@@ -324,6 +328,8 @@ public class LuceneDBGenerator {
 		String kana = dictionaryEntry.getKana();
 		
 		document.add(new StringField(LuceneStatic.dictionaryEntry_kana, kana, Field.Store.YES));
+		
+		addPrefixes(document, LuceneStatic.dictionaryEntry_kana, kana);
 		
 		if (addSugestionList == true) {
 			
@@ -342,8 +348,12 @@ public class LuceneDBGenerator {
 				
 		document.add(new TextField(LuceneStatic.dictionaryEntry_romaji, romaji, Field.Store.YES));
 
+		addPrefixes(document, LuceneStatic.dictionaryEntry_romaji, romaji);
+		
+		//
+		
 		// dodanie alternatyw romaji
-		addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_virtual_romaji, romaji);
+		addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_virtual_romaji, romaji, true);
 		
 		if (addSugestionList == true) {
 			
@@ -361,6 +371,8 @@ public class LuceneDBGenerator {
 			
 			document.add(new TextField(LuceneStatic.dictionaryEntry_translatesList, currentTranslate, Field.Store.YES));
 			
+			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesList, currentTranslate);
+			
 			if (addSugestionList == true) {
 								
 				addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, currentTranslate, true);
@@ -373,16 +385,22 @@ public class LuceneDBGenerator {
 			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
 				
 			document.add(new TextField(LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.YES));
+			
+			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars);
 		}
 		
 		// info
 		String info = emptyIfNull(dictionaryEntry.getInfo());
 		
 		document.add(new TextField(LuceneStatic.dictionaryEntry_info, info, Field.Store.YES));
+		
+		addPrefixes(document, LuceneStatic.dictionaryEntry_info, info);
 			
 		String infoWithoutPolishChars = Utils.removePolishChars(info);
 			
 		document.add(new TextField(LuceneStatic.dictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.YES));
+		
+		addPrefixes(document, LuceneStatic.dictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars);
 		
 		// example sentence groupIds
 		List<String> exampleSentenceGroupIdsList = dictionaryEntry.getExampleSentenceGroupIdsList();
@@ -394,20 +412,28 @@ public class LuceneDBGenerator {
 		indexWriter.addDocument(document);
 	}
 	
-	private static void addAlternativeRomaji(Document document, String fieldName, String romaji) {
+	private static void addAlternativeRomaji(Document document, String fieldName, String romaji, boolean generatePrefixes) {
 		
 		if (romaji.contains(" ") == true) {
 			
 			String romajiWithoutSpace = romaji.replaceAll(" ", "");
 			
-			document.add(new TextField(fieldName, romajiWithoutSpace, Field.Store.YES));				
+			document.add(new TextField(fieldName, romajiWithoutSpace, Field.Store.YES));
+			
+			if (generatePrefixes == true) {
+				addPrefixes(document, fieldName, romajiWithoutSpace);
+			}
 		}
 		
 		if (romaji.contains("'") == true) {
 			
 			String romajiWithoutChar = romaji.replaceAll("'", "");
 			
-			document.add(new TextField(fieldName, romajiWithoutChar, Field.Store.YES));							
+			document.add(new TextField(fieldName, romajiWithoutChar, Field.Store.YES));	
+			
+			if (generatePrefixes == true) {
+				addPrefixes(document, fieldName, romajiWithoutChar);
+			}
 		}		
 		
 		if (romaji.contains("du") == true) {
@@ -415,6 +441,10 @@ public class LuceneDBGenerator {
 			String romajiDzu = romaji.replaceAll("du", "dzu");
 			
 			document.add(new TextField(fieldName, romajiDzu, Field.Store.YES));
+			
+			if (generatePrefixes == true) {
+				addPrefixes(document, fieldName, romajiDzu);
+			}
 		}
 		
 		if (romaji.contains(" o ") == true) {
@@ -422,6 +452,10 @@ public class LuceneDBGenerator {
 			String romajiWo = romaji.replaceAll(" o ", " wo ");
 						
 			document.add(new TextField(fieldName, romajiWo, Field.Store.YES));
+			
+			if (generatePrefixes == true) {
+				addPrefixes(document, fieldName, romajiWo);
+			}
 		}
 
 		if (romaji.contains("tsu") == true) {
@@ -429,6 +463,10 @@ public class LuceneDBGenerator {
 			String romajiTu = romaji.replaceAll("tsu", "tu");
 			
 			document.add(new TextField(fieldName, romajiTu, Field.Store.YES));
+			
+			if (generatePrefixes == true) {
+				addPrefixes(document, fieldName, romajiTu);
+			}
 		}
 
 		if (romaji.contains("shi") == true) {
@@ -436,6 +474,10 @@ public class LuceneDBGenerator {
 			String romajiSi = romaji.replaceAll("shi", "si");
 						
 			document.add(new TextField(fieldName, romajiSi, Field.Store.YES));
+			
+			if (generatePrefixes == true) {
+				addPrefixes(document, fieldName, romajiSi);
+			}
 		}
 
 		if (romaji.contains("fu") == true) {
@@ -443,8 +485,21 @@ public class LuceneDBGenerator {
 			String romajiHu = romaji.replaceAll("fu", "hu");
 						
 			document.add(new TextField(fieldName, romajiHu, Field.Store.YES));
-		}
+			
+			if (generatePrefixes == true) {
+				addPrefixes(document, fieldName, romajiHu);
+			}
+		}		
+	}
+	
+	private static void addPrefixes(Document document, String fieldName, String value) {
 		
+		for (int idx = 1; idx < value.length(); ++idx) {
+			
+			String prefix = value.substring(idx);
+			
+			document.add(new TextField(fieldName + "_" + LuceneStatic.prefix, prefix, Field.Store.NO));			
+		}
 	}
 	
 	private static void countGrammaFormAndExamples(List<DictionaryEntry> dictionaryEntryList, IndexWriter indexWriter, boolean addGrammaAndExample, boolean addSugestionList) throws IOException {
@@ -582,7 +637,7 @@ public class LuceneDBGenerator {
 			document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
 			
 			// dodanie alternatyw romaji
-			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji);
+			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji, false);
 						
 			if (addSugestionList == true) {
 				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentRomaji), false);
@@ -624,7 +679,7 @@ public class LuceneDBGenerator {
 			document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
 			
 			// dodanie alternatyw romaji
-			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji);
+			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji, false);
 			
 			if (addSugestionList == true) {
 				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentRomaji), false);
@@ -1044,7 +1099,7 @@ public class LuceneDBGenerator {
 		
 		document.add(new TextField(LuceneStatic.nameDictionaryEntry_romaji, romaji, Field.Store.YES));
 		
-		addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry_virtual_romaji, romaji);
+		addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry_virtual_romaji, romaji, false);
 				
 		if (addSugestionList == true) {
 			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, romaji, false);
