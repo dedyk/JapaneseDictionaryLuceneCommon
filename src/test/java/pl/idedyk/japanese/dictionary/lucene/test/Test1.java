@@ -8,6 +8,7 @@ import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult.ResultItem;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
@@ -50,7 +51,7 @@ public class Test1 {
 		
 		//findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
 		
-		//findWordRequest.wordPlaceSearch = WordPlaceSearch.EXACT;
+		findWordRequest.wordPlaceSearch = WordPlaceSearch.ANY_PLACE;
 		
 		FindWordResult findWordResult = dictionaryManager.findWord(findWordRequest);
 		
@@ -58,7 +59,9 @@ public class Test1 {
 			
 			DictionaryEntry dictionaryEntry = resultItem.getDictionaryEntry();
 			
-			System.out.println(dictionaryEntry.getId() + " - " + dictionaryEntry.getDictionaryEntryTypeList() + " - " + dictionaryEntry.getKanji() + " - " + dictionaryEntry.getKana() + " - " + dictionaryEntry.getTranslates());
+			System.out.println(dictionaryEntry.getId() + " - " + dictionaryEntry.getDictionaryEntryTypeList() + " - " + dictionaryEntry.getKanji() + " - " + 
+					dictionaryEntry.getKana() + " - " + dictionaryEntry.getRomaji() + " - " + dictionaryEntry.getTranslates() + " - " +
+					dictionaryEntry.getInfo());
 			
 			System.out.println("--------");
 		}

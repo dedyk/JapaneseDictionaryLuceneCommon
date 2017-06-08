@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -89,7 +90,8 @@ public class LuceneDBGenerator {
 		System.exit(1);
 		*/
 		
-		// db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv true true db-lucene
+		// android: db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv false false false db-lucene
+		// web: db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv true true true db-lucene
 
 		// parametry
 		String dictionaryFilePath = args[0];
@@ -102,7 +104,9 @@ public class LuceneDBGenerator {
 		boolean addSugestionList = Boolean.parseBoolean(args[6]);
 		boolean addGrammaAndExample = Boolean.parseBoolean(args[7]);		
 		
-		String dbOutDir = args[8];
+		boolean generatePrefixes = Boolean.parseBoolean(args[8]);
+		
+		String dbOutDir = args[9];
 		////
 		
 		/*
@@ -155,7 +159,7 @@ public class LuceneDBGenerator {
 		FileInputStream dictionaryInputStream = new FileInputStream(dictionaryFilePath);
 
 		// wczytywanie slownika
-		List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList);
+		List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList, generatePrefixes);
 
 		// przeliczenie form
 		countGrammaFormAndExamples(dictionaryEntryList, indexWriter, addGrammaAndExample, addSugestionList);
@@ -190,7 +194,7 @@ public class LuceneDBGenerator {
 		FileInputStream kanjiInputStream = new FileInputStream(kanjiFilePath);
 
 		// wczytywanie pliku ze znakami kanji
-		readKanjiDictionaryFile(indexWriter, radicalInfoList, kanjiInputStream, addSugestionList);
+		readKanjiDictionaryFile(indexWriter, radicalInfoList, kanjiInputStream, addSugestionList, generatePrefixes);
 
 		kanjiInputStream.close();
 		
@@ -203,12 +207,14 @@ public class LuceneDBGenerator {
 			}
 		});
 		
+		Arrays.sort(namesList);
+		
 		for (File currentName : namesList) {
 			
 			FileInputStream namesInputStream = new FileInputStream(currentName);
 			
 			// wczytywanie slownika nazw
-			readNamesFile(indexWriter, namesInputStream, addSugestionList);
+			readNamesFile(indexWriter, namesInputStream, addSugestionList, generatePrefixes);
 	
 			// zamkniecie pliku
 			namesInputStream.close();
@@ -248,7 +254,7 @@ public class LuceneDBGenerator {
 		return entry;		
 	}
 	
-	private static List<DictionaryEntry> readDictionaryFile(IndexWriter indexWriter, InputStream dictionaryInputStream, boolean addSugestionList) throws IOException, DictionaryException, SQLException {
+	private static List<DictionaryEntry> readDictionaryFile(IndexWriter indexWriter, InputStream dictionaryInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
 		
 		List<DictionaryEntry> dictionaryEntryList = new ArrayList<DictionaryEntry>();
 
@@ -262,7 +268,7 @@ public class LuceneDBGenerator {
 			
 			System.out.println(String.format("DictionaryEntry id = %s", entry.getId()));
 
-			addDictionaryEntry(indexWriter, entry, addSugestionList);
+			addDictionaryEntry(indexWriter, entry, addSugestionList, generatePrefixes);
 
 			uniqueDictionaryEntryGroupEnumSet.addAll(entry.getGroups());
 			
@@ -276,7 +282,7 @@ public class LuceneDBGenerator {
 		return dictionaryEntryList;
 	}
 
-	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList) throws IOException {
+	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 		
 		Document document = new Document();
 		
@@ -313,7 +319,7 @@ public class LuceneDBGenerator {
 		// kanji
 		document.add(new StringField(LuceneStatic.dictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
 		
-		addPrefixes(document, LuceneStatic.dictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()));
+		addPrefixes(document, LuceneStatic.dictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), generatePrefixes);
 		
 		if (addSugestionList == true) {
 			
@@ -329,7 +335,7 @@ public class LuceneDBGenerator {
 		
 		document.add(new StringField(LuceneStatic.dictionaryEntry_kana, kana, Field.Store.YES));
 		
-		addPrefixes(document, LuceneStatic.dictionaryEntry_kana, kana);
+		addPrefixes(document, LuceneStatic.dictionaryEntry_kana, kana, generatePrefixes);
 		
 		if (addSugestionList == true) {
 			
@@ -348,7 +354,7 @@ public class LuceneDBGenerator {
 				
 		document.add(new TextField(LuceneStatic.dictionaryEntry_romaji, romaji, Field.Store.YES));
 
-		addPrefixes(document, LuceneStatic.dictionaryEntry_romaji, romaji);
+		addPrefixes(document, LuceneStatic.dictionaryEntry_romaji, romaji, generatePrefixes);
 		
 		//
 		
@@ -371,7 +377,7 @@ public class LuceneDBGenerator {
 			
 			document.add(new TextField(LuceneStatic.dictionaryEntry_translatesList, currentTranslate, Field.Store.YES));
 			
-			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesList, currentTranslate);
+			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesList, currentTranslate, generatePrefixes);
 			
 			if (addSugestionList == true) {
 								
@@ -384,9 +390,9 @@ public class LuceneDBGenerator {
 			
 			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
 				
-			document.add(new TextField(LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.YES));
+			document.add(new TextField(LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.NO));
 			
-			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars);
+			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, generatePrefixes);
 		}
 		
 		// info
@@ -394,13 +400,13 @@ public class LuceneDBGenerator {
 		
 		document.add(new TextField(LuceneStatic.dictionaryEntry_info, info, Field.Store.YES));
 		
-		addPrefixes(document, LuceneStatic.dictionaryEntry_info, info);
+		addPrefixes(document, LuceneStatic.dictionaryEntry_info, info, generatePrefixes);
 			
 		String infoWithoutPolishChars = Utils.removePolishChars(info);
 			
-		document.add(new TextField(LuceneStatic.dictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.YES));
+		document.add(new TextField(LuceneStatic.dictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.NO));
 		
-		addPrefixes(document, LuceneStatic.dictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars);
+		addPrefixes(document, LuceneStatic.dictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, generatePrefixes);
 		
 		// example sentence groupIds
 		List<String> exampleSentenceGroupIdsList = dictionaryEntry.getExampleSentenceGroupIdsList();
@@ -418,43 +424,37 @@ public class LuceneDBGenerator {
 			
 			String romajiWithoutSpace = romaji.replaceAll(" ", "");
 			
-			document.add(new TextField(fieldName, romajiWithoutSpace, Field.Store.YES));
+			document.add(new TextField(fieldName, romajiWithoutSpace, Field.Store.NO));
 			
-			if (generatePrefixes == true) {
-				addPrefixes(document, fieldName, romajiWithoutSpace);
-			}
+			addPrefixes(document, fieldName, romajiWithoutSpace, generatePrefixes);
 		}
 		
 		if (romaji.contains("'") == true) {
 			
 			String romajiWithoutChar = romaji.replaceAll("'", "");
 			
-			document.add(new TextField(fieldName, romajiWithoutChar, Field.Store.YES));	
+			document.add(new TextField(fieldName, romajiWithoutChar, Field.Store.NO));	
 			
-			if (generatePrefixes == true) {
-				addPrefixes(document, fieldName, romajiWithoutChar);
-			}
+			addPrefixes(document, fieldName, romajiWithoutChar, generatePrefixes);
 		}		
 		
 		if (romaji.contains("du") == true) {
 			
 			String romajiDzu = romaji.replaceAll("du", "dzu");
 			
-			document.add(new TextField(fieldName, romajiDzu, Field.Store.YES));
+			document.add(new TextField(fieldName, romajiDzu, Field.Store.NO));
 			
-			if (generatePrefixes == true) {
-				addPrefixes(document, fieldName, romajiDzu);
-			}
+			addPrefixes(document, fieldName, romajiDzu, generatePrefixes);
 		}
 		
 		if (romaji.contains(" o ") == true) {
 			
 			String romajiWo = romaji.replaceAll(" o ", " wo ");
 						
-			document.add(new TextField(fieldName, romajiWo, Field.Store.YES));
+			document.add(new TextField(fieldName, romajiWo, Field.Store.NO));
 			
 			if (generatePrefixes == true) {
-				addPrefixes(document, fieldName, romajiWo);
+				addPrefixes(document, fieldName, romajiWo, generatePrefixes);
 			}
 		}
 
@@ -462,39 +462,37 @@ public class LuceneDBGenerator {
 			
 			String romajiTu = romaji.replaceAll("tsu", "tu");
 			
-			document.add(new TextField(fieldName, romajiTu, Field.Store.YES));
+			document.add(new TextField(fieldName, romajiTu, Field.Store.NO));
 			
-			if (generatePrefixes == true) {
-				addPrefixes(document, fieldName, romajiTu);
-			}
+			addPrefixes(document, fieldName, romajiTu, generatePrefixes);
 		}
 
 		if (romaji.contains("shi") == true) {
 			
 			String romajiSi = romaji.replaceAll("shi", "si");
 						
-			document.add(new TextField(fieldName, romajiSi, Field.Store.YES));
+			document.add(new TextField(fieldName, romajiSi, Field.Store.NO));
 			
-			if (generatePrefixes == true) {
-				addPrefixes(document, fieldName, romajiSi);
-			}
+			addPrefixes(document, fieldName, romajiSi, generatePrefixes);
 		}
 
 		if (romaji.contains("fu") == true) {
 			
 			String romajiHu = romaji.replaceAll("fu", "hu");
 						
-			document.add(new TextField(fieldName, romajiHu, Field.Store.YES));
+			document.add(new TextField(fieldName, romajiHu, Field.Store.NO));
 			
-			if (generatePrefixes == true) {
-				addPrefixes(document, fieldName, romajiHu);
-			}
+			addPrefixes(document, fieldName, romajiHu, generatePrefixes);
 		}		
 	}
 	
-	private static void addPrefixes(Document document, String fieldName, String value) {
+	private static void addPrefixes(Document document, String fieldName, String value, boolean generatePrefixes) {
 		
-		for (int idx = 1; idx < value.length(); ++idx) {
+		if (generatePrefixes == false) {
+			return;
+		}
+		
+		for (int idx = 0; idx < value.length(); ++idx) {
 			
 			String prefix = value.substring(idx);
 			
@@ -838,7 +836,7 @@ public class LuceneDBGenerator {
 	}
 
 	private static void readKanjiDictionaryFile(IndexWriter indexWriter, List<RadicalInfo> radicalInfoList,
-			InputStream kanjiInputStream, boolean addSugestionList) throws IOException, DictionaryException, SQLException {
+			InputStream kanjiInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
 
 		Map<String, RadicalInfo> radicalListMapCache = new HashMap<String, RadicalInfo>();
 
@@ -893,7 +891,7 @@ public class LuceneDBGenerator {
 			}
 
 			// add
-			addKanjiEntry(indexWriter, entry, addSugestionList);
+			addKanjiEntry(indexWriter, entry, addSugestionList, generatePrefixes);
 		}
 		
 		// add available radical list
@@ -918,7 +916,7 @@ public class LuceneDBGenerator {
 	}
 	*/
 
-	public static void addKanjiEntry(IndexWriter indexWriter, KanjiEntry kanjiEntry, boolean addSugestionList) throws IOException {
+	public static void addKanjiEntry(IndexWriter indexWriter, KanjiEntry kanjiEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 
 		Document document = new Document();
 		
@@ -930,6 +928,8 @@ public class LuceneDBGenerator {
 
 		// kanji
 		document.add(new StringField(LuceneStatic.kanjiEntry_kanji, emptyIfNull(kanjiEntry.getKanji()), Field.Store.YES));
+		
+		addPrefixes(document, LuceneStatic.kanjiEntry_kanji, emptyIfNull(kanjiEntry.getKanji()), generatePrefixes);
 		
 		if (addSugestionList == true) {
 			
@@ -947,6 +947,8 @@ public class LuceneDBGenerator {
 			
 			document.add(new TextField(LuceneStatic.kanjiEntry_polishTranslatesList, currentTranslate, Field.Store.YES));
 			
+			addPrefixes(document, LuceneStatic.kanjiEntry_polishTranslatesList, currentTranslate, generatePrefixes);
+			
 			if (addSugestionList == true) {
 								
 				addSuggestion(document, LuceneStatic.kanjiEntry_android_sugestionList, currentTranslate, true);
@@ -958,7 +960,9 @@ public class LuceneDBGenerator {
 			
 			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
 				
-			document.add(new TextField(LuceneStatic.kanjiEntry_infoWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.YES));
+			document.add(new TextField(LuceneStatic.kanjiEntry_infoWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.NO));
+			
+			addPrefixes(document, LuceneStatic.kanjiEntry_infoWithoutPolishChars, currentTranslateWithoutPolishChars, generatePrefixes);
 		}
 		
 		// info
@@ -966,9 +970,13 @@ public class LuceneDBGenerator {
 		
 		document.add(new TextField(LuceneStatic.kanjiEntry_info, info, Field.Store.YES));
 		
+		addPrefixes(document, LuceneStatic.kanjiEntry_info, info, generatePrefixes);
+		
 		String infoWithoutPolishChars = Utils.removePolishChars(info);
 			
-		document.add(new TextField(LuceneStatic.kanjiEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.YES));
+		document.add(new TextField(LuceneStatic.kanjiEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.NO));
+		
+		addPrefixes(document, LuceneStatic.kanjiEntry_infoWithoutPolishChars, infoWithoutPolishChars, generatePrefixes);
 
 		// generated
 		document.add(new StringField(LuceneStatic.kanjiEntry_used, String.valueOf(kanjiEntry.isUsed()), Field.Store.YES));
@@ -1039,7 +1047,7 @@ public class LuceneDBGenerator {
 		indexWriter.addDocument(document);		
 	}
 	
-	private static List<DictionaryEntry> readNamesFile(IndexWriter indexWriter, InputStream namesInputStream, boolean addSugestionList) throws IOException, DictionaryException, SQLException {
+	private static List<DictionaryEntry> readNamesFile(IndexWriter indexWriter, InputStream namesInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
 		
 		List<DictionaryEntry> namesDictionaryEntryList = new ArrayList<DictionaryEntry>();
 
@@ -1051,7 +1059,7 @@ public class LuceneDBGenerator {
 			
 			System.out.println(String.format("DictionaryEntry (name) id = %s", entry.getId()));
 
-			addNameDictionaryEntry(indexWriter, entry, addSugestionList);
+			addNameDictionaryEntry(indexWriter, entry, addSugestionList, generatePrefixes);
 			
 			namesDictionaryEntryList.add(entry);			
 		}
@@ -1061,7 +1069,7 @@ public class LuceneDBGenerator {
 		return namesDictionaryEntryList;
 	}
 	
-	private static void addNameDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList) throws IOException {
+	private static void addNameDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 		
 		Document document = new Document();
 		
@@ -1081,6 +1089,8 @@ public class LuceneDBGenerator {
 		// kanji
 		document.add(new StringField(LuceneStatic.nameDictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
 		
+		addPrefixes(document, LuceneStatic.nameDictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), generatePrefixes);
+		
 		if (addSugestionList == true) {
 			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(dictionaryEntry.getKanji()), false);
 		}
@@ -1090,6 +1100,8 @@ public class LuceneDBGenerator {
 		
 		document.add(new StringField(LuceneStatic.nameDictionaryEntry_kana, kana, Field.Store.YES));
 		
+		addPrefixes(document, LuceneStatic.nameDictionaryEntry_kana, kana, generatePrefixes);
+		
 		if (addSugestionList == true) {
 			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, kana, false);
 		}
@@ -1098,6 +1110,8 @@ public class LuceneDBGenerator {
 		String romaji = dictionaryEntry.getRomaji();
 		
 		document.add(new TextField(LuceneStatic.nameDictionaryEntry_romaji, romaji, Field.Store.YES));
+		
+		addPrefixes(document, LuceneStatic.nameDictionaryEntry_romaji, romaji, generatePrefixes);
 		
 		addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry_virtual_romaji, romaji, false);
 				
@@ -1112,6 +1126,8 @@ public class LuceneDBGenerator {
 			
 			document.add(new TextField(LuceneStatic.nameDictionaryEntry_translatesList, currentTranslate, Field.Store.YES));
 			
+			addPrefixes(document, LuceneStatic.nameDictionaryEntry_translatesList, currentTranslate, generatePrefixes);
+			
 			if (addSugestionList == true) {
 								
 				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, currentTranslate, true);
@@ -1119,17 +1135,23 @@ public class LuceneDBGenerator {
 			
 			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
 				
-			document.add(new TextField(LuceneStatic.nameDictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.YES));
+			document.add(new TextField(LuceneStatic.nameDictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.NO));
+			
+			addPrefixes(document, LuceneStatic.nameDictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, generatePrefixes);
 		}
 		
 		// info
 		String info = emptyIfNull(dictionaryEntry.getInfo());
 		
 		document.add(new TextField(LuceneStatic.nameDictionaryEntry_info, info, Field.Store.YES));
+		
+		addPrefixes(document, LuceneStatic.nameDictionaryEntry_info, info, generatePrefixes);
 			
 		String infoWithoutPolishChars = Utils.removePolishChars(info);
 			
-		document.add(new TextField(LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.YES));
+		document.add(new TextField(LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.NO));
+		
+		addPrefixes(document, LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, generatePrefixes);
 				
 		indexWriter.addDocument(document);
 	}

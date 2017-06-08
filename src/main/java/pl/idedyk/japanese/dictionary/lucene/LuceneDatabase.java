@@ -636,6 +636,27 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			return booleanQuery;
 			
+		} else if (wordPlaceSearch == WordPlaceSearch.ANY_PLACE) {
+			
+			BooleanQuery exactQuery = new BooleanQuery();
+			
+			for (String currentWord : wordSplited) {
+				exactQuery.add(new TermQuery(new Term(fieldName + "_" + LuceneStatic.prefix, currentWord)), Occur.MUST);
+			}
+
+			BooleanQuery startWithQuery = new BooleanQuery();
+			
+			for (String currentWord : wordSplited) {
+				startWithQuery.add(new PrefixQuery(new Term(fieldName + "_" + LuceneStatic.prefix, currentWord)), Occur.MUST);
+			}
+			
+			BooleanQuery booleanQuery = new BooleanQuery();
+			
+			booleanQuery.add(exactQuery, Occur.SHOULD);
+			booleanQuery.add(startWithQuery, Occur.MUST);
+
+			return booleanQuery;
+			
 		} else if (wordPlaceSearch == WordPlaceSearch.EXACT) {
 
 			BooleanQuery booleanQuery = new BooleanQuery();
@@ -667,6 +688,21 @@ public class LuceneDatabase implements IDatabaseConnector {
 			booleanQuery.add(startWithQuery, Occur.MUST);
 
 			return booleanQuery;
+			
+		} else if (wordPlaceSearch == WordPlaceSearch.ANY_PLACE) {
+			
+			BooleanQuery exactQuery = new BooleanQuery();			
+			exactQuery.add(new TermQuery(new Term(fieldName + "_" + LuceneStatic.prefix, word)), Occur.MUST);
+
+			BooleanQuery startWithQuery = new BooleanQuery();
+			startWithQuery.add(new PrefixQuery(new Term(fieldName + "_" + LuceneStatic.prefix, word)), Occur.MUST);
+			
+			BooleanQuery booleanQuery = new BooleanQuery();
+			
+			booleanQuery.add(exactQuery, Occur.SHOULD);
+			booleanQuery.add(startWithQuery, Occur.MUST);
+
+			return booleanQuery;			
 			
 		} else if (wordPlaceSearch == WordPlaceSearch.EXACT) {
 			
