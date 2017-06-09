@@ -55,79 +55,61 @@ import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import com.csvreader.CsvReader;
 
 public class LuceneDBGenerator {	
-
 	
 	public static void main(String[] args) throws Exception {
-	
-		/*
-		// test tokenizera
-		LuceneAnalyzer analyzerTest = new LuceneAnalyzer(Version.LUCENE_47, true);
 		
-		//String text = "1";
-		//String text = "1 ala";
-		//String text = "Ala ma kota i psa";
-		//String text = "Ala ma kota i psa2 i abc";
-		//String text = "dziesięć lat";
-		//String text = "お早う御座います";
-		//String text = "Mały, skromny japoński pomocnik";
-		String text = "sprawiedliwoŚĆ";
+		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv db-lucene
+		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv db-lucene
 		
-		TokenStream tokenStream = analyzerTest.tokenStream("a", text);
-		
-		tokenStream.reset();
-		
-		while(true) {
-			
-			boolean incrementTokenResult = tokenStream.incrementToken();
-			
-			if (incrementTokenResult == false) {
-				break;
-			}
-			
-			System.out.println("Token: " + tokenStream.getAttribute(CharTermAttribute.class).toString());			
-		}
-						
-		System.exit(1);
-		*/
-		
-		// android: db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv false false false db-lucene
-		// web: db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv true true true db-lucene
-
 		// parametry
-		String dictionaryFilePath = args[0];
-		String sentencesFilePath = args[1];
-		String sentencesGroupsFilePath = args[2];		
-		String kanjiFilePath = args[3];
-		String radicalFilePath = args[4];
-		final String nameFilePath = args[5];
+		String mode = args[0];
 		
-		boolean addSugestionList = Boolean.parseBoolean(args[6]);
-		boolean addGrammaAndExample = Boolean.parseBoolean(args[7]);		
+		String dictionaryFilePath = args[1];
+		String sentencesFilePath = args[2];
+		String sentencesGroupsFilePath = args[3];
+		String kanjiFilePath = args[4];
+		String radicalFilePath = args[5];
+		final String nameFilePath = args[6];
 		
-		boolean generatePrefixes = Boolean.parseBoolean(args[8]);
+		String dbOutDir = args[7];
 		
-		String dbOutDir = args[9];
+		boolean addSugestionList;
+		boolean addGrammaAndExample;		
+		
+		boolean generateNamesDictionary;
+		
+		boolean generateDictionaryEntryPrefixes;
+		boolean generateKanjiEntryPrefixes;
+		boolean generateNameEntryPrefixes;
+		
+		if (mode.equals("web") == true) {
+			
+			addSugestionList = true;
+			addGrammaAndExample = true;		
+			
+			generateNamesDictionary = true;
+			
+			generateDictionaryEntryPrefixes = true;
+			generateKanjiEntryPrefixes = true;
+			generateNameEntryPrefixes = true;
+			
+		} else if (mode.equals("android") == true) {
+			
+			addSugestionList = false;
+			addGrammaAndExample = false;	
+			
+			generateNamesDictionary = false;
+			
+			generateDictionaryEntryPrefixes = false;
+			generateKanjiEntryPrefixes = true;
+			generateNameEntryPrefixes = false;
+
+		} else {
+			throw new Exception("Unknown mode: " + mode);
+		}
+				
 		////
-		
-		/*
-		int fixme = 1;
-		
-		String dictionaryFilePath = "db/word.csv";
-		String sentencesFilePath = "db/sentences.csv";
-		String sentencesGroupsFilePath = "db/sentences_groups.csv";		
-		String kanjiFilePath = "db/kanji.csv";
-		String radicalFilePath = "db/radical.csv";
-		
-		final String nameFilePath = "db/names.csv";
-		
-		boolean addSugestionList = true;
-		boolean addGrammaAndExample = true;
-		
-		String dbOutDir = "db-lucene";
-		*/
-		
-		////
-						
+								
 		final File dbOutDirFile = new File(dbOutDir);
 		
 		if (dbOutDirFile.exists() == false) {
@@ -159,7 +141,7 @@ public class LuceneDBGenerator {
 		FileInputStream dictionaryInputStream = new FileInputStream(dictionaryFilePath);
 
 		// wczytywanie slownika
-		List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList, generatePrefixes);
+		List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList, generateDictionaryEntryPrefixes);
 
 		// przeliczenie form
 		countGrammaFormAndExamples(dictionaryEntryList, indexWriter, addGrammaAndExample, addSugestionList);
@@ -194,30 +176,33 @@ public class LuceneDBGenerator {
 		FileInputStream kanjiInputStream = new FileInputStream(kanjiFilePath);
 
 		// wczytywanie pliku ze znakami kanji
-		readKanjiDictionaryFile(indexWriter, radicalInfoList, kanjiInputStream, addSugestionList, generatePrefixes);
+		readKanjiDictionaryFile(indexWriter, radicalInfoList, kanjiInputStream, addSugestionList, generateKanjiEntryPrefixes);
 
 		kanjiInputStream.close();
 		
 		// wczytywanie pliku z nazwami
-		File[] namesList = new File(nameFilePath).getParentFile().listFiles(new FileFilter() {
+		if (generateNamesDictionary == true) {
 			
-			@Override
-			public boolean accept(File pathname) {				
-				return pathname.getPath().startsWith(nameFilePath);
-			}
-		});
+			File[] namesList = new File(nameFilePath).getParentFile().listFiles(new FileFilter() {
+				
+				@Override
+				public boolean accept(File pathname) {				
+					return pathname.getPath().startsWith(nameFilePath);
+				}
+			});
+			
+			Arrays.sort(namesList);
+			
+			for (File currentName : namesList) {
+				
+				FileInputStream namesInputStream = new FileInputStream(currentName);
+				
+				// wczytywanie slownika nazw
+				readNamesFile(indexWriter, namesInputStream, addSugestionList, generateNameEntryPrefixes);
 		
-		Arrays.sort(namesList);
-		
-		for (File currentName : namesList) {
-			
-			FileInputStream namesInputStream = new FileInputStream(currentName);
-			
-			// wczytywanie slownika nazw
-			readNamesFile(indexWriter, namesInputStream, addSugestionList, generatePrefixes);
-	
-			// zamkniecie pliku
-			namesInputStream.close();
+				// zamkniecie pliku
+				namesInputStream.close();
+			}		
 		}		
 				
 		// zakonczenie zapisywania indeksu

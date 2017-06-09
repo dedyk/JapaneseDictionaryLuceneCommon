@@ -1,16 +1,13 @@
 package pl.idedyk.japanese.dictionary.lucene.test;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult.ResultItem;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiRequest;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
-import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
-import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
+import pl.idedyk.japanese.dictionary.api.dto.KanjiEntry;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePair;
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
@@ -20,6 +17,39 @@ import pl.idedyk.japanese.dictionary.lucene.LuceneDatabase;
 public class Test1 {
 
 	public static void main(String[] args) throws Exception {
+		
+		/*
+		// test tokenizera
+		LuceneAnalyzer analyzerTest = new LuceneAnalyzer(Version.LUCENE_47, true);
+		
+		//String text = "1";
+		//String text = "1 ala";
+		//String text = "Ala ma kota i psa";
+		//String text = "Ala ma kota i psa2 i abc";
+		//String text = "dziesięć lat";
+		//String text = "お早う御座います";
+		//String text = "Mały, skromny japoński pomocnik";
+		String text = "sprawiedliwoŚĆ";
+		
+		TokenStream tokenStream = analyzerTest.tokenStream("a", text);
+		
+		tokenStream.reset();
+		
+		while(true) {
+			
+			boolean incrementTokenResult = tokenStream.incrementToken();
+			
+			if (incrementTokenResult == false) {
+				break;
+			}
+			
+			System.out.println("Token: " + tokenStream.getAttribute(CharTermAttribute.class).toString());			
+		}
+						
+		System.exit(1);
+		*/
+		
+		//
 		
 		LuceneDatabase luceneDatabase = new LuceneDatabase("/tmp/a/db-lucene");
 		
@@ -31,6 +61,7 @@ public class Test1 {
 		
 		//		
 
+		/*
 		FindWordRequest findWordRequest = new FindWordRequest();
 		
 		//findWordRequest.searchGrammaFormAndExamples = false;		
@@ -65,7 +96,22 @@ public class Test1 {
 			
 			System.out.println("--------");
 		}
+		*/
 		
+		FindKanjiRequest findKanjiRequest = new FindKanjiRequest();
+		
+		findKanjiRequest.word = "kot";
+		findKanjiRequest.wordPlaceSearch = WordPlaceSearch.ANY_PLACE;
+		// findKanjiRequest.strokeCountFrom =
+		// findKanjiRequest.strokeCountTo =
+		// findKanjiRequest.searchOnlyTop2500 = 
+		
+		FindKanjiResult findKanjiResult = dictionaryManager.findKanji(findKanjiRequest);
+		
+		for (KanjiEntry kanjiEntry : findKanjiResult.result) {			
+			System.out.println(kanjiEntry.getKanji() + " - " + kanjiEntry.getPolishTranslates() + "- " + kanjiEntry.getInfo());			
+		}
+				
 		//
 		
 		luceneDatabase.close();
