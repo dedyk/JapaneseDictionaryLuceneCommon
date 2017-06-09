@@ -344,7 +344,7 @@ public class LuceneDBGenerator {
 		//
 		
 		// dodanie alternatyw romaji
-		addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_virtual_romaji, romaji, true);
+		addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_virtual_romaji, romaji, generatePrefixes);
 		
 		if (addSugestionList == true) {
 			
@@ -1098,7 +1098,7 @@ public class LuceneDBGenerator {
 		
 		addPrefixes(document, LuceneStatic.nameDictionaryEntry_romaji, romaji, generatePrefixes);
 		
-		addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry_virtual_romaji, romaji, false);
+		addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry_virtual_romaji, romaji, generatePrefixes);
 				
 		if (addSugestionList == true) {
 			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, romaji, false);
