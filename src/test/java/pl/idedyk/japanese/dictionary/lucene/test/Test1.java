@@ -4,10 +4,10 @@ import java.util.List;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiRequest;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiResult;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
-import pl.idedyk.japanese.dictionary.api.dto.KanjiEntry;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult.ResultItem;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.TranslateJapaneseSentenceResult;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.TranslateJapaneseSentenceResult.Token;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.TranslateJapaneseSentenceResult.TokenType;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePair;
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
@@ -98,6 +98,7 @@ public class Test1 {
 		}
 		*/
 		
+		/*
 		FindKanjiRequest findKanjiRequest = new FindKanjiRequest();
 		
 		findKanjiRequest.word = "kot";
@@ -113,6 +114,37 @@ public class Test1 {
 		}
 				
 		//
+		*/
+		
+		////////////////////
+		
+		//String sentence = "ウイリアムズF1、マッサ後任決定を急がず。最終戦後テストに参加予定のクビカが有利か";
+		String sentence = "【動画】セバスチャン・ブエミ、レッドブルRB8でスイスの峠道を駆ける「記憶に残り続ける」";
+		
+		TranslateJapaneseSentenceResult translateJapaneseSentenceResult = dictionaryManager.translateJapaneseSentenceTEST(sentence);
+		
+		List<Token> tokenList = translateJapaneseSentenceResult.getTokenList();
+		
+		for (Token token : tokenList) {
+			
+			System.out.println(token.getTokenType());
+			System.out.println(token.getToken());
+			System.out.println(token.getStartIdx());
+			System.out.println(token.getEndIdx());
+			
+			if (token.getTokenType() == TokenType.FOUND) {
+				
+				List<ResultItem> resultItemList = token.getFindWordResult().getResult();
+				
+				for (ResultItem resultItem : resultItemList) {
+					
+					System.out.println(resultItem.getDictionaryEntry().getTranslates());
+					
+				}
+			}
+			
+			System.out.println("-------------");
+		}
 		
 		luceneDatabase.close();
 	}
