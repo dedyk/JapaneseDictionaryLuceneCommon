@@ -210,6 +210,14 @@ public class LuceneDatabase implements IDatabaseConnector {
 				onlyCommonWordQuery.add(new Term(LuceneStatic.dictionaryEntry_attributeList, AttributeType.COMMON_WORD.toString()));
 				
 				query.add(onlyCommonWordQuery, Occur.MUST);
+				
+			} else {
+				
+				PhraseQuery onlyCommonWordQuery = new PhraseQuery();
+				
+				onlyCommonWordQuery.add(new Term(LuceneStatic.dictionaryEntry_attributeList, AttributeType.COMMON_WORD.toString()));
+								
+				query.add(onlyCommonWordQuery, Occur.SHOULD);
 			}
 			
 			BooleanQuery wordBooleanQuery = new BooleanQuery();
@@ -621,6 +629,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 			
 			for (String currentWord : wordSplited) {
 				exactQuery.add(new TermQuery(new Term(fieldName, currentWord)), Occur.MUST);
+				
+				exactQuery.setBoost(2.0f);
 			}
 
 			BooleanQuery startWithQuery = new BooleanQuery();

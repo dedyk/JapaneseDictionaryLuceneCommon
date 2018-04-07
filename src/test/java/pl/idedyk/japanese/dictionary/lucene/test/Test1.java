@@ -1,13 +1,16 @@
 package pl.idedyk.japanese.dictionary.lucene.test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult.ResultItem;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.TranslateJapaneseSentenceResult;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.TranslateJapaneseSentenceResult.Token;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.TranslateJapaneseSentenceResult.TokenType;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
+import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
+import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePair;
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
@@ -61,7 +64,6 @@ public class Test1 {
 		
 		//		
 
-		/*
 		FindWordRequest findWordRequest = new FindWordRequest();
 		
 		//findWordRequest.searchGrammaFormAndExamples = false;		
@@ -82,7 +84,9 @@ public class Test1 {
 		
 		//findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
 		
-		findWordRequest.wordPlaceSearch = WordPlaceSearch.ANY_PLACE;
+		findWordRequest.wordPlaceSearch = WordPlaceSearch.START_WITH;
+		
+		//findWordRequest.searchRomaji = false;
 		
 		FindWordResult findWordResult = dictionaryManager.findWord(findWordRequest);
 		
@@ -96,7 +100,6 @@ public class Test1 {
 			
 			System.out.println("--------");
 		}
-		*/
 		
 		/*
 		FindKanjiRequest findKanjiRequest = new FindKanjiRequest();
@@ -119,6 +122,7 @@ public class Test1 {
 		////////////////////
 		
 		//String sentence = "ウイリアムズF1、マッサ後任決定を急がず。最終戦後テストに参加予定のクビカが有利か";
+		/*
 		String sentence = "【動画】セバスチャン・ブエミ、レッドブルRB8でスイスの峠道を駆ける「記憶に残り続ける」";
 		
 		TranslateJapaneseSentenceResult translateJapaneseSentenceResult = dictionaryManager.translateJapaneseSentenceTEST(sentence);
@@ -145,6 +149,7 @@ public class Test1 {
 			
 			System.out.println("-------------");
 		}
+		*/
 		
 		luceneDatabase.close();
 	}
