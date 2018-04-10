@@ -9,11 +9,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -184,13 +185,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		final int maxResult = MAX_DICTIONARY_RESULT;
 		                
-		String[] wordSplited = removeSpecialChars(findWordRequest.word).split("\\s+");
-
-		String wordToLowerCase = removeSpecialChars(findWordRequest.word).toLowerCase(Locale.getDefault());
-		String wordWithoutPolishCharsToLowerCase = Utils.removePolishChars(wordToLowerCase);
-
-		//String[] wordSplitedToLowerCase = wordToLowerCase.split("\\s+");
-		String[] wordSplitedWithoutPolishCharsToLowerCase = wordWithoutPolishCharsToLowerCase.split("\\s+");
+		String[] wordSplited = getTokenizedWords(analyzerWithoutPolishChars, findWordRequest.word);
 
 		try {
 			//if (findWordRequest.wordPlaceSearch != WordPlaceSearch.ANY_PLACE) {
@@ -231,21 +226,21 @@ public class LuceneDatabase implements IDatabaseConnector {
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.dictionaryEntry_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
-				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.dictionaryEntry_virtual_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry_virtual_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchTranslate == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_translatesList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, 
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, 
 						findWordRequest.wordPlaceSearch), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchInfo == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_info, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.dictionaryEntry_infoWithoutPolishChars, 
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry_infoWithoutPolishChars, 
 						findWordRequest.wordPlaceSearch), Occur.SHOULD);
 			}
 
@@ -455,6 +450,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		return findWordResult;
 	}
 	
+	/*
 	private String removeSpecialChars(String word) {
 		
 		final String replaceChars = "`~!@#$%^&*()-=_+[]\\{}|;':\",./<>?";
@@ -465,6 +461,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		return word;		
 	}
+	*/
 
 	@Override
 	public DictionaryEntry getDictionaryEntryById(String id) throws DictionaryException {
@@ -875,15 +872,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 		findKanjiResult.result = new ArrayList<KanjiEntry>();
 
 		final int maxResult = MAX_KANJI_RESULT;
-
-		String[] wordSplited = removeSpecialChars(findKanjiRequest.word).split("\\s+");
-
-		String wordToLowerCase = removeSpecialChars(findKanjiRequest.word).toLowerCase(Locale.getDefault());
-		String wordWithoutPolishCharsToLowerCase = Utils.removePolishChars(wordToLowerCase);
-
-		//String[] wordSplitedToLowerCase = wordToLowerCase.split("\\s+");
-		String[] wordSplitedWithoutPolishCharsToLowerCase = wordWithoutPolishCharsToLowerCase.split("\\s+");
-
+		
+		String[] wordSplited = getTokenizedWords(analyzerWithoutPolishChars, findKanjiRequest.word);
+		
 		try {
 			//if (findKanjiRequest.wordPlaceSearch != FindKanjiRequest.WordPlaceSearch.ANY_PLACE) {
 
@@ -903,13 +894,13 @@ public class LuceneDatabase implements IDatabaseConnector {
 			// translate
 			//kanjiBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.kanjiEntry_polishTranslatesList, findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
 
-			kanjiBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.kanjiEntry_polishTranslatesListWithoutPolishChars, 
+			kanjiBooleanQuery.add(createQuery(wordSplited, LuceneStatic.kanjiEntry_polishTranslatesListWithoutPolishChars, 
 					findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
 
 			// info
 			//kanjiBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.kanjiEntry_info, findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
 
-			kanjiBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.kanjiEntry_infoWithoutPolishChars, 
+			kanjiBooleanQuery.add(createQuery(wordSplited, LuceneStatic.kanjiEntry_infoWithoutPolishChars, 
 					findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
 
 			query.add(kanjiBooleanQuery, Occur.MUST);
@@ -1163,15 +1154,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 		if (maxResult <= 0) {
 			return;
 		}
-
-		String[] wordSplited = removeSpecialChars(findWordRequest.word).split("\\s+");
-
-		String wordToLowerCase = removeSpecialChars(findWordRequest.word).toLowerCase(Locale.getDefault());
-		String wordWithoutPolishCharsToLowerCase = Utils.removePolishChars(wordToLowerCase);
-
-		//String[] wordSplitedToLowerCase = wordToLowerCase.split("\\s+");
-		String[] wordSplitedWithoutPolishCharsToLowerCase = wordWithoutPolishCharsToLowerCase.split("\\s+");
-
+		
+		String[] wordSplited = getTokenizedWords(analyzerWithoutPolishChars, findWordRequest.word);
+		
 		try {
 			
 			BooleanQuery query = new BooleanQuery();
@@ -1193,8 +1178,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
-				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 			}
 
 			query.add(wordBooleanQuery, Occur.MUST);
@@ -1288,14 +1273,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 			return;
 		}
 		
-		String[] wordSplited = removeSpecialChars(findWordRequest.word).split("\\s+");
-
-		String wordToLowerCase = removeSpecialChars(findWordRequest.word).toLowerCase(Locale.getDefault());
-		String wordWithoutPolishCharsToLowerCase = Utils.removePolishChars(wordToLowerCase);
-
-		//String[] wordSplitedToLowerCase = wordToLowerCase.split("\\s+");
-		String[] wordSplitedWithoutPolishCharsToLowerCase = wordWithoutPolishCharsToLowerCase.split("\\s+");
-		
+		String[] wordSplited = getTokenizedWords(analyzerWithoutPolishChars, findWordRequest.word);
+				
 		try {
 			
 			BooleanQuery query = new BooleanQuery();
@@ -1317,21 +1296,21 @@ public class LuceneDatabase implements IDatabaseConnector {
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.nameDictionaryEntry_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
-				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.nameDictionaryEntry_virtual_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.nameDictionaryEntry_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.nameDictionaryEntry_virtual_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchTranslate == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_translatesList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.nameDictionaryEntry_translatesListWithoutPolishChars, 
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.nameDictionaryEntry_translatesListWithoutPolishChars, 
 						findWordRequest.wordPlaceSearch), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchInfo == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_info, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(wordSplitedWithoutPolishCharsToLowerCase, LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, 
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, 
 						findWordRequest.wordPlaceSearch), Occur.SHOULD);
 			}
 
@@ -1844,7 +1823,52 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}	
 
 		return null;
-	}	
+	}
+	
+	private String[] getTokenizedWords(LuceneAnalyzer methodAnalyzer, String text) throws DictionaryException {
+		
+		List<String> tokenizedWordsList = new ArrayList<String>();
+		
+		TokenStream tokenStream = null;
+		
+		try {
+			tokenStream = methodAnalyzer.tokenStream("fieldName", text);
+			
+			tokenStream.reset();
+			
+			while(true) {
+				
+				boolean incrementTokenResult = tokenStream.incrementToken();
+				
+				if (incrementTokenResult == false) {
+					
+					tokenStream.end();
+										
+					break;
+				}
+				
+				tokenizedWordsList.add(tokenStream.getAttribute(CharTermAttribute.class).toString());
+			}
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas tokenizowania słowa: " + text + " - " + e);
+		
+		} finally {
+			
+			if (tokenStream != null) {
+				
+				try {
+					tokenStream.close();
+					
+				} catch (IOException e) {
+					throw new DictionaryException("Błąd podczas tokenizowania słowa: " + text + " - " + e);
+				}
+			}			
+			
+		}
+				
+		return tokenizedWordsList.toArray(new String[tokenizedWordsList.size()]);
+	}
 	
 	private static class SpellCheckerIndex {
 		
