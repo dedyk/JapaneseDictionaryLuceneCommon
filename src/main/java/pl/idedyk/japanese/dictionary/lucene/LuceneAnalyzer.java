@@ -42,7 +42,7 @@ public class LuceneAnalyzer extends Analyzer {
 
 		@Override
 		protected int normalize(int c) {
-						
+
 			if (removePolishChars == true) {
 				
 				char[] chars = Character.toChars(c);
@@ -79,8 +79,7 @@ public class LuceneAnalyzer extends Analyzer {
 		
 		@Override
 		protected boolean isTokenChar(int c) {
-			return	Character.isLetter(c) ||
-					Character.isDigit(c);
+			return Character.isLetter(c) || Character.isDigit(c) || (char)c == '・';
 		}
 	}
 }

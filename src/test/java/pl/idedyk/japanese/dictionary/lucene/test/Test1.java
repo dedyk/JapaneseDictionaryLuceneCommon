@@ -3,6 +3,10 @@ package pl.idedyk.japanese.dictionary.lucene.test;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.util.Version;
+
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
@@ -15,13 +19,13 @@ import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePair;
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary.api.tools.KanaHelper;
+import pl.idedyk.japanese.dictionary.lucene.LuceneAnalyzer;
 import pl.idedyk.japanese.dictionary.lucene.LuceneDatabase;
 
 public class Test1 {
 
 	public static void main(String[] args) throws Exception {
 		
-		/*
 		// test tokenizera
 		LuceneAnalyzer analyzerTest = new LuceneAnalyzer(Version.LUCENE_47, true);
 		
@@ -32,7 +36,8 @@ public class Test1 {
 		//String text = "dziesięć lat";
 		//String text = "お早う御座います";
 		//String text = "Mały, skromny japoński pomocnik";
-		String text = "sprawiedliwoŚĆ";
+		//String text = "sprawiedliwoŚĆ";
+		String text = "スプラッタ・ムービー";
 		
 		TokenStream tokenStream = analyzerTest.tokenStream("a", text);
 		
@@ -48,9 +53,10 @@ public class Test1 {
 			
 			System.out.println("Token: " + tokenStream.getAttribute(CharTermAttribute.class).toString());			
 		}
+		
+		analyzerTest.close();
 						
-		System.exit(1);
-		*/
+		//System.exit(1);
 		
 		//
 		
@@ -69,7 +75,9 @@ public class Test1 {
 		//findWordRequest.searchGrammaFormAndExamples = false;		
 		//findWordRequest.word = "shukujitsu";
 		
-		findWordRequest.word = "kot";
+		//findWordRequest.word = " kot";
+		findWordRequest.word = "スプラッタ・ムービー";
+		//findWordRequest.word = "スプラッタムービー";
 
 		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values();
 		
