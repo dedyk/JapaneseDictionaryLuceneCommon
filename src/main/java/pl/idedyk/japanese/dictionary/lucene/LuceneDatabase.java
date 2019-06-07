@@ -1524,8 +1524,29 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		} catch (IOException e) {
 			throw new DictionaryException("Błąd podczas pobierania znaku kanji: " + e);
-		}		
+		}
 	}
+	
+	@Override
+	public List<KanjiEntry> getKanjiEntryList(List<String> kanjiList) throws DictionaryException {
+		
+		List<KanjiEntry> result = new ArrayList<KanjiEntry>();
+		
+		if (kanjiList != null) {
+			
+			for (String currentKanji : kanjiList) {
+				
+				KanjiEntry kanjiEntry = getKanjiEntry(currentKanji);
+				
+				if (kanjiEntry != null) {
+					result.add(kanjiEntry);
+				}				
+			}			
+		}
+		
+		return result;
+	}
+
 	
 	@Override
 	public KanjiEntry getKanjiEntryById(String id) throws DictionaryException {
