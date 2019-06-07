@@ -68,9 +68,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, Lookup> lookupSuggesterMap;
 	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, SpellCheckerIndex> spellCheckerMap;
 	
-	private static final int MAX_DICTIONARY_RESULT = 50;
+	private static final int MAX_DICTIONARY_RESULT = 100;
 	
-	private static final int MAX_KANJI_RESULT = 50;
+	private static final int MAX_KANJI_RESULT = 100;
 	private static final int MAX_KANJI_STROKE_COUNT_RESULT = 200;
 	
 	public LuceneDatabase(String dbDir) {

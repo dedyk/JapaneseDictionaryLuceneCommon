@@ -17,7 +17,7 @@ import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPowerList;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
-import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePair;
+import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePairWithDictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary.api.tools.KanaHelper;
@@ -181,7 +181,7 @@ public class Test1 {
 		}
 
 		@Override
-		public List<TransitiveIntransitivePair> getTransitiveIntransitivePairsList() {
+		public List<TransitiveIntransitivePairWithDictionaryEntry> getTransitiveIntransitivePairsList() {
 			throw new UnsupportedOperationException();
 		}
 
