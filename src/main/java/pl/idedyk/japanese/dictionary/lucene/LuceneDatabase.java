@@ -71,7 +71,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	private static final int MAX_DICTIONARY_RESULT = 100;
 	
 	private static final int MAX_KANJI_RESULT = 100;
-	private static final int MAX_KANJI_STROKE_COUNT_RESULT = 200;
+	private static final int MAX_KANJI_STROKE_COUNT_RESULT = 2000;
 	
 	public LuceneDatabase(String dbDir) {
 		this.dbDir = dbDir;
