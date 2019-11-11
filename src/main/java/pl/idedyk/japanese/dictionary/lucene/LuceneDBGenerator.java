@@ -1037,10 +1037,16 @@ public class LuceneDBGenerator {
 		List<DictionaryEntry> namesDictionaryEntryList = new ArrayList<DictionaryEntry>();
 
 		CsvReader csvReader = new CsvReader(new InputStreamReader(namesInputStream), ',');
+		
+		int id = 1;
 
 		while (csvReader.readRecord()) {
 
 			DictionaryEntry entry = parseDictionaryEntry(csvReader);
+			
+			entry.setId(id);
+			
+			id++;
 			
 			System.out.println(String.format("DictionaryEntry (name) id = %s", entry.getId()));
 
