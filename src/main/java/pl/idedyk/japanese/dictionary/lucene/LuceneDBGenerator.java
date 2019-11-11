@@ -193,12 +193,14 @@ public class LuceneDBGenerator {
 			
 			Arrays.sort(namesList);
 			
+			Counter idCounter = new Counter(1);
+			
 			for (File currentName : namesList) {
 				
 				FileInputStream namesInputStream = new FileInputStream(currentName);
 				
 				// wczytywanie slownika nazw
-				readNamesFile(indexWriter, namesInputStream, addSugestionList, generateNameEntryPrefixes);
+				readNamesFile(indexWriter, namesInputStream, idCounter, addSugestionList, generateNameEntryPrefixes);
 		
 				// zamkniecie pliku
 				namesInputStream.close();
@@ -1032,21 +1034,19 @@ public class LuceneDBGenerator {
 		indexWriter.addDocument(document);		
 	}
 	
-	private static List<DictionaryEntry> readNamesFile(IndexWriter indexWriter, InputStream namesInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
+	private static List<DictionaryEntry> readNamesFile(IndexWriter indexWriter, InputStream namesInputStream, Counter idCounter, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
 		
 		List<DictionaryEntry> namesDictionaryEntryList = new ArrayList<DictionaryEntry>();
 
 		CsvReader csvReader = new CsvReader(new InputStreamReader(namesInputStream), ',');
-		
-		int id = 1;
 
 		while (csvReader.readRecord()) {
 
 			DictionaryEntry entry = parseDictionaryEntry(csvReader);
 			
-			entry.setId(id);
+			entry.setId(idCounter.getValue());
 			
-			id++;
+			idCounter.increment();
 			
 			System.out.println(String.format("DictionaryEntry (name) id = %s", entry.getId()));
 
@@ -1257,5 +1257,22 @@ public class LuceneDBGenerator {
 	
 	private static void addSpellChecker(Document document, String fieldName, String fieldValue) { 		
 		document.add(new StringField(fieldName, fieldValue, Field.Store.YES));
+	}
+	
+	private static class Counter {
+		
+		private int value;
+		
+		public Counter(int value) {
+			this.value = value;
+		}
+		
+		public void increment() {
+			value++;
+		}
+
+		public int getValue() {
+			return value;
+		}
 	}
 }
