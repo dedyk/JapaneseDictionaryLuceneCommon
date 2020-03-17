@@ -280,7 +280,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 				
 				DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
 						groupsList, prefixKanaString, kanjiString, kana, prefixRomajiString, romaji,
-						translateList, infoString, exampleSentenceGroupIdsList);
+						translateList, infoString, exampleSentenceGroupIdsList, null);
 
 				findWordResult.result.add(new FindWordResult.ResultItem(entry));
 			}
@@ -507,7 +507,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			return Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
 					groupsList, prefixKanaString, kanjiString, kana, prefixRomajiString, romaji,
-					translateList, infoString, exampleSentenceGroupIdsList);
+					translateList, infoString, exampleSentenceGroupIdsList, null);
 
 		} catch (IOException e) {
 			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
@@ -558,7 +558,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			
 			DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
 					groupsList, prefixKanaString, kanjiString, kana, prefixRomajiString, romaji,
-					translateList, infoString, exampleSentenceGroupIdsList);
+					translateList, infoString, exampleSentenceGroupIdsList, null);
 
 			entry.setName(true);
 			
@@ -611,7 +611,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			return Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
 					groupsList, prefixKanaString, kanjiString, kana, prefixRomajiString, romaji,
-					translateList, infoString, exampleSentenceGroupIdsList);
+					translateList, infoString, exampleSentenceGroupIdsList, null);
 
 		} catch (IOException e) {
 			throw new DictionaryException("Błąd podczas pobierania n-tego słowa: " + e);
@@ -853,7 +853,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
 						groupsList, prefixKanaString, kanjiString, kana, prefixRomajiString, romaji,
-						translateList, infoString, exampleSentenceGroupIdsList);
+						translateList, infoString, exampleSentenceGroupIdsList, null);
 
 				result.add(entry);
 			}
@@ -944,7 +944,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				KanjiEntry kanjiEntry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
 						onReadingList, kunReadingList, strokePathsList, polishTranslateList, infoString, used,
-						groupsList);
+						groupsList, null);
 
 				findKanjiResult.result.add(kanjiEntry);
 			}				
@@ -1350,7 +1350,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 				
 				DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
 						groupsList, prefixKanaString, kanjiString, kana, prefixRomajiString, romaji,
-						translateList, infoString, exampleSentenceGroupIdsList);
+						translateList, infoString, exampleSentenceGroupIdsList, null);
 
 				entry.setName(true);
 				
@@ -1415,7 +1415,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				KanjiEntry kanjiEntry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
 						onReadingList, kunReadingList, strokePathsList, polishTranslateList, infoString, used,
-						groupsList);
+						groupsList, null);
 
 				result.add(kanjiEntry);
 
@@ -1476,7 +1476,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				KanjiEntry kanjiEntry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
 						onReadingList, kunReadingList, strokePathsList, polishTranslateList, infoString, used,
-						groupsList);
+						groupsList, null);
 
 				result.add(kanjiEntry);
 			}				
@@ -1602,7 +1602,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		return Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
 				onReadingList, kunReadingList, strokePathsList, polishTranslateList, infoString, used,
-				groupsList);		
+				groupsList, null);		
 	}
 
 	@Override
@@ -1662,7 +1662,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				KanjiEntry kanjiEntry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
 						onReadingList, kunReadingList, strokePathsList, polishTranslateList, infoString, used,
-						groupsList);
+						groupsList, null);
 
 				result.add(kanjiEntry);
 			}

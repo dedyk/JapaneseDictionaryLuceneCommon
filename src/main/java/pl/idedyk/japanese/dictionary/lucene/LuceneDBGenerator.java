@@ -82,6 +82,8 @@ public class LuceneDBGenerator {
 		boolean generateKanjiEntryPrefixes;
 		boolean generateNameEntryPrefixes;
 		
+		boolean addEnglishTranslates;
+		
 		if (mode.equals("web") == true) {
 			
 			addSugestionList = true;
@@ -93,6 +95,8 @@ public class LuceneDBGenerator {
 			generateKanjiEntryPrefixes = true;
 			generateNameEntryPrefixes = true;
 			
+			addEnglishTranslates = true;
+			
 		} else if (mode.equals("android") == true) {
 			
 			addSugestionList = false;
@@ -103,6 +107,8 @@ public class LuceneDBGenerator {
 			generateDictionaryEntryPrefixes = false;
 			generateKanjiEntryPrefixes = true;
 			generateNameEntryPrefixes = false;
+			
+			addEnglishTranslates = true;
 
 		} else {
 			throw new Exception("Unknown mode: " + mode);
@@ -141,7 +147,7 @@ public class LuceneDBGenerator {
 		FileInputStream dictionaryInputStream = new FileInputStream(dictionaryFilePath);
 
 		// wczytywanie slownika
-		List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList, generateDictionaryEntryPrefixes);
+		List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList, generateDictionaryEntryPrefixes, addEnglishTranslates);
 
 		// przeliczenie form
 		countGrammaFormAndExamples(dictionaryEntryList, indexWriter, addGrammaAndExample, addSugestionList);
@@ -176,7 +182,7 @@ public class LuceneDBGenerator {
 		FileInputStream kanjiInputStream = new FileInputStream(kanjiFilePath);
 
 		// wczytywanie pliku ze znakami kanji
-		readKanjiDictionaryFile(indexWriter, radicalInfoList, kanjiInputStream, addSugestionList, generateKanjiEntryPrefixes);
+		readKanjiDictionaryFile(indexWriter, radicalInfoList, kanjiInputStream, addSugestionList, generateKanjiEntryPrefixes, addEnglishTranslates);
 
 		kanjiInputStream.close();
 		
@@ -234,14 +240,17 @@ public class LuceneDBGenerator {
 		
 		String exampleSentenceGroupIdsListString = csvReader.get(13);
 		
+		String englishTranslatesListString = csvReader.get(14);
+				
 		DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeString, attributesString,
 				groupsString, prefixKanaString, kanjiString, kanaListString, prefixRomajiString, romajiListString,
-				translateListString, infoString, exampleSentenceGroupIdsListString);
+				translateListString, infoString, exampleSentenceGroupIdsListString, englishTranslatesListString);
 
 		return entry;		
 	}
 	
-	private static List<DictionaryEntry> readDictionaryFile(IndexWriter indexWriter, InputStream dictionaryInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
+	private static List<DictionaryEntry> readDictionaryFile(IndexWriter indexWriter, InputStream dictionaryInputStream, boolean addSugestionList, 
+			boolean generatePrefixes, boolean addEnglishTranslates) throws IOException, DictionaryException, SQLException {
 		
 		List<DictionaryEntry> dictionaryEntryList = new ArrayList<DictionaryEntry>();
 
@@ -255,7 +264,7 @@ public class LuceneDBGenerator {
 			
 			System.out.println(String.format("DictionaryEntry id = %s", entry.getId()));
 
-			addDictionaryEntry(indexWriter, entry, addSugestionList, generatePrefixes);
+			addDictionaryEntry(indexWriter, entry, addSugestionList, generatePrefixes, addEnglishTranslates);
 
 			uniqueDictionaryEntryGroupEnumSet.addAll(entry.getGroups());
 			
@@ -269,7 +278,8 @@ public class LuceneDBGenerator {
 		return dictionaryEntryList;
 	}
 
-	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
+	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, 
+			boolean generatePrefixes, boolean addEnglishTranslates) throws IOException {
 		
 		Document document = new Document();
 		
@@ -400,6 +410,19 @@ public class LuceneDBGenerator {
 				
 		for (String currentExampleSenteceGroupId : exampleSentenceGroupIdsList) {
 			document.add(new TextField(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList, currentExampleSenteceGroupId, Field.Store.YES));
+		}
+		
+		if (addEnglishTranslates == true) {
+			
+			// english translate
+			List<String> englishTranslateList = dictionaryEntry.getEnglishTranslateList();
+			
+			if (englishTranslateList != null) {
+				
+				for (String currentEnglishTranslate : englishTranslateList) {			
+					document.add(new TextField(LuceneStatic.dictionaryEntry_englishTranslatesList, currentEnglishTranslate, Field.Store.NO));
+				}
+			}		
 		}
 		
 		indexWriter.addDocument(document);
@@ -823,7 +846,7 @@ public class LuceneDBGenerator {
 	}
 
 	private static void readKanjiDictionaryFile(IndexWriter indexWriter, List<RadicalInfo> radicalInfoList,
-			InputStream kanjiInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
+			InputStream kanjiInputStream, boolean addSugestionList, boolean generatePrefixes, boolean addEnglishTranslates) throws IOException, DictionaryException, SQLException {
 
 		Map<String, RadicalInfo> radicalListMapCache = new HashMap<String, RadicalInfo>();
 
@@ -860,13 +883,16 @@ public class LuceneDBGenerator {
 			String usedString = csvReader.get(9);
 
 			String groupString = csvReader.get(10);
+			
+			String englishTranslateListString = csvReader.get(11);
 
 			KanjiEntry entry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString,
 					Utils.parseStringIntoList(radicalsString, false),
 					Utils.parseStringIntoList(onReadingString, false),
 					Utils.parseStringIntoList(kunReadingString, false), strokePathString,
 					Utils.parseStringIntoList(polishTranslateListString, false), infoString, usedString,
-					Utils.parseStringIntoList(groupString, false));
+					Utils.parseStringIntoList(groupString, false),
+					Utils.parseStringIntoList(englishTranslateListString, false));
 
 			System.out.println(String.format("KanjiEntry id = %s", entry.getId()));
 			
@@ -878,7 +904,7 @@ public class LuceneDBGenerator {
 			}
 
 			// add
-			addKanjiEntry(indexWriter, entry, addSugestionList, generatePrefixes);
+			addKanjiEntry(indexWriter, entry, addSugestionList, generatePrefixes, addEnglishTranslates);
 		}
 		
 		// add available radical list
@@ -903,7 +929,7 @@ public class LuceneDBGenerator {
 	}
 	*/
 
-	public static void addKanjiEntry(IndexWriter indexWriter, KanjiEntry kanjiEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
+	public static void addKanjiEntry(IndexWriter indexWriter, KanjiEntry kanjiEntry, boolean addSugestionList, boolean generatePrefixes, boolean addEnglishTranslates) throws IOException {
 
 		Document document = new Document();
 		
@@ -973,6 +999,19 @@ public class LuceneDBGenerator {
 		
 		for (String currentGroup : groupsList) {
 			document.add(new StringField(LuceneStatic.kanjiEntry_groupsList, currentGroup, Field.Store.YES));
+		}
+		
+		if (addEnglishTranslates == true) {
+			
+			// english translate
+			List<String> englishTranslateList = kanjiEntry.getEnglishTranslateList();
+			
+			if (englishTranslateList != null) {
+				
+				for (String currentEnglishTranslate : englishTranslateList) {			
+					document.add(new TextField(LuceneStatic.kanjiEntry_englishTranslatesList, currentEnglishTranslate, Field.Store.NO));
+				}
+			}		
 		}
 		
 		KanjiDic2Entry kanjiDic2Entry = kanjiEntry.getKanjiDic2Entry();

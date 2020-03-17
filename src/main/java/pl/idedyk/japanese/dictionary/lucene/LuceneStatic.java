@@ -21,6 +21,7 @@ public class LuceneStatic {
 	public static final String dictionaryEntry_info = "dictionaryEntry_info";
 	public static final String dictionaryEntry_infoWithoutPolishChars = "dictionaryEntry_infoWithoutPolishChars";
 	public static final String dictionaryEntry_exampleSentenceGroupIdsList = "dictionaryEntry_exampleSentenceGroupIdsList";
+	public static final String dictionaryEntry_englishTranslatesList = "dictionaryEntry_englishTranslatesList";
 	
 	public static final String dictionaryEntry_grammaConjufateResult_and_exampleResult_objectType = "dictionaryEntry_grammaConjufateResult_and_exampleResult_objectType";	
 	public static final String dictionaryEntry_grammaConjufateResult_and_exampleResult_dictionaryEntry_id = "dictionaryEntry_grammaConjufateResult_and_exampleResult_dictionaryEntry_id";
@@ -70,6 +71,7 @@ public class LuceneStatic {
 	public static final String kanjiEntry_infoWithoutPolishChars = "kanjiEntry_infoWithoutPolishChars";
 	public static final String kanjiEntry_used = "kanjiEntry_used";
 	public static final String kanjiEntry_groupsList = "kanjiEntry_groupsList";
+	public static final String kanjiEntry_englishTranslatesList = "kanjiEntry_englishTranslatesList";
 	
 	public static final String kanjiEntry_kanjiDic2Entry_strokeCount = "kanjiEntry_kanjiDic2Entry_strokeCount";
 	public static final String kanjiEntry_kanjiDic2Entry_onReadingList = "kanjiEntry_kanjiDic2Entry_onReadingList";
