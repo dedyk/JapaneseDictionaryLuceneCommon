@@ -235,6 +235,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, 
 						findWordRequest.wordPlaceSearch), Occur.SHOULD);
+				
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry_englishTranslatesList, 
+						findWordRequest.wordPlaceSearch), Occur.SHOULD);
+
 			}
 
 			if (findWordRequest.searchInfo == true) {
