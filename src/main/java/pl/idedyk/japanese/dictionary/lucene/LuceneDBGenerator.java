@@ -420,7 +420,7 @@ public class LuceneDBGenerator {
 			if (englishTranslateList != null) {
 				
 				for (String currentEnglishTranslate : englishTranslateList) {			
-					document.add(new TextField(LuceneStatic.dictionaryEntry_englishTranslatesList, currentEnglishTranslate, Field.Store.NO));
+					document.add(new TextField(LuceneStatic.dictionaryEntry_englishTranslatesList, currentEnglishTranslate, Field.Store.YES));
 				}
 			}		
 		}
@@ -1009,7 +1009,7 @@ public class LuceneDBGenerator {
 			if (englishTranslateList != null) {
 				
 				for (String currentEnglishTranslate : englishTranslateList) {			
-					document.add(new TextField(LuceneStatic.kanjiEntry_englishTranslatesList, currentEnglishTranslate, Field.Store.NO));
+					document.add(new TextField(LuceneStatic.kanjiEntry_englishTranslatesList, currentEnglishTranslate, Field.Store.YES));
 				}
 			}		
 		}
