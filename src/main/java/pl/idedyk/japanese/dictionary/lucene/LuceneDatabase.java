@@ -1706,6 +1706,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 		
 		if (lookup != null) {
 			
+			// ewentualna zamiana half-width kana na full-width
+			term = Utils.convertHalfWidthKanaToFullKana(term);
+			
 			List<LookupResult> lookupResult = lookup.lookup(term, false, limit);
 
 			for (LookupResult currentLookupResult : lookupResult) {
