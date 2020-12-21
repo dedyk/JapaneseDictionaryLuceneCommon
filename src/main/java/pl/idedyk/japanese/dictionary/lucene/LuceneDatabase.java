@@ -80,7 +80,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	public void open() throws IOException {
 
 		index = FSDirectory.open(new File(dbDir));
-		analyzer = new LuceneAnalyzer(Version.LUCENE_47);
+		//analyzer = new LuceneAnalyzer(Version.LUCENE_47);
 		analyzerWithoutPolishChars = new LuceneAnalyzer(Version.LUCENE_47, true);
 		reader = DirectoryReader.open(index);
 		searcher = new IndexSearcher(reader);
@@ -1868,7 +1868,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 					break;
 				}
 				
-				tokenizedWordsList.add(tokenStream.getAttribute(CharTermAttribute.class).toString());
+				tokenizedWordsList.add(Utils.convertHalfWidthKanaToFullKana(tokenStream.getAttribute(CharTermAttribute.class).toString()));
 			}
 			
 		} catch (IOException e) {

@@ -42,39 +42,28 @@ public class LuceneAnalyzer extends Analyzer {
 
 		@Override
 		protected int normalize(int c) {
+						
+			// zamiana na znaki
+			char[] chars = Character.toChars(c);
 
-			if (removePolishChars == true) {
-				
-				char[] chars = Character.toChars(c);
-				
-				boolean containtsPolishChar = false;
-				
-				for (int idx = 0; idx < chars.length; ++idx) {
-					
-					char newChar = Utils.removePolishChar(chars[idx]);
-					
-					if (newChar != chars[idx]) {
-						containtsPolishChar = true;
-					}
-					
-					chars[idx] = newChar;
-				}
-				
-				if (containtsPolishChar == true) {
-				
-					if (chars.length != 1) {
-						return Character.toLowerCase(c);
-					}
-					
-					return Character.toLowerCase((int)chars[0]);
-					
-				} else {
-					return Character.toLowerCase(c);
-				}
-				
-			} else {
+			if (chars.length != 1) { // to chyba nigdy nie powinno stac sie				
 				return Character.toLowerCase(c);
 			}
+			
+			// usuwanie polskich znakow
+			if (removePolishChars == true) {				
+				for (int idx = 0; idx < chars.length; ++idx) {					
+					chars[idx] = Utils.removePolishChar(chars[idx]);
+				}
+			}
+						
+			// zamiana na male litery
+			for (int idx = 0; idx < chars.length; ++idx) {	
+				chars[idx] = Character.toLowerCase(chars[idx]);
+			}
+			
+			// zwrocenie wyniku
+			return Character.codePointAt(chars, 0);
 		}
 		
 		@Override

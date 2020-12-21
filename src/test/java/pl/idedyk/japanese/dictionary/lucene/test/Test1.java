@@ -39,7 +39,11 @@ public class Test1 {
 		//String text = "お早う御座います";
 		//String text = "Mały, skromny japoński pomocnik";
 		//String text = "sprawiedliwoŚĆ";
-		String text = "スプラッタ・ムービー";
+		//String text = "スプラッタ・ムービー";
+		//String text = "ポーランド";
+		//String text = "ﾎﾟｰﾗﾝﾄﾞ";
+		//String text = "ﾎｯﾄﾗｲﾝ";
+		String text = "ﾎｯﾄ";
 		
 		TokenStream tokenStream = analyzerTest.tokenStream("a", text);
 		
@@ -78,7 +82,7 @@ public class Test1 {
 		//findWordRequest.word = "shukujitsu";
 		
 		//findWordRequest.word = " kot";
-		findWordRequest.word = "スプラッタ・ムービー";
+		findWordRequest.word = text; //"スプラッタ・ムービー";
 		//findWordRequest.word = "スプラッタムービー";
 
 		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values();
