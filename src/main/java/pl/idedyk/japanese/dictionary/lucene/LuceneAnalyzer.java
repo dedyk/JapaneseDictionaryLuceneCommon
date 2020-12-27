@@ -68,7 +68,7 @@ public class LuceneAnalyzer extends Analyzer {
 		
 		@Override
 		protected boolean isTokenChar(int c) {
-			return Character.isLetter(c) || Character.isDigit(c) || (char)c == '・';
+			return Character.isLetter(c) || Character.isDigit(c) || (char)c == '・' || (char)c == '･';
 		}
 	}
 }

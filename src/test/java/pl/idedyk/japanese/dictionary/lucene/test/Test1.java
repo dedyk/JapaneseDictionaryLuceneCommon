@@ -43,7 +43,9 @@ public class Test1 {
 		//String text = "ポーランド";
 		//String text = "ﾎﾟｰﾗﾝﾄﾞ";
 		//String text = "ﾎｯﾄﾗｲﾝ";
-		String text = "ﾎｯﾄ";
+		//String text = "ﾎｯﾄ";
+		//String text = "ｿﾌﾄｳｪｱｴﾝｼﾞﾆｱﾘﾝｸﾞ";
+		String text = "ｿﾌﾄｳｪｱ･ｴﾝｼﾞﾆｱﾘﾝｸﾞ";
 		
 		TokenStream tokenStream = analyzerTest.tokenStream("a", text);
 		
