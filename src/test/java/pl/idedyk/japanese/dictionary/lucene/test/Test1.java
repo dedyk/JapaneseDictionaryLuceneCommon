@@ -83,8 +83,8 @@ public class Test1 {
 		//findWordRequest.searchGrammaFormAndExamples = false;		
 		//findWordRequest.word = "shukujitsu";
 		
-		//findWordRequest.word = " kot";
-		findWordRequest.word = text; //"スプラッタ・ムービー";
+		findWordRequest.word = "kat";
+		//findWordRequest.word = text; //"スプラッタ・ムービー";
 		//findWordRequest.word = "スプラッタムービー";
 
 		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values();
@@ -105,7 +105,7 @@ public class Test1 {
 		//findWordRequest.searchRomaji = false;
 		
 		FindWordResult findWordResult = dictionaryManager.findWord(findWordRequest);
-		
+				
 		for (ResultItem resultItem : findWordResult.result) {
 			
 			DictionaryEntry dictionaryEntry = resultItem.getDictionaryEntry();
