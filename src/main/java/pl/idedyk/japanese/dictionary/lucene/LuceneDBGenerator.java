@@ -3,6 +3,7 @@ package pl.idedyk.japanese.dictionary.lucene;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -28,6 +29,7 @@ import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.search.spell.JaroWinklerDistance;
 import org.apache.lucene.search.spell.LuceneDictionary;
 import org.apache.lucene.search.spell.SpellChecker;
+import org.apache.lucene.search.suggest.analyzing.AnalyzingSuggester;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -212,7 +214,10 @@ public class LuceneDBGenerator {
 		
 		// dodatkowo jeszcze, generowanie poprawiacza slow
 		generateSpellChecker(dbOutDirFile, analyzer, addSugestionList);
-				
+		
+		// cache'owanie podpowiadacza slow
+		cacheSuggester(dbOutDirFile, analyzer, addSugestionList);
+		
 		System.out.println("DB Generator - done");
 	}
 
@@ -1226,7 +1231,47 @@ public class LuceneDBGenerator {
 		
 		spellChecker.close();
 	}	
-	
+		
+	private static void cacheSuggester(File dbDir, LuceneAnalyzer analyzer, boolean addSugestionList) throws IOException {
+				
+		if (addSugestionList == true) {
+			
+			Directory mainIndex = FSDirectory.open(dbDir);
+			IndexReader mainIndexReader = DirectoryReader.open(mainIndex);
+			
+			//
+			
+			List<LuceneDatabaseSuggesterAndSpellCheckerSource> luceneDatabaseSuggesterAndSpellCheckerSourceList = new ArrayList<LuceneDatabaseSuggesterAndSpellCheckerSource>();
+			
+			luceneDatabaseSuggesterAndSpellCheckerSourceList.add(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_WEB);
+			luceneDatabaseSuggesterAndSpellCheckerSourceList.add(LuceneDatabaseSuggesterAndSpellCheckerSource.DICTIONARY_ENTRY_ANDROID);
+			
+			luceneDatabaseSuggesterAndSpellCheckerSourceList.add(LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_WEB);
+			luceneDatabaseSuggesterAndSpellCheckerSourceList.add(LuceneDatabaseSuggesterAndSpellCheckerSource.KANJI_ENTRY_ANDROID);
+
+			for (LuceneDatabaseSuggesterAndSpellCheckerSource luceneDatabaseSuggesterAndSpellCheckerSource : luceneDatabaseSuggesterAndSpellCheckerSourceList) {
+				
+				// cache'owanie podpowiadacza
+				System.out.println("Suggester cache: " + luceneDatabaseSuggesterAndSpellCheckerSource);
+				
+				// UWAGA: Podobna metoda jest w klasie LuceneDatabase.initializeSuggester
+				LuceneDictionary luceneDictionary = new LuceneDictionary(mainIndexReader, luceneDatabaseSuggesterAndSpellCheckerSource.getSuggestionListFieldName());
+				
+				AnalyzingSuggester lookup = new AnalyzingSuggester(analyzer);
+				
+				lookup.build(luceneDictionary);
+				
+				// zapis do pliku
+				lookup.store(new FileOutputStream(new File(dbDir, "suggester-" + luceneDatabaseSuggesterAndSpellCheckerSource.getSpellCheckerListFieldName() + ".cache")));
+			}
+
+			//
+			
+			mainIndexReader.close();
+			mainIndex.close();
+		}
+	}
+		
 	private static String emptyIfNull(String text) {
 		if (text == null) {
 			return "";

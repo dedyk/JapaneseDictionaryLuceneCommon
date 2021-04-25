@@ -99,6 +99,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	private void initializeSuggester(LuceneDatabaseSuggesterAndSpellCheckerSource source) throws IOException {
 		
+		// !!! UWAGA: Podobna metoda jest w klasie LuceneDBGenerator.cacheSuggester !!!
+		
 		LuceneDictionary luceneDictionary = new LuceneDictionary(reader, source.getSuggestionListFieldName());		
 		Lookup lookup = new AnalyzingSuggester(analyzerWithoutPolishChars);
 		
@@ -122,7 +124,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	private void initializeSpellChecker(LuceneDatabaseSuggesterAndSpellCheckerSource source) throws IOException {
 		
-		// UWAGA: Podobna metoda jest w klasie LuceneDBDatabase.initializeSpellChecker
+		// !!! UWAGA: Podobna metoda jest w klasie LuceneDBGenerator.initializeSpellChecker !!!
 		
 		// otwieranie podindeksu
 		File subDbOutDirFile = new File(dbDir, "subindex_" + source.getSpellCheckerListFieldName());
