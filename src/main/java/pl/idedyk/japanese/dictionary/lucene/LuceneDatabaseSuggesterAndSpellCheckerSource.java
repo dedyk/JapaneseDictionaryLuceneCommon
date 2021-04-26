@@ -22,5 +22,9 @@ public enum LuceneDatabaseSuggesterAndSpellCheckerSource {
 
 	public String getSpellCheckerListFieldName() {
 		return spellCheckerListFieldName;
-	}	
+	}
+	
+	public String getSuggesterCacheFileName() {
+		return "suggester-" + getSpellCheckerListFieldName() + ".cache";
+	}
 }

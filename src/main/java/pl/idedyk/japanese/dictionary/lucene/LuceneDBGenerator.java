@@ -1262,7 +1262,7 @@ public class LuceneDBGenerator {
 				lookup.build(luceneDictionary);
 				
 				// zapis do pliku
-				lookup.store(new FileOutputStream(new File(dbDir, "suggester-" + luceneDatabaseSuggesterAndSpellCheckerSource.getSpellCheckerListFieldName() + ".cache")));
+				lookup.store(new FileOutputStream(new File(dbDir, luceneDatabaseSuggesterAndSpellCheckerSource.getSuggesterCacheFileName())));
 			}
 
 			//

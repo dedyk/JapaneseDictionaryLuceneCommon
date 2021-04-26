@@ -1,6 +1,7 @@
 package pl.idedyk.japanese.dictionary.lucene;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -104,8 +105,16 @@ public class LuceneDatabase implements IDatabaseConnector {
 		LuceneDictionary luceneDictionary = new LuceneDictionary(reader, source.getSuggestionListFieldName());		
 		Lookup lookup = new AnalyzingSuggester(analyzerWithoutPolishChars);
 		
-		lookup.build(luceneDictionary);
-
+		// proba zaladowania z cache'u
+		File cacheFile = new File(dbDir, source.getSuggesterCacheFileName());
+		
+		if (cacheFile.isFile() == true) { // cache istnieje
+			lookup.load(new FileInputStream(cacheFile));
+			
+		} else { // wygenerowanie zawartosci
+			lookup.build(luceneDictionary);
+		}
+		
 		//
 		
 		lookupSuggesterMap.put(source, lookup);
