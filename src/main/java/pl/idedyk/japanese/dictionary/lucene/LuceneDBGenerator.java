@@ -131,7 +131,7 @@ public class LuceneDBGenerator {
 		Directory index = FSDirectory.open(dbOutDirFile);
 		
 		// tworzenie analizatora lucene
-		LuceneAnalyzer analyzer = new LuceneAnalyzer(Version.LUCENE_47);
+		LuceneAnalyzer analyzer = new LuceneAnalyzer(Version.LUCENE_47, true);
 		
 		// tworzenie zapisywacza konfiguracji
 		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
