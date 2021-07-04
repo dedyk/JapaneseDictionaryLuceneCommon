@@ -749,7 +749,7 @@ public class LuceneDBGenerator {
 			String groupId = csvReader.get(0);
 			String sentenceIdListString = csvReader.get(1);
 			
-			List<String> sentenceIdList = Utils.parseStringIntoList(sentenceIdListString, false);
+			List<String> sentenceIdList = Utils.parseStringIntoList(sentenceIdListString /*, false */);
 			
 			GroupWithTatoebaSentenceList groupWithTatoebaSentenceList = new GroupWithTatoebaSentenceList();
 
@@ -867,11 +867,11 @@ public class LuceneDBGenerator {
 			String groupString = csvReader.get(10);
 
 			KanjiEntry entry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString,
-					Utils.parseStringIntoList(radicalsString, false),
-					Utils.parseStringIntoList(onReadingString, false),
-					Utils.parseStringIntoList(kunReadingString, false), strokePathString,
-					Utils.parseStringIntoList(polishTranslateListString, false), infoString, usedString,
-					Utils.parseStringIntoList(groupString, false));
+					Utils.parseStringIntoList(radicalsString /*, false */),
+					Utils.parseStringIntoList(onReadingString /*, false */),
+					Utils.parseStringIntoList(kunReadingString /*, false */), strokePathString,
+					Utils.parseStringIntoList(polishTranslateListString /*, false */), infoString, usedString,
+					Utils.parseStringIntoList(groupString /*, false */));
 
 			System.out.println(String.format("KanjiEntry id = %s", entry.getId()));
 			
