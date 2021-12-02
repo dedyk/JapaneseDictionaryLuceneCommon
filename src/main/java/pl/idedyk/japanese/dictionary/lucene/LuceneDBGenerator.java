@@ -16,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntField;
@@ -53,15 +57,18 @@ import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateGroupType
 import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateResult;
 import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateResultType;
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
 
 import com.csvreader.CsvReader;
+import com.google.gson.Gson;
 
 public class LuceneDBGenerator {	
 	
 	public static void main(String[] args) throws Exception {
 		
-		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv db-lucene
-		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv db-lucene
+		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv db/word2.xml db-lucene
+		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv word2.xml db-lucene
 		
 		// parametry
 		String mode = args[0];
@@ -73,7 +80,9 @@ public class LuceneDBGenerator {
 		String radicalFilePath = args[5];
 		final String nameFilePath = args[6];
 		
-		String dbOutDir = args[7];
+		final String word2XmlFilePath = args[7];
+		
+		String dbOutDir = args[8];
 		
 		boolean addSugestionList;
 		boolean addGrammaAndExample;		
@@ -83,6 +92,8 @@ public class LuceneDBGenerator {
 		boolean generateDictionaryEntryPrefixes;
 		boolean generateKanjiEntryPrefixes;
 		boolean generateNameEntryPrefixes;
+		
+		boolean addWord2Xml;
 		
 		if (mode.equals("web") == true) {
 			
@@ -95,6 +106,8 @@ public class LuceneDBGenerator {
 			generateKanjiEntryPrefixes = true;
 			generateNameEntryPrefixes = true;
 			
+			addWord2Xml = true;
+			
 		} else if (mode.equals("android") == true) {
 			
 			addSugestionList = false;
@@ -105,6 +118,8 @@ public class LuceneDBGenerator {
 			generateDictionaryEntryPrefixes = false;
 			generateKanjiEntryPrefixes = true;
 			generateNameEntryPrefixes = false;
+			
+			addWord2Xml = false;
 
 		} else {
 			throw new Exception("Unknown mode: " + mode);
@@ -207,7 +222,12 @@ public class LuceneDBGenerator {
 				// zamkniecie pliku
 				namesInputStream.close();
 			}		
-		}		
+		}	
+		
+		// dodawanie pliku word2.xml
+		if (addWord2Xml == true) {			
+			addWord2Xml(indexWriter, word2XmlFilePath);
+		}
 				
 		// zakonczenie zapisywania indeksu
 		indexWriter.close();
@@ -1269,6 +1289,45 @@ public class LuceneDBGenerator {
 			
 			mainIndexReader.close();
 			mainIndex.close();
+		}
+	}
+	
+	private static void addWord2Xml(IndexWriter indexWriter, String word2XmlFilePath) throws JAXBException, IOException {
+		
+		JAXBContext jaxbContext = JAXBContext.newInstance(JMdict.class);              
+
+		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+		
+		JMdict jmdict = (JMdict) jaxbUnmarshaller.unmarshal(new File(word2XmlFilePath));
+		
+		//
+		
+		Gson gson = new Gson();
+		
+		//
+
+		// pobranie listy wpisow
+		List<Entry> entryList = jmdict.getEntryList();
+
+		for (Entry entry : entryList) {
+			
+			System.out.println("Add word 2 entry: " + entry.getEntryId());
+															
+			// dodanie do lucynki
+			Document document = new Document();
+			
+			// object type
+			document.add(new StringField(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType, Field.Store.YES));
+
+			// id
+			document.add(new IntField(LuceneStatic.dictionaryEntry2_id, entry.getEntryId(), Field.Store.YES));
+			
+			// xml
+			document.add(new StringField(LuceneStatic.dictionaryEntry2_entry, gson.toJson(entry), Field.Store.YES));
+			
+			//
+			
+			indexWriter.addDocument(document);
 		}
 	}
 		

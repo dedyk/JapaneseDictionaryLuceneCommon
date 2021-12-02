@@ -92,6 +92,11 @@ public class LuceneStatic {
 	public static final String allAvailableKanjiRadicals_objectType = "allAvailableKanjiRadicals";
 	public static final String allAvailableKanjiRadicals_radicalsList = "allAvailableKanjiRadicals_radicalsList";
 	
+	public static final String dictionaryEntry2_objectType = "dictionaryEntry2";
+	
+	public static final String dictionaryEntry2_id = "dictionaryEntry2_id";
+	public static final String dictionaryEntry2_entry = "dictionaryEntry2_entry";
+	
 	//
 	
 	public static final String prefix = "prefix";
