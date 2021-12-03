@@ -40,6 +40,8 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
+import com.google.gson.Gson;
+
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
 import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiRequest;
@@ -55,6 +57,7 @@ import pl.idedyk.japanese.dictionary.api.dto.GroupWithTatoebaSentenceList;
 import pl.idedyk.japanese.dictionary.api.dto.KanjiEntry;
 import pl.idedyk.japanese.dictionary.api.dto.TatoebaSentence;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
 
 public class LuceneDatabase implements IDatabaseConnector {
 
@@ -525,6 +528,40 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}		
 	}
 
+	@Override
+	public JMdict.Entry getDictionaryEntry2ById(Integer entryId) throws DictionaryException {
+		
+		Gson gson = new Gson();
+
+		BooleanQuery query = new BooleanQuery();
+
+		// object type
+		PhraseQuery phraseQuery = new PhraseQuery();
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType));
+
+		query.add(phraseQuery, Occur.MUST);
+
+		query.add(NumericRangeQuery.newIntRange(LuceneStatic.dictionaryEntry2_id, entryId, entryId, true, true), Occur.MUST);
+
+		try {
+			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
+
+			if (scoreDocs.length == 0) {
+				return null;
+			}
+
+			Document foundDocument = searcher.doc(scoreDocs[0].doc);
+
+			//String idString = foundDocument.get(LuceneStatic.dictionaryEntry2_id);
+			String entryBody = foundDocument.get(LuceneStatic.dictionaryEntry2_entry);
+			
+			return gson.fromJson(entryBody, JMdict.Entry.class);
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
+		}		
+	}
+	
 	@Override
 	public DictionaryEntry getDictionaryEntryNameById(String id) throws DictionaryException {
 

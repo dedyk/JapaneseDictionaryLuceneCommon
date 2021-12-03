@@ -23,6 +23,7 @@ import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary.api.tools.KanaHelper;
 import pl.idedyk.japanese.dictionary.lucene.LuceneAnalyzer;
 import pl.idedyk.japanese.dictionary.lucene.LuceneDatabase;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
 
 public class Test1 {
 
@@ -166,6 +167,11 @@ public class Test1 {
 			System.out.println("-------------");
 		}
 		*/
+		
+		// dictionary 2
+		Entry entry = dictionaryManager.getDictionaryEntry2ById(1232870);
+		
+		System.out.println(entry.getEntryId());
 		
 		luceneDatabase.close();
 	}
