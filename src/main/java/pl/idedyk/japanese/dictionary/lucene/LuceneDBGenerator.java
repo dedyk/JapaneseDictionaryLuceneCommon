@@ -119,7 +119,7 @@ public class LuceneDBGenerator {
 			generateKanjiEntryPrefixes = true;
 			generateNameEntryPrefixes = false;
 			
-			addWord2Xml = false;
+			addWord2Xml = true;
 
 		} else {
 			throw new Exception("Unknown mode: " + mode);
