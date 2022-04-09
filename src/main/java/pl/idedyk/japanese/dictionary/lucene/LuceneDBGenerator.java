@@ -14,7 +14,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -39,6 +41,8 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
+import pl.idedyk.japanese.dictionary.api.dto.Attribute;
+import pl.idedyk.japanese.dictionary.api.dto.AttributeType;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
@@ -57,8 +61,18 @@ import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateGroupType
 import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateResult;
 import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateResultType;
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
+import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon;
+import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon.KanjiKanaPair;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.DialectEnum;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.FieldEnum;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.Gloss;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.LanguageSource;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.MiscEnum;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.PartOfSpeechEnum;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.Sense;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.SenseAdditionalInfo;
 
 import com.csvreader.CsvReader;
 import com.google.gson.Gson;
@@ -153,12 +167,15 @@ public class LuceneDBGenerator {
 		indexWriterConfig.setOpenMode(OpenMode.CREATE);
 		
 		IndexWriter indexWriter = new IndexWriter(index, indexWriterConfig);
+		
+		// wczytanie pliku ze slownikiem w formacie word2.xml
+		JMdict jmdict = readWord2Xml(word2XmlFilePath);
 
 		// otwarcie pliku ze slownikiem
 		FileInputStream dictionaryInputStream = new FileInputStream(dictionaryFilePath);
 
 		// wczytywanie slownika
-		List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList, generateDictionaryEntryPrefixes);
+		List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, jmdict, addSugestionList, generateDictionaryEntryPrefixes);
 
 		// przeliczenie form
 		countGrammaFormAndExamples(dictionaryEntryList, indexWriter, addGrammaAndExample, addSugestionList);
@@ -226,7 +243,7 @@ public class LuceneDBGenerator {
 		
 		// dodawanie pliku word2.xml
 		if (addWord2Xml == true) {			
-			addWord2Xml(indexWriter, word2XmlFilePath);
+			addWord2Xml(indexWriter, jmdict);
 		}
 				
 		// zakonczenie zapisywania indeksu
@@ -266,7 +283,18 @@ public class LuceneDBGenerator {
 		return entry;		
 	}
 	
-	private static List<DictionaryEntry> readDictionaryFile(IndexWriter indexWriter, InputStream dictionaryInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
+	private static List<DictionaryEntry> readDictionaryFile(IndexWriter indexWriter, InputStream dictionaryInputStream, JMdict jmdict, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
+		
+		// cachowanie danych w JMdict
+		List<Entry> entryList = jmdict.getEntryList();
+
+		Map<Integer, Entry> jmdictCache = new TreeMap<Integer, Entry>();
+		
+		for (Entry entry : entryList) {
+			jmdictCache.put(entry.getEntryId(), entry);
+		}
+		
+		//
 		
 		List<DictionaryEntry> dictionaryEntryList = new ArrayList<DictionaryEntry>();
 
@@ -277,10 +305,23 @@ public class LuceneDBGenerator {
 		while (csvReader.readRecord()) {
 
 			DictionaryEntry entry = parseDictionaryEntry(csvReader);
+			Entry jmdictEntry = null;
+			
+			// sprawdzenie, czy wystepuje slowo w formacie JMdict
+			List<Attribute> jmdictEntryIdAttributeList = entry.getAttributeList().getAttributeList(AttributeType.JMDICT_ENTRY_ID);
+			
+			if (jmdictEntryIdAttributeList != null && jmdictEntryIdAttributeList.size() > 0) { // cos jest
+				
+				// pobieramy entry id
+				Integer entryId = Integer.parseInt(jmdictEntryIdAttributeList.get(0).getAttributeValue().get(0));
+				
+				// pobieramy z cache
+				jmdictEntry = jmdictCache.get(entryId);				
+			}
 			
 			System.out.println(String.format("DictionaryEntry id = %s", entry.getId()));
 
-			addDictionaryEntry(indexWriter, entry, addSugestionList, generatePrefixes);
+			addDictionaryEntry(indexWriter, entry, jmdictEntry, addSugestionList, generatePrefixes);
 
 			uniqueDictionaryEntryGroupEnumSet.addAll(entry.getGroups());
 			
@@ -294,7 +335,7 @@ public class LuceneDBGenerator {
 		return dictionaryEntryList;
 	}
 
-	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
+	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, Entry jmdictEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 		
 		Document document = new Document();
 		
@@ -425,6 +466,139 @@ public class LuceneDBGenerator {
 				
 		for (String currentExampleSenteceGroupId : exampleSentenceGroupIdsList) {
 			document.add(new TextField(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList, currentExampleSenteceGroupId, Field.Store.YES));
+		}
+		
+		// generowanie tlumaczen slowa w formacie wyswietlanym podczas wyszukiwania
+		if (jmdictEntry != null) { // slowo w nowym formacie
+			
+			List<KanjiKanaPair> kanjiKanaPairList = Dictionary2HelperCommon.getKanjiKanaPairListStatic(jmdictEntry);
+			
+			// szukamy konkretnego znaczenia dla naszego slowa
+			KanjiKanaPair dictionaryEntry2KanjiKanaPair = Dictionary2HelperCommon.findKanjiKanaPair(kanjiKanaPairList, dictionaryEntry);
+
+			if (dictionaryEntry2KanjiKanaPair != null) {				
+				for (int senseIdx = 0; senseIdx < dictionaryEntry2KanjiKanaPair.getSenseList().size(); ++senseIdx) {
+					
+					Sense sense = dictionaryEntry2KanjiKanaPair.getSenseList().get(senseIdx);
+					
+					List<Gloss> glossList = sense.getGlossList();
+					List<SenseAdditionalInfo> senseAdditionalInfoList = sense.getAdditionalInfoList();
+					List<LanguageSource> senseLanguageSourceList = sense.getLanguageSourceList();
+					List<FieldEnum> senseFieldList = sense.getFieldList();
+					List<MiscEnum> senseMiscList = sense.getMiscList();
+					List<DialectEnum> senseDialectList = sense.getDialectList();
+					List<PartOfSpeechEnum> partOfSpeechList = sense.getPartOfSpeechList();
+														
+					// pobieramy polskie tlumaczenia
+					List<Gloss> glossPolList = glossList.stream().filter(gloss -> (gloss.getLang().equals("pol") == true)).collect(Collectors.toList());
+					
+					// i informacje dodatkowe
+					Optional<SenseAdditionalInfo> senseAdditionalPolOptional = senseAdditionalInfoList.stream().filter(additionalInfo -> (additionalInfo.getLang().equals("pol") == true)).findFirst();				
+					
+					String partOfSpeechValue = null;
+					
+					// czesci mowy
+					if (partOfSpeechList.size() > 0) {						
+						List<String> translateToPolishPartOfSpeechEnum = Dictionary2HelperCommon.translateToPolishPartOfSpeechEnum(partOfSpeechList);
+						
+						partOfSpeechValue = pl.idedyk.japanese.dictionary.api.dictionary.Utils.convertListToString(translateToPolishPartOfSpeechEnum, "; ");
+					}				
+					
+					for (Gloss currentGlossPol : glossPolList) {
+						
+						Tr tr = new Tr();
+
+						// dodanie pojedynczego znaczenia
+						Td glossPolValueTd = new Td();
+						
+						// wyroznienie znaczenia
+						H glossPolTdH4 = new H(4, null, "margin-top: 0px;margin-bottom: 5px");
+						
+						glossPolTdH4.addHtmlElement(new Text(currentGlossPol.getValue()));
+						
+						glossPolValueTd.addHtmlElement(glossPolTdH4);
+												
+						tr.addHtmlElement(glossPolValueTd);
+						
+						// sprawdzenie, czy wystepuje dodatkowy typ znaczenia
+						if (currentGlossPol.getGType() != null) {
+							
+							Td glossPolGTypeTd = new Td();
+							
+							Div glossPolGTypeTdDiv = new Div(null, "margin-top: 0px;margin-left: 25px;margin-bottom: 5px");
+							
+							glossPolGTypeTdDiv.addHtmlElement(new Text(Dictionary2HelperCommon.translateToPolishGlossType(currentGlossPol.getGType())));
+							
+							glossPolGTypeTd.addHtmlElement(glossPolGTypeTdDiv);
+							
+							tr.addHtmlElement(glossPolGTypeTd);
+						}
+							
+											
+						table.addHtmlElement(tr);					
+					}
+					
+					// informacje dodatkowe
+					List<String> additionalInfoToAddList = new ArrayList<>();
+					
+					// dziedzina
+					if (senseFieldList.size() > 0) {
+						additionalInfoToAddList.addAll(Dictionary2HelperCommon.translateToPolishFieldEnumList(senseFieldList));						
+					}
+					
+					// rozne informacje
+					if (senseMiscList.size() > 0) {
+						additionalInfoToAddList.addAll(Dictionary2HelperCommon.translateToPolishMiscEnumList(senseMiscList));
+					}
+					
+					// dialekt
+					if (senseDialectList.size() > 0) {
+						additionalInfoToAddList.addAll(Dictionary2HelperCommon.translateToPolishDialectEnumList(senseDialectList));
+					}
+					
+					if (senseAdditionalPolOptional.isPresent() == true) { // czy informacje dodatkowe istnieja
+						
+						String senseAdditionalPolOptionalValue = senseAdditionalPolOptional.get().getValue();
+						
+						additionalInfoToAddList.add(senseAdditionalPolOptionalValue);
+					}
+					
+					// czy sa informacje o zagranicznym pochodzeniu slow
+					if (senseLanguageSourceList != null && senseLanguageSourceList.size() > 0) {
+						
+						for (LanguageSource languageSource : senseLanguageSourceList) {
+													
+							String languageCodeInPolish = Dictionary2HelperCommon.translateToPolishLanguageCode(languageSource.getLang());
+							String languageValue = languageSource.getValue();
+							String languageLsWasei = Dictionary2HelperCommon.translateToPolishLanguageSourceLsWaseiEnum(languageSource.getLsWasei());
+							
+							if (StringUtils.isBlank(languageValue) == false) {
+								additionalInfoToAddList.add(languageCodeInPolish + ": " + languageValue);
+								
+							} else {
+								additionalInfoToAddList.add(Dictionary2HelperCommon.translateToPolishLanguageCodeWithoutValue(languageSource.getLang()));
+							}
+							
+							if (languageLsWasei != null) {
+								additionalInfoToAddList.add(languageLsWasei);
+							}
+						}
+					}
+									
+					if (additionalInfoToAddList.size() > 0) {
+						
+						Tr tr = new Tr();
+						
+						Td senseAdditionalPolTd = new Td();
+						
+						senseAdditionalPolTd.addHtmlElement(new Text(pl.idedyk.japanese.dictionary.api.dictionary.Utils.convertListToString(additionalInfoToAddList, "; ")));
+						
+						tr.addHtmlElement(senseAdditionalPolTd);
+						
+						table.addHtmlElement(tr);
+					}
+				}
+			}
 		}
 		
 		indexWriter.addDocument(document);
@@ -1292,16 +1466,19 @@ public class LuceneDBGenerator {
 		}
 	}
 	
-	private static void addWord2Xml(IndexWriter indexWriter, String word2XmlFilePath) throws JAXBException, IOException {
+	private static JMdict readWord2Xml(String word2XmlFilePath) throws JAXBException {
 		
 		JAXBContext jaxbContext = JAXBContext.newInstance(JMdict.class);              
 
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 		
 		JMdict jmdict = (JMdict) jaxbUnmarshaller.unmarshal(new File(word2XmlFilePath));
-		
-		//
-		
+
+		return jmdict;
+	}
+	
+	private static void addWord2Xml(IndexWriter indexWriter, JMdict jmdict) throws IOException {
+				
 		Gson gson = new Gson();
 		
 		//
