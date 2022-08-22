@@ -50,6 +50,14 @@ public class LuceneAnalyzer extends Analyzer {
 				return Character.toLowerCase(c);
 			}
 			
+			if (Character.UnicodeBlock.of(c).toString().equals("HALFWIDTH_AND_FULLWIDTH_FORMS") == true) {
+				return Character.codePointAt(chars, 0);
+			}
+
+			if (Character.UnicodeBlock.of(c).toString().equals("CJK_SYMBOLS_AND_PUNCTUATION") == true) {
+				return Character.codePointAt(chars, 0);
+			}
+									
 			// usuwanie polskich znakow
 			if (removePolishChars == true) {				
 				for (int idx = 0; idx < chars.length; ++idx) {					
@@ -62,13 +70,20 @@ public class LuceneAnalyzer extends Analyzer {
 				chars[idx] = Character.toLowerCase(chars[idx]);
 			}
 			
+			
+			
 			// zwrocenie wyniku
 			return Character.codePointAt(chars, 0);
 		}
 		
 		@Override
 		protected boolean isTokenChar(int c) {
-			return Character.isLetter(c) || Character.isDigit(c) || (char)c == '・' || (char)c == '･';
+						
+			return Character.isLetter(c) || 
+					Character.isDigit(c) || 
+					(char)c == '・' || 
+					(char)c == '･' ||
+					Character.UnicodeBlock.of(c).toString().equals("CJK_SYMBOLS_AND_PUNCTUATION") == true;
 		}
 	}
 }

@@ -46,7 +46,10 @@ public class Test1 {
 		//String text = "ﾎｯﾄﾗｲﾝ";
 		//String text = "ﾎｯﾄ";
 		//String text = "ｿﾌﾄｳｪｱｴﾝｼﾞﾆｱﾘﾝｸﾞ";
-		String text = "ｿﾌﾄｳｪｱ･ｴﾝｼﾞﾆｱﾘﾝｸﾞ";
+		//String text = "ｿﾌﾄｳｪｱ･ｴﾝｼﾞﾆｱﾘﾝｸﾞ";
+		//String text = "実効利用者ＩＤ";
+		//String text = "遅牛も淀、早牛も淀";
+		String text = "マイクロRNA";
 		
 		TokenStream tokenStream = analyzerTest.tokenStream("a", text);
 		
@@ -65,7 +68,7 @@ public class Test1 {
 		
 		analyzerTest.close();
 						
-		//System.exit(1);
+		System.exit(1);
 		
 		//
 		
