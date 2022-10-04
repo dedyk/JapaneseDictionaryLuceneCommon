@@ -490,6 +490,27 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		query.add(NumericRangeQuery.newIntRange(LuceneStatic.dictionaryEntry_id, Integer.parseInt(id), Integer.parseInt(id), true, true), Occur.MUST);
 
+		return getCommonDictionaryEntryByIdUniqueKey(query);
+	}
+
+	@Override
+	public DictionaryEntry getDictionaryEntryByUniqueKey(String uniqueKey) throws DictionaryException {
+
+		BooleanQuery query = new BooleanQuery();
+
+		// object type
+		PhraseQuery phraseQuery = new PhraseQuery();
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_objectType));
+
+		query.add(phraseQuery, Occur.MUST);
+
+		query.add(createQuery(uniqueKey, LuceneStatic.dictionaryEntry_uniqueKey, WordPlaceSearch.EXACT), Occur.MUST);
+
+		return getCommonDictionaryEntryByIdUniqueKey(query);
+	}
+	
+	private DictionaryEntry getCommonDictionaryEntryByIdUniqueKey(BooleanQuery query) throws DictionaryException {
+		
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
 
@@ -575,6 +596,27 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		query.add(NumericRangeQuery.newIntRange(LuceneStatic.nameDictionaryEntry_id, Integer.parseInt(id), Integer.parseInt(id), true, true), Occur.MUST);
 		
+		return getCommonDictionaryEntryNameByIdUniqueKey(query);
+	}
+
+	@Override
+	public DictionaryEntry getDictionaryEntryNameByUniqueKey(String uniqueKey) throws DictionaryException {
+
+		BooleanQuery query = new BooleanQuery();
+
+		// object type
+		PhraseQuery phraseQuery = new PhraseQuery();
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry_objectType));
+
+		query.add(phraseQuery, Occur.MUST);
+		
+		query.add(createQuery(uniqueKey, LuceneStatic.nameDictionaryEntry_uniqueKey, WordPlaceSearch.EXACT), Occur.MUST);
+		
+		return getCommonDictionaryEntryNameByIdUniqueKey(query);
+	}
+
+	private DictionaryEntry getCommonDictionaryEntryNameByIdUniqueKey(BooleanQuery query) throws DictionaryException {
+		
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
 
@@ -587,7 +629,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			String idString = foundDocument.get(LuceneStatic.nameDictionaryEntry_id);
 
 			List<String> dictionaryEntryTypeList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList));
-			List<String> attributeList = new ArrayList<String>();
+			List<String> attributeList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_attributeList));
 			List<String> groupsList = new ArrayList<String>();
 
 			String prefixKanaString = "";
@@ -1379,7 +1421,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 				String idString = foundDocument.get(LuceneStatic.nameDictionaryEntry_id);
 
 				List<String> dictionaryEntryTypeList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList));
-				List<String> attributeList = new ArrayList<String>();
+				List<String> attributeList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_attributeList));
 				List<String> groupsList = new ArrayList<String>();
 
 				String prefixKanaString = "";

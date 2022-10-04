@@ -304,6 +304,13 @@ public class LuceneDBGenerator {
 		// id
 		document.add(new IntField(LuceneStatic.dictionaryEntry_id, dictionaryEntry.getId(), Field.Store.YES));
 		
+		// unique key
+		String uniqueKey = dictionaryEntry.getUniqueKey();
+		
+		if (uniqueKey != null) {
+			document.add(new StringField(LuceneStatic.dictionaryEntry_uniqueKey, uniqueKey, Field.Store.YES));
+		}
+		
 		// dictionary entry type list
 		List<String> dictionaryEntryTypeStringList = DictionaryEntryType.convertToValues(dictionaryEntry.getDictionaryEntryTypeList());
 		
@@ -1095,11 +1102,25 @@ public class LuceneDBGenerator {
 		// id
 		document.add(new IntField(LuceneStatic.nameDictionaryEntry_id, dictionaryEntry.getId(), Field.Store.YES));
 		
+		// unique key
+		String uniqueKey = dictionaryEntry.getUniqueKey();
+		
+		if (uniqueKey != null) {
+			document.add(new StringField(LuceneStatic.nameDictionaryEntry_uniqueKey, uniqueKey, Field.Store.YES));
+		}
+		
 		// dictionary entry type list
 		List<String> dictionaryEntryTypeStringList = DictionaryEntryType.convertToValues(dictionaryEntry.getDictionaryEntryTypeList());
 		
 		for (String dictionaryEntryTypeString : dictionaryEntryTypeStringList) {
 			document.add(new StringField(LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList, dictionaryEntryTypeString, Field.Store.YES));
+		}
+		
+		// attributeList
+		List<String> attributeStringList = dictionaryEntry.getAttributeList().convertAttributeListToListString();
+		
+		for (String currentAttribute : attributeStringList) {
+			document.add(new StringField(LuceneStatic.nameDictionaryEntry_attributeList, currentAttribute, Field.Store.YES));
 		}
 				
 		// kanji

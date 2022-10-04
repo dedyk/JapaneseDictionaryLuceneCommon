@@ -7,6 +7,7 @@ public class LuceneStatic {
 	public static final String dictionaryEntry_objectType = "dictionaryEntry";
 	
 	public static final String dictionaryEntry_id = "dictionaryEntry_id";
+	public static final String dictionaryEntry_uniqueKey = "dictionaryEntry_uniqueKey";
 	public static final String dictionaryEntry_dictionaryEntryTypeList = "dictionaryEntry_dictionaryEntryTypeList";
 	public static final String dictionaryEntry_attributeList = "dictionaryEntry_attributeList";
 	public static final String dictionaryEntry_groupsList = "dictionaryEntry_groupsList";
@@ -50,7 +51,9 @@ public class LuceneStatic {
 	public static final String nameDictionaryEntry_objectType = "nameDictionaryEntry";
 	
 	public static final String nameDictionaryEntry_id = "nameDictionaryEntry_id";
+	public static final String nameDictionaryEntry_uniqueKey = "nameDictionaryEntry_uniqueKey";
 	public static final String nameDictionaryEntry_dictionaryEntryTypeList = "nameDictionaryEntry_dictionaryEntryTypeList";
+	public static final String nameDictionaryEntry_attributeList = "nameDictionaryEntry_attributeList";
 	public static final String nameDictionaryEntry_kanji = "nameDictionaryEntry_kanji";
 	public static final String nameDictionaryEntry_kana = "nameDictionaryEntry_kana";
 	public static final String nameDictionaryEntry_romaji = "nameDictionaryEntry_romaji";
