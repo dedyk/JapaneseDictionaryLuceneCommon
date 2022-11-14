@@ -83,7 +83,7 @@ public class LuceneAnalyzer extends Analyzer {
 					Character.isDigit(c) || 
 					(char)c == '・' || 
 					(char)c == '･' ||
-					Character.UnicodeBlock.of(c).toString().equals("CJK_SYMBOLS_AND_PUNCTUATION") == true;
+					(Character.UnicodeBlock.of(c) != null && Character.UnicodeBlock.of(c).toString().equals("CJK_SYMBOLS_AND_PUNCTUATION") == true);
 		}
 	}
 }
