@@ -87,7 +87,7 @@ public class Test1 {
 		//findWordRequest.searchGrammaFormAndExamples = false;		
 		//findWordRequest.word = "shukujitsu";
 		
-		findWordRequest.word = "suru";
+		findWordRequest.word = "robić";
 		//findWordRequest.word = text; //"スプラッタ・ムービー";
 		//findWordRequest.word = "スプラッタムービー";
 

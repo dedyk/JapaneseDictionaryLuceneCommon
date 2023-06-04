@@ -394,9 +394,21 @@ public class LuceneDBGenerator {
 		
 		for (String currentTranslate : translates) {
 			
-			document.add(new TextField(LuceneStatic.dictionaryEntry_translatesList, currentTranslate, Field.Store.YES));
+			Float boost = null;
 			
-			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesList, currentTranslate, generatePrefixes);
+			int fixme = 1; // test
+			
+			if (dictionaryEntry.getId() == 253) {
+				boost = 10.0f;
+			}
+			
+			if (dictionaryEntry.getId() == 34160) {
+				boost = 12.0f;
+			}
+			
+			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_translatesList, currentTranslate, Field.Store.YES), boost));
+			
+			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesList, currentTranslate, generatePrefixes, boost);
 			
 			if (addSugestionList == true) {
 								
@@ -409,9 +421,9 @@ public class LuceneDBGenerator {
 			
 			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
 				
-			document.add(new TextField(LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.NO));
+			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.NO), boost));
 			
-			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, generatePrefixes);
+			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, generatePrefixes, boost);
 		}
 		
 		// info
@@ -435,6 +447,15 @@ public class LuceneDBGenerator {
 		}
 		
 		indexWriter.addDocument(document);
+	}
+	
+	private static TextField setBoost(TextField textField, Float boost) {
+		
+		if (boost != null) {
+			textField.setBoost(boost);
+		}
+		
+		return textField;
 	}
 	
 	private static void addAlternativeRomaji(Document document, String fieldName, String romaji, boolean generatePrefixes) {
@@ -506,6 +527,10 @@ public class LuceneDBGenerator {
 	}
 	
 	private static void addPrefixes(Document document, String fieldName, String value, boolean generatePrefixes) {
+		addPrefixes(document, fieldName, value, generatePrefixes, null);
+	}
+	
+	private static void addPrefixes(Document document, String fieldName, String value, boolean generatePrefixes, Float boost) {
 		
 		if (generatePrefixes == false) {
 			return;
@@ -515,7 +540,7 @@ public class LuceneDBGenerator {
 			
 			String prefix = value.substring(idx);
 			
-			document.add(new TextField(fieldName + "_" + LuceneStatic.prefix, prefix, Field.Store.NO));			
+			document.add(setBoost(new TextField(fieldName + "_" + LuceneStatic.prefix, prefix, Field.Store.NO), boost));			
 		}
 	}
 	
