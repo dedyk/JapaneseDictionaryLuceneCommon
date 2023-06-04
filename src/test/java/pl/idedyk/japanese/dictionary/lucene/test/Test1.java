@@ -68,7 +68,7 @@ public class Test1 {
 		
 		analyzerTest.close();
 						
-		System.exit(1);
+		//System.exit(1);
 		
 		//
 		
@@ -87,7 +87,7 @@ public class Test1 {
 		//findWordRequest.searchGrammaFormAndExamples = false;		
 		//findWordRequest.word = "shukujitsu";
 		
-		findWordRequest.word = "kat";
+		findWordRequest.word = "suru";
 		//findWordRequest.word = text; //"スプラッタ・ムービー";
 		//findWordRequest.word = "スプラッタムービー";
 
@@ -106,6 +106,8 @@ public class Test1 {
 		
 		findWordRequest.wordPlaceSearch = WordPlaceSearch.START_WITH;
 		
+		//findWordRequest.searchTranslate = false;
+		findWordRequest.searchInfo = false;
 		//findWordRequest.searchRomaji = false;
 		
 		FindWordResult findWordResult = dictionaryManager.findWord(findWordRequest);
@@ -171,10 +173,12 @@ public class Test1 {
 		}
 		*/
 		
+		/*
 		// dictionary 2
 		Entry entry = dictionaryManager.getDictionaryEntry2ById(1232870);
 		
 		System.out.println(entry.getEntryId());
+		*/
 		
 		luceneDatabase.close();
 	}
