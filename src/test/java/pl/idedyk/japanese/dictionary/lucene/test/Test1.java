@@ -23,7 +23,6 @@ import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary.api.tools.KanaHelper;
 import pl.idedyk.japanese.dictionary.lucene.LuceneAnalyzer;
 import pl.idedyk.japanese.dictionary.lucene.LuceneDatabase;
-import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
 
 public class Test1 {
 
@@ -87,7 +86,7 @@ public class Test1 {
 		//findWordRequest.searchGrammaFormAndExamples = false;		
 		//findWordRequest.word = "shukujitsu";
 		
-		findWordRequest.word = "robić";
+		findWordRequest.word = "kot";
 		//findWordRequest.word = text; //"スプラッタ・ムービー";
 		//findWordRequest.word = "スプラッタムービー";
 

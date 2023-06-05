@@ -39,6 +39,8 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
+import pl.idedyk.japanese.dictionary.api.dto.Attribute;
+import pl.idedyk.japanese.dictionary.api.dto.AttributeType;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
@@ -296,8 +298,29 @@ public class LuceneDBGenerator {
 
 	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 		
-		Document document = new Document();
+		// wyliczenie boost'era
 		
+		List<Attribute> priorityList = dictionaryEntry.getAttributeList().getAttributeList(AttributeType.PRIORITY);		
+		Integer boostInteger = priorityList != null && priorityList.size() > 0 ? Integer.parseInt(priorityList.get(0).getAttributeValue().get(0)) : Integer.MAX_VALUE;
+		Float boostFloat = null;
+		
+		if (boostInteger == Integer.MAX_VALUE) {
+			boostFloat = null;
+			
+		} else if (boostInteger < 100) {
+			boostFloat = 10.0f - (boostInteger.intValue() / 100.0f);
+			
+		} else if (boostInteger < 200) {
+			boostFloat = 10.0f - (boostInteger.intValue() / 200.0f);
+			
+		} else if (boostInteger < 1000) {
+			boostFloat = 3.0f - (boostInteger.intValue() / 1000.0f);
+		}
+		
+		//
+		
+		Document document = new Document();
+				
 		// object type
 		document.add(new StringField(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_objectType, Field.Store.YES));
 		
@@ -393,22 +416,10 @@ public class LuceneDBGenerator {
 		List<String> translates = dictionaryEntry.getTranslates();
 		
 		for (String currentTranslate : translates) {
+						
+			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_translatesList, currentTranslate, Field.Store.YES), boostFloat));
 			
-			Float boost = null;
-			
-			int fixme = 1; // test
-			
-			if (dictionaryEntry.getId() == 253) {
-				boost = 10.0f;
-			}
-			
-			if (dictionaryEntry.getId() == 34160) {
-				boost = 12.0f;
-			}
-			
-			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_translatesList, currentTranslate, Field.Store.YES), boost));
-			
-			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesList, currentTranslate, generatePrefixes, boost);
+			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesList, currentTranslate, generatePrefixes, boostFloat);
 			
 			if (addSugestionList == true) {
 								
@@ -421,9 +432,9 @@ public class LuceneDBGenerator {
 			
 			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
 				
-			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.NO), boost));
+			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.NO), boostFloat));
 			
-			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, generatePrefixes, boost);
+			addPrefixes(document, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, generatePrefixes, boostFloat);
 		}
 		
 		// info
