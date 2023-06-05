@@ -299,23 +299,7 @@ public class LuceneDBGenerator {
 	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 		
 		// wyliczenie boost'era
-		
-		List<Attribute> priorityList = dictionaryEntry.getAttributeList().getAttributeList(AttributeType.PRIORITY);		
-		Integer boostInteger = priorityList != null && priorityList.size() > 0 ? Integer.parseInt(priorityList.get(0).getAttributeValue().get(0)) : Integer.MAX_VALUE;
-		Float boostFloat = null;
-		
-		if (boostInteger == Integer.MAX_VALUE) {
-			boostFloat = null;
-			
-		} else if (boostInteger < 100) {
-			boostFloat = 10.0f - (boostInteger.intValue() / 100.0f);
-			
-		} else if (boostInteger < 200) {
-			boostFloat = 10.0f - (boostInteger.intValue() / 200.0f);
-			
-		} else if (boostInteger < 1000) {
-			boostFloat = 3.0f - (boostInteger.intValue() / 1000.0f);
-		}
+		Float boostFloat = getBoostFloat(dictionaryEntry);
 		
 		//
 		
@@ -361,7 +345,7 @@ public class LuceneDBGenerator {
 		// kanji
 		document.add(new StringField(LuceneStatic.dictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
 		
-		addPrefixes(document, LuceneStatic.dictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), generatePrefixes);
+		addPrefixes(document, LuceneStatic.dictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), generatePrefixes, boostFloat);
 		
 		if (addSugestionList == true) {
 			
@@ -377,7 +361,7 @@ public class LuceneDBGenerator {
 		
 		document.add(new StringField(LuceneStatic.dictionaryEntry_kana, kana, Field.Store.YES));
 		
-		addPrefixes(document, LuceneStatic.dictionaryEntry_kana, kana, generatePrefixes);
+		addPrefixes(document, LuceneStatic.dictionaryEntry_kana, kana, generatePrefixes, boostFloat);
 		
 		if (addSugestionList == true) {
 			
@@ -394,14 +378,14 @@ public class LuceneDBGenerator {
 		// romajiList
 		String romaji = dictionaryEntry.getRomaji();
 				
-		document.add(new TextField(LuceneStatic.dictionaryEntry_romaji, romaji, Field.Store.YES));
+		document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_romaji, romaji, Field.Store.YES), boostFloat));
 
-		addPrefixes(document, LuceneStatic.dictionaryEntry_romaji, romaji, generatePrefixes);
+		addPrefixes(document, LuceneStatic.dictionaryEntry_romaji, romaji, generatePrefixes, boostFloat);
 		
 		//
 		
 		// dodanie alternatyw romaji
-		addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_virtual_romaji, romaji, generatePrefixes);
+		addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_virtual_romaji, romaji, generatePrefixes, boostFloat);
 		
 		if (addSugestionList == true) {
 			
@@ -440,15 +424,15 @@ public class LuceneDBGenerator {
 		// info
 		String info = emptyIfNull(dictionaryEntry.getInfo());
 		
-		document.add(new TextField(LuceneStatic.dictionaryEntry_info, info, Field.Store.YES));
+		document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_info, info, Field.Store.YES), boostFloat));
 		
-		addPrefixes(document, LuceneStatic.dictionaryEntry_info, info, generatePrefixes);
+		addPrefixes(document, LuceneStatic.dictionaryEntry_info, info, generatePrefixes, boostFloat);
 			
 		String infoWithoutPolishChars = Utils.removePolishChars(info);
 			
-		document.add(new TextField(LuceneStatic.dictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.NO));
+		document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.NO), boostFloat));
 		
-		addPrefixes(document, LuceneStatic.dictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, generatePrefixes);
+		addPrefixes(document, LuceneStatic.dictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, generatePrefixes, boostFloat);
 		
 		// example sentence groupIds
 		List<String> exampleSentenceGroupIdsList = dictionaryEntry.getExampleSentenceGroupIdsList();
@@ -460,6 +444,43 @@ public class LuceneDBGenerator {
 		indexWriter.addDocument(document);
 	}
 	
+	private static Float getBoostFloat(DictionaryEntry dictionaryEntry) {
+		List<Attribute> priorityList = dictionaryEntry.getAttributeList().getAttributeList(AttributeType.PRIORITY);
+		
+		Integer boostInteger = priorityList != null && priorityList.size() > 0 ? Integer.parseInt(priorityList.get(0).getAttributeValue().get(0)) : Integer.MAX_VALUE;
+		Float boostFloat = null;
+		
+		if (boostInteger == Integer.MAX_VALUE) {
+			boostFloat = null;
+			
+		} else if (boostInteger < 100) {
+			float[] ab = calculateAandBFactor(1, 100, 100, 5); // funkcja przechodzaca przez punkty A(1, 100), B(100, 5)
+			
+			boostFloat = ab[0] * boostInteger.intValue() + ab[1];
+			
+		} else if (boostInteger < 110) {
+			float[] ab = calculateAandBFactor(100, 5, 110, 2); // funkcja przechodzaca przez punkty A(100, 5), B(110, 2)
+			
+			boostFloat = ab[0] * boostInteger.intValue() + ab[1];
+			
+		} /* 
+		else if (boostInteger < 1000) {
+			float[] ab = calculateAandBFactor(110, 2, 1000, 0); // funkcja przechodzaca przez punkty A(110, 2), B(1000, 0)
+			
+			boostFloat = ab[0] * boostInteger.intValue() + ab[1];
+		}
+		*/
+		
+		return boostFloat;
+	}
+	
+	private static float[] calculateAandBFactor(float x1, float y1, float x2, float y2) {		
+		float a = (y2 - y1) / (x2 - x1);
+		float b = y2 - a * x2;
+
+		return new float[] { a, b };
+	}
+	
 	private static TextField setBoost(TextField textField, Float boost) {
 		
 		if (boost != null) {
@@ -469,43 +490,43 @@ public class LuceneDBGenerator {
 		return textField;
 	}
 	
-	private static void addAlternativeRomaji(Document document, String fieldName, String romaji, boolean generatePrefixes) {
+	private static void addAlternativeRomaji(Document document, String fieldName, String romaji, boolean generatePrefixes, Float boostFloat) {
 		
 		if (romaji.contains(" ") == true) {
 			
 			String romajiWithoutSpace = romaji.replaceAll(" ", "");
 			
-			document.add(new TextField(fieldName, romajiWithoutSpace, Field.Store.NO));
+			document.add(setBoost(new TextField(fieldName, romajiWithoutSpace, Field.Store.NO), boostFloat));
 			
-			addPrefixes(document, fieldName, romajiWithoutSpace, generatePrefixes);
+			addPrefixes(document, fieldName, romajiWithoutSpace, generatePrefixes, boostFloat);
 		}
 		
 		if (romaji.contains("'") == true) {
 			
 			String romajiWithoutChar = romaji.replaceAll("'", "");
 			
-			document.add(new TextField(fieldName, romajiWithoutChar, Field.Store.NO));	
+			document.add(setBoost(new TextField(fieldName, romajiWithoutChar, Field.Store.NO), boostFloat));
 			
-			addPrefixes(document, fieldName, romajiWithoutChar, generatePrefixes);
+			addPrefixes(document, fieldName, romajiWithoutChar, generatePrefixes, boostFloat);
 		}		
 		
 		if (romaji.contains("du") == true) {
 			
 			String romajiDzu = romaji.replaceAll("du", "dzu");
 			
-			document.add(new TextField(fieldName, romajiDzu, Field.Store.NO));
+			document.add(setBoost(new TextField(fieldName, romajiDzu, Field.Store.NO), boostFloat));
 			
-			addPrefixes(document, fieldName, romajiDzu, generatePrefixes);
+			addPrefixes(document, fieldName, romajiDzu, generatePrefixes, boostFloat);
 		}
 		
 		if (romaji.contains(" o ") == true) {
 			
 			String romajiWo = romaji.replaceAll(" o ", " wo ");
 						
-			document.add(new TextField(fieldName, romajiWo, Field.Store.NO));
+			document.add(setBoost(new TextField(fieldName, romajiWo, Field.Store.NO), boostFloat));
 			
 			if (generatePrefixes == true) {
-				addPrefixes(document, fieldName, romajiWo, generatePrefixes);
+				addPrefixes(document, fieldName, romajiWo, generatePrefixes, boostFloat);
 			}
 		}
 
@@ -513,27 +534,27 @@ public class LuceneDBGenerator {
 			
 			String romajiTu = romaji.replaceAll("tsu", "tu");
 			
-			document.add(new TextField(fieldName, romajiTu, Field.Store.NO));
+			document.add(setBoost(new TextField(fieldName, romajiTu, Field.Store.NO), boostFloat));
 			
-			addPrefixes(document, fieldName, romajiTu, generatePrefixes);
+			addPrefixes(document, fieldName, romajiTu, generatePrefixes, boostFloat);
 		}
 
 		if (romaji.contains("shi") == true) {
 			
 			String romajiSi = romaji.replaceAll("shi", "si");
 						
-			document.add(new TextField(fieldName, romajiSi, Field.Store.NO));
+			document.add(setBoost(new TextField(fieldName, romajiSi, Field.Store.NO), boostFloat));
 			
-			addPrefixes(document, fieldName, romajiSi, generatePrefixes);
+			addPrefixes(document, fieldName, romajiSi, generatePrefixes, boostFloat);
 		}
 
 		if (romaji.contains("fu") == true) {
 			
 			String romajiHu = romaji.replaceAll("fu", "hu");
 						
-			document.add(new TextField(fieldName, romajiHu, Field.Store.NO));
+			document.add(setBoost(new TextField(fieldName, romajiHu, Field.Store.NO), boostFloat));
 			
-			addPrefixes(document, fieldName, romajiHu, generatePrefixes);
+			addPrefixes(document, fieldName, romajiHu, generatePrefixes, boostFloat);
 		}		
 	}
 	
@@ -541,7 +562,7 @@ public class LuceneDBGenerator {
 		addPrefixes(document, fieldName, value, generatePrefixes, null);
 	}
 	
-	private static void addPrefixes(Document document, String fieldName, String value, boolean generatePrefixes, Float boost) {
+	private static void addPrefixes(Document document, String fieldName, String value, boolean generatePrefixes, Float boostFloat) {
 		
 		if (generatePrefixes == false) {
 			return;
@@ -551,7 +572,7 @@ public class LuceneDBGenerator {
 			
 			String prefix = value.substring(idx);
 			
-			document.add(setBoost(new TextField(fieldName + "_" + LuceneStatic.prefix, prefix, Field.Store.NO), boost));			
+			document.add(setBoost(new TextField(fieldName + "_" + LuceneStatic.prefix, prefix, Field.Store.NO), boostFloat));			
 		}
 	}
 	
@@ -569,6 +590,9 @@ public class LuceneDBGenerator {
 	}
 	
 	private static void countGrammaFormAndExamples(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, KeigoHelper keigoHelper, boolean addGrammaAndExample, boolean addSugestionList) throws IOException {
+		
+		// wyliczenie boost'era
+		Float boostFloat = getBoostFloat(dictionaryEntry);
 		
 		if (addGrammaAndExample == false) {
 			
@@ -608,7 +632,7 @@ public class LuceneDBGenerator {
 				List<GrammaFormConjugateGroupTypeElements> grammaConjufateResult = GrammaConjugaterManager.getGrammaConjufateResult(keigoHelper, dictionaryEntry, grammaFormCache,
 						currentDictionaryEntryType, true);
 				
-				addGrammaFormConjugateGroupList(grammaAndExampleDocument, indexWriter, dictionaryEntry, grammaConjufateResult, addSugestionList);
+				addGrammaFormConjugateGroupList(grammaAndExampleDocument, indexWriter, dictionaryEntry, grammaConjufateResult, addSugestionList, boostFloat);
 			}
 
 			List<ExampleGroupTypeElements> examples = ExampleManager.getExamples(keigoHelper, dictionaryEntry, grammaFormCache, null, true);
@@ -617,7 +641,7 @@ public class LuceneDBGenerator {
 			for (DictionaryEntryType currentDictionaryEntryType : dictionaryEntry.getDictionaryEntryTypeList()) {
 				examples = ExampleManager.getExamples(keigoHelper, dictionaryEntry, grammaFormCache, currentDictionaryEntryType, true);
 				
-				addExampleGroupTypeList(grammaAndExampleDocument, indexWriter, dictionaryEntry, examples, addSugestionList);
+				addExampleGroupTypeList(grammaAndExampleDocument, indexWriter, dictionaryEntry, examples, addSugestionList, boostFloat);
 			}
 			
 			if (grammaAndExampleDocument.getFields().size() > 2) {
@@ -627,7 +651,7 @@ public class LuceneDBGenerator {
 	}
 	
 	private static void addGrammaFormConjugateGroupList(Document document, IndexWriter indexWriter, DictionaryEntry dictionaryEntry, 
-			List<GrammaFormConjugateGroupTypeElements> grammaConjufateResult, boolean addSugestionList) throws IOException {
+			List<GrammaFormConjugateGroupTypeElements> grammaConjufateResult, boolean addSugestionList, Float boostFloat) throws IOException {
 		
 		if (grammaConjufateResult == null) {
 			return;
@@ -638,13 +662,13 @@ public class LuceneDBGenerator {
 			List<GrammaFormConjugateResult> grammaFormConjugateResults = grammaFormConjugateGroupTypeElements.getGrammaFormConjugateResults();
 			
 			for (GrammaFormConjugateResult grammaFormConjugateResult : grammaFormConjugateResults) {				
-				addGrammaFormConjugateResult(document, indexWriter, dictionaryEntry, grammaFormConjugateResult, addSugestionList);
+				addGrammaFormConjugateResult(document, indexWriter, dictionaryEntry, grammaFormConjugateResult, addSugestionList, boostFloat);
 			}
 		}		
 	}
 	
 	private static void addExampleGroupTypeList(Document document, IndexWriter indexWriter, DictionaryEntry dictionaryEntry, 
-			List<ExampleGroupTypeElements> exampleGroupTypeElementsList, boolean addSugestionList) throws IOException {
+			List<ExampleGroupTypeElements> exampleGroupTypeElementsList, boolean addSugestionList, Float boostFloat) throws IOException {
 		
 		if (exampleGroupTypeElementsList == null) {
 			return;
@@ -655,13 +679,13 @@ public class LuceneDBGenerator {
 			List<ExampleResult> exampleResults = exampleGroupTypeElements.getExampleResults();
 			
 			for (ExampleResult currentExampleResult : exampleResults) {
-				addExampleResult(document, indexWriter, dictionaryEntry, currentExampleResult, addSugestionList);
+				addExampleResult(document, indexWriter, dictionaryEntry, currentExampleResult, addSugestionList, boostFloat);
 			}
 		}		
 	}
 	
 	private static void addGrammaFormConjugateResult(Document document, IndexWriter indexWriter, DictionaryEntry dictionaryEntry, 
-			GrammaFormConjugateResult grammaFormConjugateResult, boolean addSugestionList) throws IOException {
+			GrammaFormConjugateResult grammaFormConjugateResult, boolean addSugestionList, Float boostFloat) throws IOException {
 				
 		// kanji
 		if (grammaFormConjugateResult.isKanjiExists() == true) {					
@@ -687,10 +711,10 @@ public class LuceneDBGenerator {
 		List<String> romajiList = grammaFormConjugateResult.getRomajiList();
 		
 		for (String currentRomaji : romajiList) {
-			document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
+			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES), boostFloat));
 			
 			// dodanie alternatyw romaji
-			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji, false);
+			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji, false, boostFloat);
 						
 			if (addSugestionList == true) {
 				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentRomaji), false);
@@ -698,12 +722,12 @@ public class LuceneDBGenerator {
 		}
 		
 		if (grammaFormConjugateResult.getAlternative() != null) {
-			addGrammaFormConjugateResult(document, indexWriter, dictionaryEntry, grammaFormConjugateResult.getAlternative(), addSugestionList);
+			addGrammaFormConjugateResult(document, indexWriter, dictionaryEntry, grammaFormConjugateResult.getAlternative(), addSugestionList, boostFloat);
 		}
 	}
 	
 	private static void addExampleResult(Document document, IndexWriter indexWriter, DictionaryEntry dictionaryEntry, ExampleResult exampleResult,
-			boolean addSugestionList) throws IOException {
+			boolean addSugestionList, Float boostFloat) throws IOException {
 		
 		// kanji
 		if (exampleResult.isKanjiExists() == true) {					
@@ -729,10 +753,10 @@ public class LuceneDBGenerator {
 		List<String> romajiList = exampleResult.getRomajiList();
 		
 		for (String currentRomaji : romajiList) {
-			document.add(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES));
+			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES), boostFloat));
 			
 			// dodanie alternatyw romaji
-			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji, false);
+			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji, false, boostFloat);
 			
 			if (addSugestionList == true) {
 				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentRomaji), false);
@@ -740,7 +764,7 @@ public class LuceneDBGenerator {
 		}
 		
 		if (exampleResult.getAlternative() != null) {
-			addExampleResult(document, indexWriter, dictionaryEntry, exampleResult.getAlternative(), addSugestionList);
+			addExampleResult(document, indexWriter, dictionaryEntry, exampleResult.getAlternative(), addSugestionList, boostFloat);
 		}		
 	}
 	
@@ -1186,7 +1210,7 @@ public class LuceneDBGenerator {
 		
 		addPrefixes(document, LuceneStatic.nameDictionaryEntry_romaji, romaji, generatePrefixes);
 		
-		addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry_virtual_romaji, romaji, generatePrefixes);
+		addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry_virtual_romaji, romaji, generatePrefixes, null);
 				
 		if (addSugestionList == true) {
 			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, romaji, false);
