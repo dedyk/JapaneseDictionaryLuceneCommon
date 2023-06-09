@@ -235,30 +235,30 @@ public class LuceneDatabase implements IDatabaseConnector {
 			BooleanQuery wordBooleanQuery = new BooleanQuery();
 
 			if (findWordRequest.searchKanji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_kanji, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchKana == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_kana, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_kana, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_virtual_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_virtual_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchTranslate == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_translatesList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
 				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, 
-						findWordRequest.wordPlaceSearch), Occur.SHOULD);
+						findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchInfo == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_info, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
 				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_infoWithoutPolishChars, 
-						findWordRequest.wordPlaceSearch), Occur.SHOULD);
+						findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			query.add(wordBooleanQuery, Occur.MUST);
@@ -711,28 +711,28 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}				
 	}
 
-	private Query createQuery(String rejoinedWord, String[] wordSplited, String fieldName, WordPlaceSearch wordPlaceSearch) {
+	private Query createQuery(String rejoinedWord, String[] wordSplited, String fieldName, WordPlaceSearch wordPlaceSearch, boolean useSpanFirstQuery) {
 
 		if (wordPlaceSearch == WordPlaceSearch.START_WITH) {
 			
-			//PhraseQuery phraseQuery = new PhraseQuery();
+			Query exactQuery;
 			
-			// phraseQuery.add(new Term(fieldName, wordSplited[0]));
-			// phraseQuery.setBoost(2.0f);
-			
-			SpanFirstQuery exactQuery = new SpanFirstQuery(new SpanTermQuery(new Term(fieldName, rejoinedWord)), 1);
-			exactQuery.setBoost(2.0f);
-						
-			//BooleanQuery exactQuery = new BooleanQuery();
-			
-			/*
-			for (String currentWord : wordSplited) {
-				exactQuery.add(new TermQuery(new Term(fieldName, currentWord)), Occur.MUST);
+			if (useSpanFirstQuery == false) {
+				exactQuery = new BooleanQuery();
+				
+				for (String currentWord : wordSplited) {
+					((BooleanQuery)exactQuery).add(new TermQuery(new Term(fieldName, currentWord)), Occur.MUST);
+					
+					exactQuery.setBoost(2.0f);
+				}
+
+				
+			} else {
+				exactQuery = new SpanFirstQuery(new SpanTermQuery(new Term(fieldName, rejoinedWord)), 1);
 				
 				exactQuery.setBoost(2.0f);
-			}
-			*/
-
+			}			
+						
 			BooleanQuery startWithQuery = new BooleanQuery();
 			
 			for (String currentWord : wordSplited) {
@@ -993,19 +993,19 @@ public class LuceneDatabase implements IDatabaseConnector {
 			BooleanQuery kanjiBooleanQuery = new BooleanQuery();
 
 			// kanji
-			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry_kanji, findKanjiRequest.wordPlaceSearch), Occur.SHOULD);				
+			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry_kanji, findKanjiRequest.wordPlaceSearch, false), Occur.SHOULD);				
 
 			// translate
 			//kanjiBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.kanjiEntry_polishTranslatesList, findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
 
 			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry_polishTranslatesListWithoutPolishChars, 
-					findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
+					findKanjiRequest.wordPlaceSearch, true), Occur.SHOULD);
 
 			// info
 			//kanjiBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.kanjiEntry_info, findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
 
 			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry_infoWithoutPolishChars, 
-					findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
+					findKanjiRequest.wordPlaceSearch, true), Occur.SHOULD);
 
 			query.add(kanjiBooleanQuery, Occur.MUST);
 			
@@ -1275,16 +1275,16 @@ public class LuceneDatabase implements IDatabaseConnector {
 			BooleanQuery wordBooleanQuery = new BooleanQuery();
 
 			if (findWordRequest.searchKanji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanji, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchKana == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			query.add(wordBooleanQuery, Occur.MUST);
@@ -1394,30 +1394,30 @@ public class LuceneDatabase implements IDatabaseConnector {
 			BooleanQuery wordBooleanQuery = new BooleanQuery();
 
 			if (findWordRequest.searchKanji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_kanji, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchKana == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_kana, findWordRequest.wordPlaceSearch), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_kana, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_virtual_romaji, findWordRequest.wordPlaceSearch), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_virtual_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchTranslate == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_translatesList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
 				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_translatesListWithoutPolishChars, 
-						findWordRequest.wordPlaceSearch), Occur.SHOULD);
+						findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchInfo == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_info, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
 				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, 
-						findWordRequest.wordPlaceSearch), Occur.SHOULD);
+						findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			BooleanQuery dictionaryEntryTypeListFilter = createDictionaryEntryTypeListFilter(LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
