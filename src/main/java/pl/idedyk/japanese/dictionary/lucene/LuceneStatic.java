@@ -77,6 +77,7 @@ public class LuceneStatic {
 	public static final String kanjiEntry_kanjiDic2Entry_strokeCount = "kanjiEntry_kanjiDic2Entry_strokeCount";
 	public static final String kanjiEntry_kanjiDic2Entry_onReadingList = "kanjiEntry_kanjiDic2Entry_onReadingList";
 	public static final String kanjiEntry_kanjiDic2Entry_kunReadingList = "kanjiEntry_kanjiDic2Entry_kunReadingList";
+	public static final String kanjiEntry_kanjiDic2Entry_nanoriReadingList = "kanjiEntry_kanjiDic2Entry_nanoriReadingList";
 	public static final String kanjiEntry_kanjiDic2Entry_radicalsList = "kanjiEntry_kanjiDic2Entry_radicalsList";
 	public static final String kanjiEntry_kanjiDic2Entry_jlpt = "kanjiEntry_kanjiDic2Entry_jlpt";
 	public static final String kanjiEntry_kanjiDic2Entry_freq = "kanjiEntry_kanjiDic2Entry_freq";

@@ -939,24 +939,26 @@ public class LuceneDBGenerator {
 			String strokeCountString = csvReader.get(2);
 
 			String radicalsString = csvReader.get(3);
-
+			
 			String onReadingString = csvReader.get(4);
-
 			String kunReadingString = csvReader.get(5);
+			String nanoriReadingString = csvReader.get(6);
 
-			String strokePathString = csvReader.get(6);
+			String strokePathString = csvReader.get(7);
 
-			String polishTranslateListString = csvReader.get(7);
-			String infoString = csvReader.get(8);
+			String polishTranslateListString = csvReader.get(8);
+			String infoString = csvReader.get(9);
 
-			String usedString = csvReader.get(9);
+			String usedString = csvReader.get(10);
 
-			String groupString = csvReader.get(10);
+			String groupString = csvReader.get(11);
 
 			KanjiEntry entry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString,
 					Utils.parseStringIntoList(radicalsString /*, false */),
 					Utils.parseStringIntoList(onReadingString /*, false */),
-					Utils.parseStringIntoList(kunReadingString /*, false */), strokePathString,
+					Utils.parseStringIntoList(kunReadingString /*, false */), 
+					Utils.parseStringIntoList(nanoriReadingString /*, false */),
+					strokePathString,
 					Utils.parseStringIntoList(polishTranslateListString /*, false */), infoString, usedString,
 					Utils.parseStringIntoList(groupString /*, false */));
 
@@ -1087,6 +1089,13 @@ public class LuceneDBGenerator {
 			for (String currentKunReading : kunReadingList) {
 				document.add(new StringField(LuceneStatic.kanjiEntry_kanjiDic2Entry_kunReadingList, currentKunReading, Field.Store.YES));
 			}
+			
+			// kanjiDic2Entry_nanoriReadingList
+			List<String> nanoriReadingList = kanjiDic2Entry.getNanoriReading();
+			
+			for (String currentNanoriReading : nanoriReadingList) {
+				document.add(new StringField(LuceneStatic.kanjiEntry_kanjiDic2Entry_nanoriReadingList, currentNanoriReading, Field.Store.YES));
+			}			
 			
 			// kanjiDic2Entry_radicalsList
 			List<String> radicalsList = kanjiDic2Entry.getRadicals();
