@@ -71,18 +71,20 @@ public class LuceneStatic {
 	public static final String kanjiEntry_polishTranslatesListWithoutPolishChars = "kanjiEntry_polishTranslatesListWithoutPolishChars";
 	public static final String kanjiEntry_info = "kanjiEntry_info";
 	public static final String kanjiEntry_infoWithoutPolishChars = "kanjiEntry_infoWithoutPolishChars";
-	public static final String kanjiEntry_used = "kanjiEntry_used";
-	public static final String kanjiEntry_groupsList = "kanjiEntry_groupsList";
-	
-	public static final String kanjiEntry_kanjiDic2Entry_strokeCount = "kanjiEntry_kanjiDic2Entry_strokeCount";
-	public static final String kanjiEntry_kanjiDic2Entry_onReadingList = "kanjiEntry_kanjiDic2Entry_onReadingList";
-	public static final String kanjiEntry_kanjiDic2Entry_kunReadingList = "kanjiEntry_kanjiDic2Entry_kunReadingList";
-	public static final String kanjiEntry_kanjiDic2Entry_nanoriReadingList = "kanjiEntry_kanjiDic2Entry_nanoriReadingList";
-	public static final String kanjiEntry_kanjiDic2Entry_radicalsList = "kanjiEntry_kanjiDic2Entry_radicalsList";
-	public static final String kanjiEntry_kanjiDic2Entry_jlpt = "kanjiEntry_kanjiDic2Entry_jlpt";
-	public static final String kanjiEntry_kanjiDic2Entry_freq = "kanjiEntry_kanjiDic2Entry_freq";
-	
-	public static final String kanjiEntry_kanjivgEntry_strokePaths = "kanjiEntry_kanjivgEntry_strokePaths";	
+	public static final String kanjiEntry_strokeCount = "kanjiEntry_strokeCount";
+	public static final String kanjiEntry_entry = "kanjiEntry_entry";
+//	public static final String kanjiEntry_used = "kanjiEntry_used";
+//	public static final String kanjiEntry_groupsList = "kanjiEntry_groupsList";
+//	
+//	
+//	public static final String kanjiEntry_kanjiDic2Entry_onReadingList = "kanjiEntry_kanjiDic2Entry_onReadingList";
+//	public static final String kanjiEntry_kanjiDic2Entry_kunReadingList = "kanjiEntry_kanjiDic2Entry_kunReadingList";
+//	public static final String kanjiEntry_kanjiDic2Entry_nanoriReadingList = "kanjiEntry_kanjiDic2Entry_nanoriReadingList";
+//	public static final String kanjiEntry_kanjiDic2Entry_radicalsList = "kanjiEntry_kanjiDic2Entry_radicalsList";
+//	public static final String kanjiEntry_kanjiDic2Entry_jlpt = "kanjiEntry_kanjiDic2Entry_jlpt";
+//	public static final String kanjiEntry_kanjiDic2Entry_freq = "kanjiEntry_kanjiDic2Entry_freq";
+//	
+//	public static final String kanjiEntry_kanjivgEntry_strokePaths = "kanjiEntry_kanjivgEntry_strokePaths";	
 	
 	public static final String kanjiEntry_android_sugestionList = "kanjiEntry_android_sugestionList";
 	public static final String kanjiEntry_web_sugestionList = "kanjiEntry_web_sugestionList";

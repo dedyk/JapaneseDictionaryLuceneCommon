@@ -61,6 +61,8 @@ import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateResultTyp
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
+import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.CharacterInfo;
+import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Kanjidic2;
 
 import com.csvreader.CsvReader;
 import com.google.gson.Gson;
@@ -69,8 +71,8 @@ public class LuceneDBGenerator {
 	
 	public static void main(String[] args) throws Exception {
 		
-		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv db/word2.xml db-lucene
-		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji.csv db/radical.csv db/names.csv word2.xml db-lucene
+		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/names.csv db/word2.xml db-lucene
+		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/names.csv word2.xml db-lucene
 		
 		// parametry
 		String mode = args[0];
@@ -156,6 +158,8 @@ public class LuceneDBGenerator {
 		
 		IndexWriter indexWriter = new IndexWriter(index, indexWriterConfig);
 
+		System.out.println("Tymczasowe wylaczone zapisywanie slownika!!!");
+		/*
 		// otwarcie pliku ze slownikiem
 		FileInputStream dictionaryInputStream = new FileInputStream(dictionaryFilePath);
 
@@ -182,20 +186,22 @@ public class LuceneDBGenerator {
 		readSentenceGroupsFile(indexWriter, sentencesGroupsInputStream);
 		
 		sentencesGroupsInputStream.close();
+		*/
+		System.out.println("Tymczasowe wylaczone zapisywanie slownika - koniec!!!");
 		
 		// otwarcie pliku ze znakami podstawowymi
 		FileInputStream radicalInputStream = new FileInputStream(radicalFilePath);
 
 		// wczytywanie pliku ze znakami podstawowymi
-		List<RadicalInfo> radicalInfoList = readRadicalEntriesFromCsv(radicalInputStream);
+		// List<RadicalInfo> radicalInfoList = readRadicalEntriesFromCsv(radicalInputStream);
 
-		radicalInputStream.close();
+		// radicalInputStream.close();
 
 		// otwarcie pliku ze znakami kanji
 		FileInputStream kanjiInputStream = new FileInputStream(kanjiFilePath);
 
 		// wczytywanie pliku ze znakami kanji
-		readKanjiDictionaryFile(indexWriter, radicalInfoList, kanjiInputStream, addSugestionList, generateKanjiEntryPrefixes);
+		readKanjiDictionaryFile(indexWriter, /* radicalInfoList, */ kanjiInputStream, addSugestionList, generateKanjiEntryPrefixes);
 
 		kanjiInputStream.close();
 		
@@ -914,9 +920,10 @@ public class LuceneDBGenerator {
 		return radicalList;
 	}
 
-	private static void readKanjiDictionaryFile(IndexWriter indexWriter, List<RadicalInfo> radicalInfoList,
-			InputStream kanjiInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
+	private static void readKanjiDictionaryFile(IndexWriter indexWriter, /* List<RadicalInfo> radicalInfoList, */
+			InputStream kanjiInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException, JAXBException {
 
+		/*
 		Map<String, RadicalInfo> radicalListMapCache = new HashMap<String, RadicalInfo>();
 
 		for (RadicalInfo currentRadicalInfo : radicalInfoList) {
@@ -925,60 +932,92 @@ public class LuceneDBGenerator {
 
 			radicalListMapCache.put(radical, currentRadicalInfo);
 		}
-		
-		Set<String> allAvailableRadicalSet = new HashSet<String>();
-
-		CsvReader csvReader = new CsvReader(new InputStreamReader(kanjiInputStream), ',');
-
-		while (csvReader.readRecord()) {
-
-			String idString = csvReader.get(0);
-
-			String kanjiString = csvReader.get(1);
-
-			String strokeCountString = csvReader.get(2);
-
-			String radicalsString = csvReader.get(3);
+		*/
 			
-			String onReadingString = csvReader.get(4);
-			String kunReadingString = csvReader.get(5);
-			String nanoriReadingString = csvReader.get(6);
+		// stara implementacja - do zakomentowania
+//		Set<String> allAvailableRadicalSet = new HashSet<String>();
+//
+//		CsvReader csvReader = new CsvReader(new InputStreamReader(kanjiInputStream), ',');
+//
+//		while (csvReader.readRecord()) {
+//
+//			String idString = csvReader.get(0);
+//
+//			String kanjiString = csvReader.get(1);
+//
+//			String strokeCountString = csvReader.get(2);
+//
+//			String radicalsString = csvReader.get(3);
+//			
+//			String onReadingString = csvReader.get(4);
+//			String kunReadingString = csvReader.get(5);
+//			String nanoriReadingString = csvReader.get(6);
+//
+//			String strokePathString = csvReader.get(7);
+//
+//			String polishTranslateListString = csvReader.get(8);
+//			String infoString = csvReader.get(9);
+//
+//			String usedString = csvReader.get(10);
+//
+//			String groupString = csvReader.get(11);
+//
+//			KanjiEntry entry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString,
+//					Utils.parseStringIntoList(radicalsString /*, false */),
+//					Utils.parseStringIntoList(onReadingString /*, false */),
+//					Utils.parseStringIntoList(kunReadingString /*, false */), 
+//					Utils.parseStringIntoList(nanoriReadingString /*, false */),
+//					strokePathString,
+//					Utils.parseStringIntoList(polishTranslateListString /*, false */), infoString, usedString,
+//					Utils.parseStringIntoList(groupString /*, false */));
+//
+//			System.out.println(String.format("KanjiEntry id = %s", entry.getId()));
+//			
+//			// update radical info
+//			if (entry.getKanjiDic2Entry() != null) {
+//				//updateRadicalInfoUse(radicalListMapCache, entry.getKanjiDic2Entry().getRadicals());
+//				
+//				allAvailableRadicalSet.addAll(entry.getKanjiDic2Entry().getRadicals());
+//			}
+//
+//			// add
+//			addKanjiEntry(indexWriter, entry, addSugestionList, generatePrefixes);
+//		}
+//		
+//		// add available radical list
+//		addAvailableRadicalList(indexWriter, allAvailableRadicalSet);
+//
+//		csvReader.close();
+		
+		// wczytanie pliku kanji.xml
+		Set<String> allAvailableRadicalSet = new HashSet<String>();
+		
+		//
+		
+		JAXBContext jaxbContext = JAXBContext.newInstance(Kanjidic2.class);              
 
-			String strokePathString = csvReader.get(7);
-
-			String polishTranslateListString = csvReader.get(8);
-			String infoString = csvReader.get(9);
-
-			String usedString = csvReader.get(10);
-
-			String groupString = csvReader.get(11);
-
-			KanjiEntry entry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString,
-					Utils.parseStringIntoList(radicalsString /*, false */),
-					Utils.parseStringIntoList(onReadingString /*, false */),
-					Utils.parseStringIntoList(kunReadingString /*, false */), 
-					Utils.parseStringIntoList(nanoriReadingString /*, false */),
-					strokePathString,
-					Utils.parseStringIntoList(polishTranslateListString /*, false */), infoString, usedString,
-					Utils.parseStringIntoList(groupString /*, false */));
-
-			System.out.println(String.format("KanjiEntry id = %s", entry.getId()));
+		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+		
+		Kanjidic2 kanjidic2 = (Kanjidic2) jaxbUnmarshaller.unmarshal(kanjiInputStream);
+			
+		// chodzimy po znakach kanji i je zapisujemy
+		for (CharacterInfo kanjiCharacterInfo : kanjidic2.getCharacterList()) {			
+			System.out.println("Add kanji dic 2 entry: " + kanjiCharacterInfo.getKanji() + " (" + kanjiCharacterInfo.getId() + ")");			
 			
 			// update radical info
-			if (entry.getKanjiDic2Entry() != null) {
+			if (kanjiCharacterInfo.getMisc2() != null) {
 				//updateRadicalInfoUse(radicalListMapCache, entry.getKanjiDic2Entry().getRadicals());
 				
-				allAvailableRadicalSet.addAll(entry.getKanjiDic2Entry().getRadicals());
+				allAvailableRadicalSet.addAll(kanjiCharacterInfo.getMisc2().getRadicals());
 			}
-
+			
 			// add
-			addKanjiEntry(indexWriter, entry, addSugestionList, generatePrefixes);
+			addKanjiEntry(indexWriter, kanjiCharacterInfo, addSugestionList, generatePrefixes);
 		}
 		
 		// add available radical list
 		addAvailableRadicalList(indexWriter, allAvailableRadicalSet);
 
-		csvReader.close();
 	}
 	
 	/*
@@ -996,7 +1035,161 @@ public class LuceneDBGenerator {
 		}
 	}
 	*/
+	
+	public static void addKanjiEntry(IndexWriter indexWriter, CharacterInfo kanjiCharacterInfo, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 
+		Gson gson = new Gson();
+		
+		//
+		
+		Document document = new Document();
+		
+		// object type
+		document.add(new StringField(LuceneStatic.objectType, LuceneStatic.kanjiEntry_objectType, Field.Store.YES));
+		
+		// id
+		document.add(new IntField(LuceneStatic.kanjiEntry_id, kanjiCharacterInfo.getId(), Field.Store.YES));
+
+		// kanji
+		document.add(new StringField(LuceneStatic.kanjiEntry_kanji, emptyIfNull(kanjiCharacterInfo.getKanji()), Field.Store.YES));
+		
+		addPrefixes(document, LuceneStatic.kanjiEntry_kanji, emptyIfNull(kanjiCharacterInfo.getKanji()), generatePrefixes);
+		
+		if (addSugestionList == true) {
+			
+			addSuggestion(document, LuceneStatic.kanjiEntry_android_sugestionList, emptyIfNull(kanjiCharacterInfo.getKanji()), false);
+			addSuggestion(document, LuceneStatic.kanjiEntry_web_sugestionList, emptyIfNull(kanjiCharacterInfo.getKanji()), false);
+			
+			addSpellChecker(document, LuceneStatic.kanjiEntry_android_spellCheckerList, emptyIfNull(kanjiCharacterInfo.getKanji()));
+			addSpellChecker(document, LuceneStatic.kanjiEntry_web_spellCheckerList, emptyIfNull(kanjiCharacterInfo.getKanji()));
+		}
+			
+		// polishTranslatesList
+		List<String> polishtranslatesList = Utils.getPolishTranslates(kanjiCharacterInfo);
+		
+		for (String currentTranslate : polishtranslatesList) {
+			
+			document.add(new TextField(LuceneStatic.kanjiEntry_polishTranslatesList, currentTranslate, Field.Store.YES));
+			
+			addPrefixes(document, LuceneStatic.kanjiEntry_polishTranslatesList, currentTranslate, generatePrefixes);
+			
+			if (addSugestionList == true) {
+								
+				addSuggestion(document, LuceneStatic.kanjiEntry_android_sugestionList, currentTranslate, true);
+				addSuggestion(document, LuceneStatic.kanjiEntry_web_sugestionList, currentTranslate, true);
+				
+				addSpellChecker(document, LuceneStatic.kanjiEntry_android_spellCheckerList, currentTranslate);
+				addSpellChecker(document, LuceneStatic.kanjiEntry_web_spellCheckerList, currentTranslate);				
+			}
+			
+			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
+				
+			document.add(new TextField(LuceneStatic.kanjiEntry_infoWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.NO));
+			
+			addPrefixes(document, LuceneStatic.kanjiEntry_infoWithoutPolishChars, currentTranslateWithoutPolishChars, generatePrefixes);
+		}
+		
+		// info
+		String info = emptyIfNull(Utils.getPolishAdditionalInfo(kanjiCharacterInfo));
+		
+		document.add(new TextField(LuceneStatic.kanjiEntry_info, info, Field.Store.YES));
+		
+		addPrefixes(document, LuceneStatic.kanjiEntry_info, info, generatePrefixes);
+		
+		String infoWithoutPolishChars = Utils.removePolishChars(info);
+			
+		document.add(new TextField(LuceneStatic.kanjiEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.NO));
+		
+		addPrefixes(document, LuceneStatic.kanjiEntry_infoWithoutPolishChars, infoWithoutPolishChars, generatePrefixes);
+
+		// strokeCount
+		document.add(new IntField(LuceneStatic.kanjiEntry_strokeCount, kanjiCharacterInfo.getMisc().getStrokeCountList().get(0), Field.Store.YES));
+		
+		// xml
+		document.add(new StringField(LuceneStatic.kanjiEntry_entry, gson.toJson(kanjiCharacterInfo), Field.Store.YES));
+		
+		
+		
+		
+		
+		
+		//////////////////
+		
+		// generated
+		document.add(new StringField(LuceneStatic.kanjiEntry_used, String.valueOf(kanjiEntry.isUsed()), Field.Store.YES));
+				
+		// groupsList
+		List<String> groupsList = GroupEnum.convertToValues(kanjiEntry.getGroups());
+		
+		for (String currentGroup : groupsList) {
+			document.add(new StringField(LuceneStatic.kanjiEntry_groupsList, currentGroup, Field.Store.YES));
+		}
+		
+		
+
+		if (kanjiDic2Entry != null) {
+
+			
+			// kanjiDic2Entry_onReadingList
+			List<String> onReadingList = kanjiDic2Entry.getOnReading();
+			
+			for (String currentOnReading : onReadingList) {
+				document.add(new StringField(LuceneStatic.kanjiEntry_kanjiDic2Entry_onReadingList, currentOnReading, Field.Store.YES));
+			}
+
+			// kanjiDic2Entry_kunReadingList
+			List<String> kunReadingList = kanjiDic2Entry.getKunReading();
+			
+			for (String currentKunReading : kunReadingList) {
+				document.add(new StringField(LuceneStatic.kanjiEntry_kanjiDic2Entry_kunReadingList, currentKunReading, Field.Store.YES));
+			}
+			
+			// kanjiDic2Entry_nanoriReadingList
+			List<String> nanoriReadingList = kanjiDic2Entry.getNanoriReading();
+			
+			for (String currentNanoriReading : nanoriReadingList) {
+				document.add(new StringField(LuceneStatic.kanjiEntry_kanjiDic2Entry_nanoriReadingList, currentNanoriReading, Field.Store.YES));
+			}			
+			
+			// kanjiDic2Entry_radicalsList
+			List<String> radicalsList = kanjiDic2Entry.getRadicals();
+			
+			for (String currentRadical : radicalsList) {
+				document.add(new StringField(LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList, currentRadical, Field.Store.YES));
+			}
+			
+			// kanjiDic2Entry_jlpt
+			Integer jlpt = kanjiDic2Entry.getJlpt();
+			
+			if (jlpt != null) {
+				document.add(new IntField(LuceneStatic.kanjiEntry_kanjiDic2Entry_jlpt, jlpt, Field.Store.YES));
+			}			
+			
+			// kanjiDic2Entry_freq
+			Integer freq = kanjiDic2Entry.getFreq();
+			
+			if (freq != null) {
+				document.add(new IntField(LuceneStatic.kanjiEntry_kanjiDic2Entry_freq, freq, Field.Store.YES));
+			}
+		}
+		
+		KanjivgEntry kanjivgEntry = kanjiEntry.getKanjivgEntry();
+		
+		if (kanjivgEntry != null) {
+			
+			// kanjivgEntry_strokePaths
+			List<String> strokePaths = kanjivgEntry.getStrokePaths();
+						
+			for (String currentStrokePath : strokePaths) {
+				document.add(new StringField(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths, currentStrokePath, Field.Store.YES));
+			}
+		}
+		
+
+		indexWriter.addDocument(document);		
+	}
+
+	/*
 	public static void addKanjiEntry(IndexWriter indexWriter, KanjiEntry kanjiEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 
 		Document document = new Document();
@@ -1134,6 +1327,7 @@ public class LuceneDBGenerator {
 
 		indexWriter.addDocument(document);		
 	}
+	*/
 	
 	private static List<DictionaryEntry> readNamesFile(IndexWriter indexWriter, InputStream namesInputStream, Counter idCounter, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
 		

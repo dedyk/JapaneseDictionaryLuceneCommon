@@ -1014,7 +1014,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			Integer strokeCountTo = findKanjiRequest.strokeCountTo;
 							
 			if (strokeCountFrom != null || strokeCountTo != null) {
-				query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry_kanjiDic2Entry_strokeCount, 
+				query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry_strokeCount, 
 						strokeCountFrom != null ? strokeCountFrom.intValue() : 0,
 						strokeCountTo != null ? strokeCountTo.intValue() : 999999, true, true), Occur.MUST);					
 			}
@@ -1547,7 +1547,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		query.add(phraseQuery, Occur.MUST);
 
-		query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry_kanjiDic2Entry_strokeCount, from, to, true, true), Occur.MUST);
+		query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry_strokeCount, from, to, true, true), Occur.MUST);
 
 		final int maxResult = MAX_KANJI_STROKE_COUNT_RESULT;
 
