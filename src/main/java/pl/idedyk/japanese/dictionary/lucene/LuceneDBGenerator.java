@@ -45,10 +45,6 @@ import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
 import pl.idedyk.japanese.dictionary.api.dto.GroupWithTatoebaSentenceList;
-import pl.idedyk.japanese.dictionary.api.dto.KanjiDic2Entry;
-import pl.idedyk.japanese.dictionary.api.dto.KanjiEntry;
-import pl.idedyk.japanese.dictionary.api.dto.KanjivgEntry;
-import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TatoebaSentence;
 import pl.idedyk.japanese.dictionary.api.example.ExampleManager;
 import pl.idedyk.japanese.dictionary.api.example.dto.ExampleGroupTypeElements;
@@ -81,7 +77,7 @@ public class LuceneDBGenerator {
 		String sentencesFilePath = args[2];
 		String sentencesGroupsFilePath = args[3];
 		String kanjiFilePath = args[4];
-		String radicalFilePath = args[5];
+		// String radicalFilePath = args[5];
 		final String nameFilePath = args[6];
 		
 		final String word2XmlFilePath = args[7];
@@ -158,8 +154,6 @@ public class LuceneDBGenerator {
 		
 		IndexWriter indexWriter = new IndexWriter(index, indexWriterConfig);
 
-		System.out.println("Tymczasowe wylaczone zapisywanie slownika!!!");
-		/*
 		// otwarcie pliku ze slownikiem
 		FileInputStream dictionaryInputStream = new FileInputStream(dictionaryFilePath);
 
@@ -186,11 +180,9 @@ public class LuceneDBGenerator {
 		readSentenceGroupsFile(indexWriter, sentencesGroupsInputStream);
 		
 		sentencesGroupsInputStream.close();
-		*/
-		System.out.println("Tymczasowe wylaczone zapisywanie slownika - koniec!!!");
 		
 		// otwarcie pliku ze znakami podstawowymi
-		FileInputStream radicalInputStream = new FileInputStream(radicalFilePath);
+		// FileInputStream radicalInputStream = new FileInputStream(radicalFilePath);
 
 		// wczytywanie pliku ze znakami podstawowymi
 		// List<RadicalInfo> radicalInfoList = readRadicalEntriesFromCsv(radicalInputStream);
@@ -885,6 +877,7 @@ public class LuceneDBGenerator {
 		indexWriter.addDocument(document);
 	}
 	
+	/*
 	private static List<RadicalInfo> readRadicalEntriesFromCsv(InputStream radicalInputStream) throws IOException,
 			DictionaryException {
 
@@ -919,6 +912,7 @@ public class LuceneDBGenerator {
 
 		return radicalList;
 	}
+	*/
 
 	private static void readKanjiDictionaryFile(IndexWriter indexWriter, /* List<RadicalInfo> radicalInfoList, */
 			InputStream kanjiInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException, JAXBException {
