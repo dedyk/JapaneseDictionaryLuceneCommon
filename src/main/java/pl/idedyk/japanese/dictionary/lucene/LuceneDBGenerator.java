@@ -57,7 +57,7 @@ import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateResultTyp
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
-import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.CharacterInfo;
+import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Kanjidic2;
 
 import com.csvreader.CsvReader;
@@ -940,7 +940,7 @@ public class LuceneDBGenerator {
 		Kanjidic2 kanjidic2 = (Kanjidic2) jaxbUnmarshaller.unmarshal(kanjiInputStream);
 			
 		// chodzimy po znakach kanji i je zapisujemy
-		for (CharacterInfo kanjiCharacterInfo : kanjidic2.getCharacterList()) {			
+		for (KanjiCharacterInfo kanjiCharacterInfo : kanjidic2.getCharacterList()) {			
 			System.out.println("Add kanji dic 2 entry: " + kanjiCharacterInfo.getKanji() + " (" + kanjiCharacterInfo.getId() + ")");			
 			
 			// update radical info
@@ -974,7 +974,7 @@ public class LuceneDBGenerator {
 	}
 	*/
 	
-	public static void addKanjiEntry(IndexWriter indexWriter, CharacterInfo kanjiCharacterInfo, boolean addSugestionList, boolean generatePrefixes) throws IOException {
+	public static void addKanjiEntry(IndexWriter indexWriter, KanjiCharacterInfo kanjiCharacterInfo, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 
 		Gson gson = new Gson();
 		

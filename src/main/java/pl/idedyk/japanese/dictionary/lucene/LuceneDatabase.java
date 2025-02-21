@@ -59,7 +59,7 @@ import pl.idedyk.japanese.dictionary.api.dto.GroupWithTatoebaSentenceList;
 import pl.idedyk.japanese.dictionary.api.dto.TatoebaSentence;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
-import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.CharacterInfo;
+import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 
 public class LuceneDatabase implements IDatabaseConnector {
 
@@ -974,7 +974,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		Gson gson = new Gson();
 
 		FindKanjiResult findKanjiResult = new FindKanjiResult();
-		findKanjiResult.result = new ArrayList<CharacterInfo>();
+		findKanjiResult.result = new ArrayList<KanjiCharacterInfo>();
 
 		final int maxResult = MAX_KANJI_RESULT;
 		
@@ -1030,7 +1030,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 				
 				String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
 				
-				CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
+				KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
 
 				findKanjiResult.result.add(kanjiCharacterInfo);
 			}				
@@ -1452,7 +1452,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 
 	@Override
-	public List<CharacterInfo> findKanjiFromRadicals(String[] radicals) throws DictionaryException {
+	public List<KanjiCharacterInfo> findKanjiFromRadicals(String[] radicals) throws DictionaryException {
 		
 		Gson gson = new Gson();
 
@@ -1472,7 +1472,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		query.add(kanjiBooleanQuery, Occur.MUST);
 
-		List<CharacterInfo> result = new ArrayList<CharacterInfo>();
+		List<KanjiCharacterInfo> result = new ArrayList<KanjiCharacterInfo>();
 
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, Integer.MAX_VALUE).scoreDocs;
@@ -1483,7 +1483,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 				
 			    String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
 			    
-			    CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
+			    KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
 
 				result.add(kanjiCharacterInfo);
 
@@ -1517,7 +1517,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			ScoreDoc[] scoreDocs = searcher.search(query, null, maxResult + 1).scoreDocs;
 
-			List<CharacterInfo> result = new ArrayList<CharacterInfo>();
+			List<KanjiCharacterInfo> result = new ArrayList<KanjiCharacterInfo>();
 
 			for (ScoreDoc scoreDoc : scoreDocs) {
 
@@ -1525,7 +1525,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
 			    
-			    CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
+				KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
 				
 				result.add(kanjiCharacterInfo);
 			}				
@@ -1548,7 +1548,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 
 	@Override
-	public CharacterInfo getKanjiEntry(String kanji) throws DictionaryException {
+	public KanjiCharacterInfo getKanjiEntry(String kanji) throws DictionaryException {
 
 		Gson gson = new Gson();
 		
@@ -1573,7 +1573,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			
 			String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
 			
-			CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
+			KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
 			
 			return kanjiCharacterInfo;
 
@@ -1583,15 +1583,15 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 	
 	@Override
-	public List<CharacterInfo> getKanjiEntryList(List<String> kanjiList) throws DictionaryException {
+	public List<KanjiCharacterInfo> getKanjiEntryList(List<String> kanjiList) throws DictionaryException {
 		
-		List<CharacterInfo> result = new ArrayList<CharacterInfo>();
+		List<KanjiCharacterInfo> result = new ArrayList<KanjiCharacterInfo>();
 		
 		if (kanjiList != null) {
 			
 			for (String currentKanji : kanjiList) {
 				
-				CharacterInfo kanjiCharacterInfo = getKanjiEntry(currentKanji);
+				KanjiCharacterInfo kanjiCharacterInfo = getKanjiEntry(currentKanji);
 				
 				if (kanjiCharacterInfo != null) {
 					result.add(kanjiCharacterInfo);
@@ -1604,7 +1604,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	
 	@Override
-	public CharacterInfo getKanjiEntryById(String id) throws DictionaryException {
+	public KanjiCharacterInfo getKanjiEntryById(String id) throws DictionaryException {
 		
 		Gson gson = new Gson();
 
@@ -1629,7 +1629,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			
 			String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
 			
-			CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
+			KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
 			
 			return kanjiCharacterInfo;
 
@@ -1639,7 +1639,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 
 	@Override
-	public List<CharacterInfo> getAllKanjis(boolean onlyUsed) throws DictionaryException {
+	public List<KanjiCharacterInfo> getAllKanjis(boolean onlyUsed) throws DictionaryException {
 		
 		Gson gson = new Gson();
 
@@ -1659,7 +1659,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			ScoreDoc[] scoreDocs = searcher.search(query, null, Integer.MAX_VALUE).scoreDocs;
 
-			List<CharacterInfo> result = new ArrayList<CharacterInfo>();
+			List<KanjiCharacterInfo> result = new ArrayList<KanjiCharacterInfo>();
 
 			for (ScoreDoc scoreDoc : scoreDocs) {
 
@@ -1667,15 +1667,15 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
 			    
-			    CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
+				KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
 
 				result.add(kanjiCharacterInfo);
 			}
 			
-			Collections.sort(result, new Comparator<CharacterInfo>() {
+			Collections.sort(result, new Comparator<KanjiCharacterInfo>() {
 
 				@Override
-				public int compare(CharacterInfo o1, CharacterInfo o2) {
+				public int compare(KanjiCharacterInfo o1, KanjiCharacterInfo o2) {
 					
 					int o1id = o1.getId();
 					int o2id = o2.getId();
