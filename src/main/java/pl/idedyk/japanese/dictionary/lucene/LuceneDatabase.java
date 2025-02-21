@@ -56,10 +56,10 @@ import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
 import pl.idedyk.japanese.dictionary.api.dto.GroupWithTatoebaSentenceList;
-import pl.idedyk.japanese.dictionary.api.dto.KanjiEntry;
 import pl.idedyk.japanese.dictionary.api.dto.TatoebaSentence;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
+import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.CharacterInfo;
 
 public class LuceneDatabase implements IDatabaseConnector {
 
@@ -970,9 +970,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	@Override
 	public FindKanjiResult findKanji(FindKanjiRequest findKanjiRequest) throws DictionaryException {
+		
+		Gson gson = new Gson();
 
 		FindKanjiResult findKanjiResult = new FindKanjiResult();
-		findKanjiResult.result = new ArrayList<KanjiEntry>();
+		findKanjiResult.result = new ArrayList<CharacterInfo>();
 
 		final int maxResult = MAX_KANJI_RESULT;
 		
@@ -1019,39 +1021,18 @@ public class LuceneDatabase implements IDatabaseConnector {
 						strokeCountTo != null ? strokeCountTo.intValue() : 999999, true, true), Occur.MUST);					
 			}
 
+			// szukanie
 			ScoreDoc[] scoreDocs = searcher.search(query, null, maxResult + 1).scoreDocs;
 
+			// przygodowanie odpowiedzi
 			for (ScoreDoc scoreDoc : scoreDocs) {
-
 				Document foundDocument = searcher.doc(scoreDoc.doc);
+				
+				String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
+				
+				CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
 
-				String idString = foundDocument.get(LuceneStatic.kanjiEntry_id);
-
-				String kanjiString = foundDocument.get(LuceneStatic.kanjiEntry_kanji);
-
-				String strokeCountString = foundDocument.get(LuceneStatic.kanjiEntry_kanjiDic2Entry_strokeCount);
-
-				List<String> strokePathsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths));
-
-				String used = foundDocument.get(LuceneStatic.kanjiEntry_used);
-
-				List<String> radicalsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList));
-
-				List<String> onReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_onReadingList));
-				List<String> kunReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_kunReadingList));
-				List<String> nanoriReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_nanoriReadingList));
-
-				List<String> polishTranslateList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_polishTranslatesList));
-
-				List<String> groupsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_groupsList));
-
-				String infoString = foundDocument.get(LuceneStatic.kanjiEntry_info);
-
-				KanjiEntry kanjiEntry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
-						onReadingList, kunReadingList, nanoriReadingList, strokePathsList, polishTranslateList, infoString, used,
-						groupsList);
-
-				findKanjiResult.result.add(kanjiEntry);
+				findKanjiResult.result.add(kanjiCharacterInfo);
 			}				
 
 			/*
@@ -1211,9 +1192,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				BooleanQuery kanjiBooleanQuery = new BooleanQuery();
 
-
 				for (String currentRadical : radicals) {
-					kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList, WordPlaceSearch.EXACT), Occur.MUST);
+					kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry_radicalsList, WordPlaceSearch.EXACT), Occur.MUST);
 				}
 
 				query.add(kanjiBooleanQuery, Occur.MUST);			
@@ -1224,7 +1204,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 					Document foundDocument = searcher.doc(scoreDoc.doc);
 
-					result.addAll(Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList)));
+					result.addAll(Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_radicalsList)));
 				}
 
 				return result;
@@ -1472,7 +1452,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 
 	@Override
-	public List<KanjiEntry> findKanjiFromRadicals(String[] radicals) throws DictionaryException {
+	public List<CharacterInfo> findKanjiFromRadicals(String[] radicals) throws DictionaryException {
+		
+		Gson gson = new Gson();
 
 		BooleanQuery query = new BooleanQuery();
 
@@ -1485,12 +1467,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 		BooleanQuery kanjiBooleanQuery = new BooleanQuery();
 
 		for (String currentRadical : radicals) {
-			kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList, WordPlaceSearch.EXACT), Occur.MUST);
+			kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry_radicalsList, WordPlaceSearch.EXACT), Occur.MUST);
 		}
 
 		query.add(kanjiBooleanQuery, Occur.MUST);
 
-		List<KanjiEntry> result = new ArrayList<KanjiEntry>();
+		List<CharacterInfo> result = new ArrayList<CharacterInfo>();
 
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, Integer.MAX_VALUE).scoreDocs;
@@ -1498,34 +1480,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 			for (ScoreDoc scoreDoc : scoreDocs) {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
+				
+			    String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
+			    
+			    CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
 
-				String idString = foundDocument.get(LuceneStatic.kanjiEntry_id);
-
-				String kanjiString = foundDocument.get(LuceneStatic.kanjiEntry_kanji);
-
-				String strokeCountString = foundDocument.get(LuceneStatic.kanjiEntry_kanjiDic2Entry_strokeCount);
-
-				List<String> strokePathsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths));
-
-				String used = foundDocument.get(LuceneStatic.kanjiEntry_used);
-
-				List<String> radicalsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList));
-
-				List<String> onReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_onReadingList));
-				List<String> kunReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_kunReadingList));
-				List<String> nanoriReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_nanoriReadingList));
-
-				List<String> polishTranslateList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_polishTranslatesList));
-
-				List<String> groupsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_groupsList));
-
-				String infoString = foundDocument.get(LuceneStatic.kanjiEntry_info);
-
-				KanjiEntry kanjiEntry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
-						onReadingList, kunReadingList, nanoriReadingList, strokePathsList, polishTranslateList, infoString, used,
-						groupsList);
-
-				result.add(kanjiEntry);
+				result.add(kanjiCharacterInfo);
 
 			}
 
@@ -1538,6 +1498,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	@Override
 	public FindKanjiResult findKanjisFromStrokeCount(int from, int to) throws DictionaryException {
+		
+		Gson gson = new Gson();
 
 		BooleanQuery query = new BooleanQuery();
 
@@ -1555,39 +1517,17 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			ScoreDoc[] scoreDocs = searcher.search(query, null, maxResult + 1).scoreDocs;
 
-			List<KanjiEntry> result = new ArrayList<KanjiEntry>();
+			List<CharacterInfo> result = new ArrayList<CharacterInfo>();
 
 			for (ScoreDoc scoreDoc : scoreDocs) {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
 
-				String idString = foundDocument.get(LuceneStatic.kanjiEntry_id);
-
-				String kanjiString = foundDocument.get(LuceneStatic.kanjiEntry_kanji);
-
-				String strokeCountString = foundDocument.get(LuceneStatic.kanjiEntry_kanjiDic2Entry_strokeCount);
-
-				List<String> strokePathsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths));
-
-				String used = foundDocument.get(LuceneStatic.kanjiEntry_used);
-
-				List<String> radicalsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList));
-
-				List<String> onReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_onReadingList));
-				List<String> kunReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_kunReadingList));
-				List<String> nanoriReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_nanoriReadingList));
-
-				List<String> polishTranslateList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_polishTranslatesList));
-
-				List<String> groupsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_groupsList));
-
-				String infoString = foundDocument.get(LuceneStatic.kanjiEntry_info);
-
-				KanjiEntry kanjiEntry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
-						onReadingList, kunReadingList, nanoriReadingList, strokePathsList, polishTranslateList, infoString, used,
-						groupsList);
-
-				result.add(kanjiEntry);
+				String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
+			    
+			    CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
+				
+				result.add(kanjiCharacterInfo);
 			}				
 
 			FindKanjiResult findKanjiResult = new FindKanjiResult();
@@ -1608,8 +1548,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 
 	@Override
-	public KanjiEntry getKanjiEntry(String kanji) throws DictionaryException {
+	public CharacterInfo getKanjiEntry(String kanji) throws DictionaryException {
 
+		Gson gson = new Gson();
+		
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
@@ -1629,7 +1571,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			Document foundDocument = searcher.doc(scoreDocs[0].doc);
 			
-			return createKanjiEntry(foundDocument);
+			String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
+			
+			CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
+			
+			return kanjiCharacterInfo;
 
 		} catch (IOException e) {
 			throw new DictionaryException("Błąd podczas pobierania znaku kanji: " + e);
@@ -1637,18 +1583,18 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 	
 	@Override
-	public List<KanjiEntry> getKanjiEntryList(List<String> kanjiList) throws DictionaryException {
+	public List<CharacterInfo> getKanjiEntryList(List<String> kanjiList) throws DictionaryException {
 		
-		List<KanjiEntry> result = new ArrayList<KanjiEntry>();
+		List<CharacterInfo> result = new ArrayList<CharacterInfo>();
 		
 		if (kanjiList != null) {
 			
 			for (String currentKanji : kanjiList) {
 				
-				KanjiEntry kanjiEntry = getKanjiEntry(currentKanji);
+				CharacterInfo kanjiCharacterInfo = getKanjiEntry(currentKanji);
 				
-				if (kanjiEntry != null) {
-					result.add(kanjiEntry);
+				if (kanjiCharacterInfo != null) {
+					result.add(kanjiCharacterInfo);
 				}				
 			}			
 		}
@@ -1658,7 +1604,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	
 	@Override
-	public KanjiEntry getKanjiEntryById(String id) throws DictionaryException {
+	public CharacterInfo getKanjiEntryById(String id) throws DictionaryException {
+		
+		Gson gson = new Gson();
 
 		BooleanQuery query = new BooleanQuery();
 		
@@ -1679,44 +1627,21 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			Document foundDocument = searcher.doc(scoreDocs[0].doc);
 			
-			return createKanjiEntry(foundDocument);
+			String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
+			
+			CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
+			
+			return kanjiCharacterInfo;
 
 		} catch (IOException e) {
 			throw new DictionaryException("Błąd podczas pobierania znaku kanji: " + e);
 		}		
 	}
-	
-	private KanjiEntry createKanjiEntry(Document document) throws DictionaryException {
-		
-		String idString = document.get(LuceneStatic.kanjiEntry_id);
-
-		String kanjiString = document.get(LuceneStatic.kanjiEntry_kanji);
-
-		String strokeCountString = document.get(LuceneStatic.kanjiEntry_kanjiDic2Entry_strokeCount);
-
-		List<String> strokePathsList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths));
-
-		String used = document.get(LuceneStatic.kanjiEntry_used);
-
-		List<String> radicalsList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList));
-
-		List<String> onReadingList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_onReadingList));
-		List<String> kunReadingList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_kunReadingList));
-		List<String> nanoriReadingList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_nanoriReadingList));
-
-		List<String> polishTranslateList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_polishTranslatesList));
-
-		List<String> groupsList = Arrays.asList(document.getValues(LuceneStatic.kanjiEntry_groupsList));
-
-		String infoString = document.get(LuceneStatic.kanjiEntry_info);
-
-		return Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
-				onReadingList, kunReadingList, nanoriReadingList, strokePathsList, polishTranslateList, infoString, used,
-				groupsList);		
-	}
 
 	@Override
-	public List<KanjiEntry> getAllKanjis(boolean withDetails, boolean onlyUsed) throws DictionaryException {
+	public List<CharacterInfo> getAllKanjis(boolean onlyUsed) throws DictionaryException {
+		
+		Gson gson = new Gson();
 
 		BooleanQuery query = new BooleanQuery();
 
@@ -1734,55 +1659,23 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			ScoreDoc[] scoreDocs = searcher.search(query, null, Integer.MAX_VALUE).scoreDocs;
 
-			List<KanjiEntry> result = new ArrayList<KanjiEntry>();
+			List<CharacterInfo> result = new ArrayList<CharacterInfo>();
 
 			for (ScoreDoc scoreDoc : scoreDocs) {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
 
-				String idString = foundDocument.get(LuceneStatic.kanjiEntry_id);
+				String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
+			    
+			    CharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, CharacterInfo.class);
 
-				String kanjiString = foundDocument.get(LuceneStatic.kanjiEntry_kanji);				
-
-				String used = foundDocument.get(LuceneStatic.kanjiEntry_used);
-
-				String strokeCountString = null;
-
-				List<String> radicalsList = null;
-				List<String> onReadingList = null;
-				List<String> kunReadingList = null;
-				List<String> strokePathsList = null;
-				List<String> nanoriReadingList = null;
-
-				if (withDetails == true) {
-					strokeCountString = foundDocument.get(LuceneStatic.kanjiEntry_kanjiDic2Entry_strokeCount);
-
-					radicalsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_radicalsList));
-
-					onReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_onReadingList));
-					kunReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_kunReadingList));
-					nanoriReadingList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjiDic2Entry_nanoriReadingList));
-					
-					strokePathsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths));
-				}
-				
-				List<String> polishTranslateList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_polishTranslatesList));
-
-				List<String> groupsList = Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_groupsList));
-
-				String infoString = foundDocument.get(LuceneStatic.kanjiEntry_info);
-
-				KanjiEntry kanjiEntry = Utils.parseKanjiEntry(idString, kanjiString, strokeCountString, radicalsList,
-						onReadingList, kunReadingList, nanoriReadingList, strokePathsList, polishTranslateList, infoString, used,
-						groupsList);
-
-				result.add(kanjiEntry);
+				result.add(kanjiCharacterInfo);
 			}
 			
-			Collections.sort(result, new Comparator<KanjiEntry>() {
+			Collections.sort(result, new Comparator<CharacterInfo>() {
 
 				@Override
-				public int compare(KanjiEntry o1, KanjiEntry o2) {
+				public int compare(CharacterInfo o1, CharacterInfo o2) {
 					
 					int o1id = o1.getId();
 					int o2id = o2.getId();
