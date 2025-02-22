@@ -1,6 +1,5 @@
 package pl.idedyk.japanese.dictionary.lucene.test;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.analysis.TokenStream;
@@ -9,13 +8,11 @@ import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult.ResultItem;
+import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiRequest;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPowerList;
-import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
-import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePairWithDictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
@@ -23,6 +20,7 @@ import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary.api.tools.KanaHelper;
 import pl.idedyk.japanese.dictionary.lucene.LuceneAnalyzer;
 import pl.idedyk.japanese.dictionary.lucene.LuceneDatabase;
+import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 
 public class Test1 {
 
@@ -81,6 +79,7 @@ public class Test1 {
 		
 		//		
 
+		/*
 		FindWordRequest findWordRequest = new FindWordRequest();
 		
 		//findWordRequest.searchGrammaFormAndExamples = false;		
@@ -121,8 +120,8 @@ public class Test1 {
 			
 			System.out.println("--------");
 		}
+		*/
 		
-		/*
 		FindKanjiRequest findKanjiRequest = new FindKanjiRequest();
 		
 		findKanjiRequest.word = "kot";
@@ -133,12 +132,11 @@ public class Test1 {
 		
 		FindKanjiResult findKanjiResult = dictionaryManager.findKanji(findKanjiRequest);
 		
-		for (KanjiEntry kanjiEntry : findKanjiResult.result) {			
-			System.out.println(kanjiEntry.getKanji() + " - " + kanjiEntry.getPolishTranslates() + "- " + kanjiEntry.getInfo());			
+		for (KanjiCharacterInfo kanjiCharacterInfo : findKanjiResult.result) {			
+			System.out.println(kanjiCharacterInfo.getKanji() + " - " + Utils.getPolishTranslates(kanjiCharacterInfo) + "- " + Utils.getPolishAdditionalInfo(kanjiCharacterInfo));			
 		}
 				
 		//
-		*/
 		
 		////////////////////
 		
