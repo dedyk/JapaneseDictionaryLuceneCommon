@@ -5,7 +5,7 @@
 	<groupId>pl.idedyk.japanese</groupId>
 	<artifactId>JapaneseDictionaryLuceneCommon</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0-SNAPSHOT-kanjidic</version>
+	<version>1.0-SNAPSHOT</version>
 	<name>JapaneseDictionaryLuceneCommon Maven</name>
 	<url>http://maven.apache.org</url>
 
