@@ -1604,7 +1604,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	
 	@Override
-	public KanjiCharacterInfo getKanjiEntryById(String id) throws DictionaryException {
+	public KanjiCharacterInfo getKanjiCharacterInfoById(String id) throws DictionaryException {
 		
 		Gson gson = new Gson();
 
