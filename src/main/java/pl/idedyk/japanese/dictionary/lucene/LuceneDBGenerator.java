@@ -950,6 +950,11 @@ public class LuceneDBGenerator {
 				allAvailableRadicalSet.addAll(kanjiCharacterInfo.getMisc2().getRadicals());
 			}
 			
+			// usuniecie zbednych elementow z kanji w celach optymalizacyjnych
+			kanjiCharacterInfo.setCodePoint(null);
+			kanjiCharacterInfo.setDictionaryNumber(null);
+			kanjiCharacterInfo.setQueryCode(null);			
+			
 			// add
 			addKanjiEntry(indexWriter, kanjiCharacterInfo, addSugestionList, generatePrefixes);
 		}
@@ -974,7 +979,7 @@ public class LuceneDBGenerator {
 	}
 	*/
 	
-	public static void addKanjiEntry(IndexWriter indexWriter, KanjiCharacterInfo kanjiCharacterInfo, boolean addSugestionList, boolean generatePrefixes) throws IOException {
+	private static void addKanjiEntry(IndexWriter indexWriter, KanjiCharacterInfo kanjiCharacterInfo, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 
 		Gson gson = new Gson();
 		
