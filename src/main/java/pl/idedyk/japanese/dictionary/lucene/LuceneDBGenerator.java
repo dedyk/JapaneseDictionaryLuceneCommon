@@ -23,6 +23,7 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntField;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
@@ -1058,9 +1059,16 @@ public class LuceneDBGenerator {
 		for (String currentRadical : radicalsList) {
 			document.add(new StringField(LuceneStatic.kanjiEntry_radicalsList, currentRadical, Field.Store.YES));
 		}
+						
+		// strokePaths - wynosimy z xml-a w celach optymalizacyjnych
+		fixme_zamienic_do_osobnego_dokumentu();
+		
+		document.add(new StoredField(LuceneStatic.kanjiEntry_strokePaths, Utils.convertListToString(kanjiCharacterInfo.getMisc2().getStrokePaths())));
+		
+		kanjiCharacterInfo.getMisc2().getStrokePaths().clear();
 		
 		// xml
-		document.add(new StringField(LuceneStatic.kanjiEntry_entry, gson.toJson(kanjiCharacterInfo), Field.Store.YES));		
+		document.add(new StoredField(LuceneStatic.kanjiEntry_entry, gson.toJson(kanjiCharacterInfo)));	
 
 		indexWriter.addDocument(document);		
 	}

@@ -60,6 +60,7 @@ import pl.idedyk.japanese.dictionary.api.dto.TatoebaSentence;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
+import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Misc2Info;
 
 public class LuceneDatabase implements IDatabaseConnector {
 
@@ -1027,10 +1028,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 			// przygodowanie odpowiedzi
 			for (ScoreDoc scoreDoc : scoreDocs) {
 				Document foundDocument = searcher.doc(scoreDoc.doc);
-				
-				String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
-				
-				KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
+								
+				KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, true);
 
 				findKanjiResult.result.add(kanjiCharacterInfo);
 			}				
@@ -1481,10 +1480,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
 				
-			    String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
-			    
-			    KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
-
+				KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, true);
+				
 				result.add(kanjiCharacterInfo);
 
 			}
@@ -1522,11 +1519,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 			for (ScoreDoc scoreDoc : scoreDocs) {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
-
-				String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
-			    
-				KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
 				
+				KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, true);
+			    				
 				result.add(kanjiCharacterInfo);
 			}				
 
@@ -1571,10 +1566,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			Document foundDocument = searcher.doc(scoreDocs[0].doc);
 			
-			String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
-			
-			KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
-			
+			KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, true);
+						
 			return kanjiCharacterInfo;
 
 		} catch (IOException e) {
@@ -1627,10 +1620,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			Document foundDocument = searcher.doc(scoreDocs[0].doc);
 			
-			String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
-			
-			KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
-			
+			KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, true);
+						
 			return kanjiCharacterInfo;
 
 		} catch (IOException e) {
@@ -1639,7 +1630,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 
 	@Override
-	public List<KanjiCharacterInfo> getAllKanjis(boolean onlyUsed) throws DictionaryException {
+	public List<KanjiCharacterInfo> getAllKanjis(boolean withDetails, boolean onlyUsed) throws DictionaryException {
 		
 		Gson gson = new Gson();
 
@@ -1664,11 +1655,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 			for (ScoreDoc scoreDoc : scoreDocs) {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
-
-				String entryBody = foundDocument.get(LuceneStatic.kanjiEntry_entry);
+				
+				KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, withDetails == true);
 			    
-				KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
-
 				result.add(kanjiCharacterInfo);
 			}
 			
@@ -1912,6 +1901,32 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 		
 		return result.toString();
+	}
+	
+	private KanjiCharacterInfo createKanjiEntryFromLuceneDocument(Gson gson, Document luceneDocument, boolean addStroke) {
+		
+		sprawdzic_wywolania_i_zamienic_gdzie_trzeba_na_addStroke_na_false();
+		
+		String entryBody = luceneDocument.get(LuceneStatic.kanjiEntry_entry);
+		
+		KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
+		
+		if (addStroke == true) {
+			String strokePathsAsString = luceneDocument.get(LuceneStatic.kanjiEntry_strokePaths);
+			
+			if (strokePathsAsString != null) {
+				List<String> strokePaths = Utils.parseStringIntoList(strokePathsAsString);
+				
+				if (kanjiCharacterInfo.getMisc2() == null) {
+					kanjiCharacterInfo.setMisc2(new Misc2Info());
+				}
+				
+				kanjiCharacterInfo.getMisc2().getStrokePaths().clear();
+				kanjiCharacterInfo.getMisc2().getStrokePaths().addAll(strokePaths);
+			}
+		}
+		
+		return kanjiCharacterInfo;
 	}
 	
 	private static class SpellCheckerIndex {
