@@ -1059,7 +1059,7 @@ public class LuceneDBGenerator {
 		for (String currentRadical : radicalsList) {
 			document.add(new StringField(LuceneStatic.kanjiEntry_radicalsList, currentRadical, Field.Store.YES));
 		}
-						
+		
 		// strokePaths - wynosimy z xml-a w celach optymalizacyjnych
 		fixme_zamienic_do_osobnego_dokumentu();
 		
@@ -1351,7 +1351,7 @@ public class LuceneDBGenerator {
 			document.add(new IntField(LuceneStatic.dictionaryEntry2_id, entry.getEntryId(), Field.Store.YES));
 			
 			// xml
-			document.add(new StringField(LuceneStatic.dictionaryEntry2_entry, gson.toJson(entry), Field.Store.YES));
+			document.add(new StoredField(LuceneStatic.dictionaryEntry2_entry, gson.toJson(entry)));
 			
 			//
 			
