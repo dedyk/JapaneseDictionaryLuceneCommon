@@ -1903,26 +1903,41 @@ public class LuceneDatabase implements IDatabaseConnector {
 		return result.toString();
 	}
 	
-	private KanjiCharacterInfo createKanjiEntryFromLuceneDocument(Gson gson, Document luceneDocument, boolean addStroke) {
-		
-		sprawdzic_wywolania_i_zamienic_gdzie_trzeba_na_addStroke_na_false();
-		
+	private KanjiCharacterInfo createKanjiEntryFromLuceneDocument(Gson gson, Document luceneDocument, boolean addStroke) throws IOException {
+				
 		String entryBody = luceneDocument.get(LuceneStatic.kanjiEntry_entry);
 		
 		KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
 		
 		if (addStroke == true) {
-			String strokePathsAsString = luceneDocument.get(LuceneStatic.kanjiEntry_strokePaths);
+			// pobieramy strokePaths
+			BooleanQuery query = new BooleanQuery();
 			
-			if (strokePathsAsString != null) {
-				List<String> strokePaths = Utils.parseStringIntoList(strokePathsAsString);
+			// object type
+			PhraseQuery phraseQuery = new PhraseQuery();
+			phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntryStrokePaths_objectType));
+
+			query.add(phraseQuery, Occur.MUST);
+			
+			query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntryStrokePaths_id, kanjiCharacterInfo.getId(), kanjiCharacterInfo.getId(), true, true), Occur.MUST);
+			
+			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
+
+			if (scoreDocs.length > 0) {
+				Document foundStrokePathsDocument = searcher.doc(scoreDocs[0].doc);
 				
-				if (kanjiCharacterInfo.getMisc2() == null) {
-					kanjiCharacterInfo.setMisc2(new Misc2Info());
-				}
+				String strokePathsAsString = foundStrokePathsDocument.get(LuceneStatic.kanjiEntryStrokePaths_strokePaths);
 				
-				kanjiCharacterInfo.getMisc2().getStrokePaths().clear();
-				kanjiCharacterInfo.getMisc2().getStrokePaths().addAll(strokePaths);
+				if (strokePathsAsString != null) {
+					List<String> strokePaths = Utils.parseStringIntoList(strokePathsAsString);
+					
+					if (kanjiCharacterInfo.getMisc2() == null) {
+						kanjiCharacterInfo.setMisc2(new Misc2Info());
+					}
+					
+					kanjiCharacterInfo.getMisc2().getStrokePaths().clear();
+					kanjiCharacterInfo.getMisc2().getStrokePaths().addAll(strokePaths);
+				}				
 			}
 		}
 		

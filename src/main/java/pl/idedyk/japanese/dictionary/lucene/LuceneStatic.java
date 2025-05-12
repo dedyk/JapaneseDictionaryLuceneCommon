@@ -76,7 +76,12 @@ public class LuceneStatic {
 	public static final String kanjiEntry_used = "kanjiEntry_used";
 	public static final String kanjiEntry_radicalsList = "kanjiEntry_radicalsList";
 	public static final String kanjiEntry_entry = "kanjiEntry_entry";
-	public static final String kanjiEntry_strokePaths = "kanjiEntry_strokePaths";
+	
+	// kanjiEntryStrokePaths
+	public static final String kanjiEntryStrokePaths_objectType = "kanjiEntryStrokePaths";
+	
+	public static final String kanjiEntryStrokePaths_id = "kanjiEntryStrokePaths_id";
+	public static final String kanjiEntryStrokePaths_strokePaths = "kanjiEntryStrokePaths_strokePaths";
 	
 	//
 	

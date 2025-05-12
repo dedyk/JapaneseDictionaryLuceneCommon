@@ -1061,16 +1061,32 @@ public class LuceneDBGenerator {
 		}
 		
 		// strokePaths - wynosimy z xml-a w celach optymalizacyjnych
-		fixme_zamienic_do_osobnego_dokumentu();
+		List<String> strokePaths = new ArrayList<>();
 		
-		document.add(new StoredField(LuceneStatic.kanjiEntry_strokePaths, Utils.convertListToString(kanjiCharacterInfo.getMisc2().getStrokePaths())));
+		strokePaths.addAll(kanjiCharacterInfo.getMisc2().getStrokePaths());
 		
 		kanjiCharacterInfo.getMisc2().getStrokePaths().clear();
 		
 		// xml
 		document.add(new StoredField(LuceneStatic.kanjiEntry_entry, gson.toJson(kanjiCharacterInfo)));	
 
-		indexWriter.addDocument(document);		
+		indexWriter.addDocument(document);
+		
+		// dodanie strokePaths do osobnego dokumentu
+		if (strokePaths.size() > 0) {
+			Document strokePathsDocument = new Document();
+			
+			// object type
+			strokePathsDocument.add(new StringField(LuceneStatic.objectType, LuceneStatic.kanjiEntryStrokePaths_objectType, Field.Store.YES));
+			
+			// id
+			strokePathsDocument.add(new IntField(LuceneStatic.kanjiEntryStrokePaths_id, kanjiCharacterInfo.getId(), Field.Store.YES));
+
+			// strokePaths
+			strokePathsDocument.add(new StoredField(LuceneStatic.kanjiEntryStrokePaths_strokePaths, Utils.convertListToString(strokePaths)));
+			
+			indexWriter.addDocument(strokePathsDocument);			
+		}
 	}
 	
 	private static List<DictionaryEntry> readNamesFile(IndexWriter indexWriter, InputStream namesInputStream, Counter idCounter, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {

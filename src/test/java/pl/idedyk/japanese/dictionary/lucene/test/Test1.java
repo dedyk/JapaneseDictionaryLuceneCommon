@@ -8,10 +8,6 @@ import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
-import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiRequest;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiResult;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPowerList;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePairWithDictionaryEntry;
@@ -122,6 +118,7 @@ public class Test1 {
 		}
 		*/
 		
+		/*
 		FindKanjiRequest findKanjiRequest = new FindKanjiRequest();
 		
 		findKanjiRequest.word = "kot";
@@ -135,6 +132,7 @@ public class Test1 {
 		for (KanjiCharacterInfo kanjiCharacterInfo : findKanjiResult.result) {			
 			System.out.println(kanjiCharacterInfo.getKanji() + " - " + Utils.getPolishTranslates(kanjiCharacterInfo) + "- " + Utils.getPolishAdditionalInfo(kanjiCharacterInfo));			
 		}
+		*/
 				
 		//
 		
@@ -176,6 +174,11 @@ public class Test1 {
 		
 		System.out.println(entry.getEntryId());
 		*/
+					
+		KanjiCharacterInfo kanjiEntry = dictionaryManager.getKanjiEntryById(15);
+		
+		System.out.println(kanjiEntry.getKanji());
+		System.out.println(kanjiEntry.getMisc2().getStrokePaths());
 		
 		luceneDatabase.close();
 	}
