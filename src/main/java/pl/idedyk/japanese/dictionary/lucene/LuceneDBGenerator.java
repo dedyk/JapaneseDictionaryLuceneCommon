@@ -23,6 +23,7 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntField;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
@@ -1127,7 +1128,7 @@ public class LuceneDBGenerator {
 			List<String> strokePaths = kanjivgEntry.getStrokePaths();
 						
 			for (String currentStrokePath : strokePaths) {
-				document.add(new StringField(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths, currentStrokePath, Field.Store.YES));
+				document.add(new StoredField(LuceneStatic.kanjiEntry_kanjivgEntry_strokePaths, currentStrokePath));
 			}
 		}
 		
@@ -1413,7 +1414,7 @@ public class LuceneDBGenerator {
 			document.add(new IntField(LuceneStatic.dictionaryEntry2_id, entry.getEntryId(), Field.Store.YES));
 			
 			// xml
-			document.add(new StringField(LuceneStatic.dictionaryEntry2_entry, gson.toJson(entry), Field.Store.YES));
+			document.add(new StoredField(LuceneStatic.dictionaryEntry2_entry, gson.toJson(entry)));
 			
 			//
 			
