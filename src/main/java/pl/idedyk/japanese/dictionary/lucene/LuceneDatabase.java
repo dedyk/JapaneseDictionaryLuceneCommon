@@ -1029,7 +1029,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			for (ScoreDoc scoreDoc : scoreDocs) {
 				Document foundDocument = searcher.doc(scoreDoc.doc);
 								
-				KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, true);
+				KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, false);
 
 				findKanjiResult.result.add(kanjiCharacterInfo);
 			}				
@@ -1480,7 +1480,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
 				
-				KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, true);
+				KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, false);
 				
 				result.add(kanjiCharacterInfo);
 
@@ -1520,7 +1520,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
 				
-				KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, true);
+				KanjiCharacterInfo kanjiCharacterInfo = createKanjiEntryFromLuceneDocument(gson, foundDocument, false);
 			    				
 				result.add(kanjiCharacterInfo);
 			}				
