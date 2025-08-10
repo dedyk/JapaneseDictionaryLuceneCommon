@@ -101,6 +101,31 @@ public class LuceneStatic {
 	
 	public static final String dictionaryEntry2_id = "dictionaryEntry2_id";
 	public static final String dictionaryEntry2_entry = "dictionaryEntry2_entry";
+		
+	public static final String dictionaryEntry2_kanji = "dictionaryEntry2_kanji";
+	public static final String dictionaryEntry2_kana = "dictionaryEntry2_kana";
+	public static final String dictionaryEntry2_romaji = "dictionaryEntry2_romaji";
+	public static final String dictionaryEntry2_translatesList = "dictionaryEntry2_translatesList";
+	public static final String dictionaryEntry2_info = "dictionaryEntry2_info";
+	
+	// FM_FIXME: do wykorzystania ???
+	public static final String dictionaryEntry2_uniqueKey = "dictionaryEntry2_uniqueKey";
+	public static final String dictionaryEntry2_dictionaryEntryTypeList = "dictionaryEntry2_dictionaryEntryTypeList";
+
+	public static final String dictionaryEntry2_attributeList = "dictionaryEntry2_attributeList";
+	public static final String dictionaryEntry2_groupsList = "dictionaryEntry2_groupsList";
+	
+	// FM_FIXME: chyba do usuniecia
+	// public static final String dictionaryEntry_prefixKana = "dictionaryEntry_prefixKana";
+	// public static final String dictionaryEntry_prefixRomaji = "dictionaryEntry_prefixRomaji";
+	
+	// public static final String dictionaryEntry_virtual_romaji = "dictionaryEntry_virtual_romaji";
+	// public static final String dictionaryEntry_translatesListWithoutPolishChars = "dictionaryEntry_translatesListWithoutPolishChars";	
+	// public static final String dictionaryEntry_infoWithoutPolishChars = "dictionaryEntry_infoWithoutPolishChars";
+	
+	// FM_FIXME: do wykorzystania
+	public static final String dictionaryEntry2_exampleSentenceGroupIdsList = "dictionaryEntry2_exampleSentenceGroupIdsList";
+
 	
 	//
 	
