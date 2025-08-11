@@ -451,6 +451,8 @@ public class LuceneDBGenerator {
 	}
 	
 	private static Float getBoostFloat(DictionaryEntry dictionaryEntry) {
+		// FM_FIXME: do usuniecia, a logike do przerzucenia dla odpowiednika dla Entry
+		
 		List<Attribute> priorityList = dictionaryEntry.getAttributeList().getAttributeList(AttributeType.PRIORITY);
 		
 		Integer boostInteger = priorityList != null && priorityList.size() > 0 ? Integer.parseInt(priorityList.get(0).getAttributeValue().get(0)) : Integer.MAX_VALUE;
