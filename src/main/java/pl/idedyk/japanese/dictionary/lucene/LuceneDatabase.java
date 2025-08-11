@@ -1218,6 +1218,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 	@Override
 	public void findDictionaryEntriesInGrammaFormAndExamples(FindWordRequest findWordRequest, FindWordResult findWordResult)
 			throws DictionaryException {
+		
+		// FM_FIXME: do uzycia z word2 xml
 
 		if (findWordRequest.searchGrammaFormAndExamples == false) {
 			return;

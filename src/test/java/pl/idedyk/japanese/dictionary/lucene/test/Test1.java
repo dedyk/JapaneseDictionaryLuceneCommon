@@ -1,5 +1,6 @@
 package pl.idedyk.japanese.dictionary.lucene.test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.analysis.TokenStream;
@@ -8,7 +9,13 @@ import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult.ResultItem;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPowerList;
+import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
+import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePairWithDictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
@@ -16,7 +23,6 @@ import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary.api.tools.KanaHelper;
 import pl.idedyk.japanese.dictionary.lucene.LuceneAnalyzer;
 import pl.idedyk.japanese.dictionary.lucene.LuceneDatabase;
-import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 
 public class Test1 {
 
@@ -65,7 +71,7 @@ public class Test1 {
 		
 		//
 		
-		LuceneDatabase luceneDatabase = new LuceneDatabase("/tmp/a/db-lucene");
+		LuceneDatabase luceneDatabase = new LuceneDatabase("db-lucene");
 		
 		luceneDatabase.open();
 		
@@ -75,7 +81,6 @@ public class Test1 {
 		
 		//		
 
-		/*
 		FindWordRequest findWordRequest = new FindWordRequest();
 		
 		//findWordRequest.searchGrammaFormAndExamples = false;		
@@ -116,7 +121,6 @@ public class Test1 {
 			
 			System.out.println("--------");
 		}
-		*/
 		
 		/*
 		FindKanjiRequest findKanjiRequest = new FindKanjiRequest();
@@ -174,11 +178,13 @@ public class Test1 {
 		
 		System.out.println(entry.getEntryId());
 		*/
-					
+		
+		/*
 		KanjiCharacterInfo kanjiEntry = dictionaryManager.getKanjiEntryById(15);
 		
 		System.out.println(kanjiEntry.getKanji());
 		System.out.println(kanjiEntry.getMisc2().getStrokePaths());
+		*/
 		
 		luceneDatabase.close();
 	}

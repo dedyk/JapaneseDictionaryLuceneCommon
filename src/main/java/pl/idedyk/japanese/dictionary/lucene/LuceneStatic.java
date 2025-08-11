@@ -115,6 +115,14 @@ public class LuceneStatic {
 	public static final String dictionaryEntry2_attributeList = "dictionaryEntry2_attributeList";
 	public static final String dictionaryEntry2_groupsList = "dictionaryEntry2_groupsList";
 	
+	// FM_FIXME: do wykorzystania: wyliczanie z entry
+	public static final String dictionaryEntry2_grammaConjufateResult_and_exampleResult_objectType = "dictionaryEntry2_grammaConjufateResult_and_exampleResult_objectType";	
+	public static final String dictionaryEntry2_grammaConjufateResult_and_exampleResult_entry_id = "dictionaryEntry2_grammaConjufateResult_and_exampleResult_entry_id";
+	
+	public static final String dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanji = "dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanji";
+	public static final String dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList = "dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList";
+	public static final String dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList = "dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList";
+	
 	// FM_FIXME: chyba do usuniecia
 	// public static final String dictionaryEntry_prefixKana = "dictionaryEntry_prefixKana";
 	// public static final String dictionaryEntry_prefixRomaji = "dictionaryEntry_prefixRomaji";

@@ -480,6 +480,12 @@ public class LuceneDBGenerator {
 		return boostFloat;
 	}
 	
+	private static Float getBoostFloat(Entry entry) {
+		// FM_FIXME: do implementacji
+		
+		return null;
+	}
+	
 	private static float[] calculateAandBFactor(float x1, float y1, float x2, float y2) {		
 		float a = (y2 - y1) / (x2 - x1);
 		float b = y2 - a * x2;
@@ -584,6 +590,8 @@ public class LuceneDBGenerator {
 	
 	private static void countGrammaFormAndExamples(List<DictionaryEntry> dictionaryEntryList, IndexWriter indexWriter, boolean addGrammaAndExample, boolean addSugestionList) throws IOException {
 		
+		// FM_FIXME: do uzycia z word2 xml
+		
 		KeigoHelper keigoHelper = new KeigoHelper();
 		
 		for (DictionaryEntry dictionaryEntry : dictionaryEntryList) {
@@ -596,6 +604,8 @@ public class LuceneDBGenerator {
 	}
 	
 	private static void countGrammaFormAndExamples(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, KeigoHelper keigoHelper, boolean addGrammaAndExample, boolean addSugestionList) throws IOException {
+		
+		// FM_FIXME: do uzycia z word2 xml
 		
 		// wyliczenie boost'era
 		Float boostFloat = getBoostFloat(dictionaryEntry);
@@ -1366,7 +1376,7 @@ public class LuceneDBGenerator {
 			
 			// wyliczenie boost'era
 			// FM_FIXME: do poprawienia
-			Float boostFloat = null; // getBoostFloat(entry);
+			Float boostFloat = getBoostFloat(entry);
 
 															
 			// dodanie do lucynki
