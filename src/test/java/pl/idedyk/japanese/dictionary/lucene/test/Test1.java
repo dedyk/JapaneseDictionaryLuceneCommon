@@ -23,6 +23,7 @@ import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary.api.tools.KanaHelper;
 import pl.idedyk.japanese.dictionary.lucene.LuceneAnalyzer;
 import pl.idedyk.japanese.dictionary.lucene.LuceneDatabase;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
 
 public class Test1 {
 
@@ -86,9 +87,10 @@ public class Test1 {
 		//findWordRequest.searchGrammaFormAndExamples = false;		
 		//findWordRequest.word = "shukujitsu";
 		
-		findWordRequest.word = "kot";
-		//findWordRequest.word = text; //"スプラッタ・ムービー";
-		//findWordRequest.word = "スプラッタムービー";
+		// findWordRequest.word = "kot";
+		// findWordRequest.word = text; //"スプラッタ・ムービー";
+		// findWordRequest.word = "スプラッタムービー";
+		findWordRequest.word = "猫";
 
 		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values();
 		
@@ -113,11 +115,17 @@ public class Test1 {
 				
 		for (ResultItem resultItem : findWordResult.result) {
 			
-			DictionaryEntry dictionaryEntry = resultItem.getDictionaryEntry();
+			Entry entry = resultItem.getEntry();
 			
-			System.out.println(dictionaryEntry.getId() + " - " + dictionaryEntry.getDictionaryEntryTypeList() + " - " + dictionaryEntry.getKanji() + " - " + 
+			System.out.println(entry.getEntryId());
+			System.out.println(resultItem.getKanjiList());
+			System.out.println(resultItem.getKanaList());
+			System.out.println(resultItem.getRomajiList());
+			System.out.println(resultItem.getTranslates());
+			
+			/* + " - " + dictionaryEntry.getDictionaryEntryTypeList() + " - " + dictionaryEntry.getKanji() + " - " + 
 					dictionaryEntry.getKana() + " - " + dictionaryEntry.getRomaji() + " - " + dictionaryEntry.getTranslates() + " - " +
-					dictionaryEntry.getInfo());
+					dictionaryEntry.getInfo()); */
 			
 			System.out.println("--------");
 		}
