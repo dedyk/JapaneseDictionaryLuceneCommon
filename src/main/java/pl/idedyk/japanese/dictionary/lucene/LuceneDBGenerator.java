@@ -63,6 +63,10 @@ import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon.Printab
 import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon.PrintableSenseEntryGloss;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.MiscInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfoAttributeListInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfoEntriesInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Kanjidic2;
 
@@ -450,12 +454,7 @@ public class LuceneDBGenerator {
 		indexWriter.addDocument(document);
 	}
 	
-	private static Float getBoostFloat(DictionaryEntry dictionaryEntry) {
-		// FM_FIXME: do usuniecia, a logike do przerzucenia dla odpowiednika dla Entry
-		
-		List<Attribute> priorityList = dictionaryEntry.getAttributeList().getAttributeList(AttributeType.PRIORITY);
-		
-		Integer boostInteger = priorityList != null && priorityList.size() > 0 ? Integer.parseInt(priorityList.get(0).getAttributeValue().get(0)) : Integer.MAX_VALUE;
+	private static Float getBoostFloat(Integer boostInteger) {
 		Float boostFloat = null;
 		
 		if (boostInteger == Integer.MAX_VALUE) {
@@ -482,10 +481,40 @@ public class LuceneDBGenerator {
 		return boostFloat;
 	}
 	
+	private static Float getBoostFloat(DictionaryEntry dictionaryEntry) {
+		// FM_FIXME: do usuniecia, a logike do przerzucenia dla odpowiednika dla Entry
+		
+		List<Attribute> priorityList = dictionaryEntry.getAttributeList().getAttributeList(AttributeType.PRIORITY);
+		
+		Integer boostInteger = priorityList != null && priorityList.size() > 0 ? Integer.parseInt(priorityList.get(0).getAttributeValue().get(0)) : Integer.MAX_VALUE;
+		
+		return getBoostFloat(boostInteger);		
+	}
+	
 	private static Float getBoostFloat(Entry entry) {
 		// FM_FIXME: do implementacji
 		
-		return null;
+		MiscInfo misc = entry.getMisc();
+		
+		if (misc == null) {
+			return null;
+		}
+		
+		OldPolishJapaneseDictionaryInfo oldPolishJapaneseDictionary = misc.getOldPolishJapaneseDictionary();
+		
+		if (oldPolishJapaneseDictionary == null) {
+			return getBoostFloat(Integer.MAX_VALUE);
+		}
+		
+		OldPolishJapaneseDictionaryInfoAttributeListInfo priorityAttribute = oldPolishJapaneseDictionary.getAttributeList().stream().filter(f -> f.getType().equals(AttributeType.PRIORITY.name())).findFirst().orElse(null);
+		
+		if (priorityAttribute == null) {
+			return getBoostFloat(Integer.MAX_VALUE);
+		}
+		
+		Integer boostInteger = Integer.parseInt(priorityAttribute.getValue());
+		
+		return getBoostFloat(boostInteger);
 	}
 	
 	private static float[] calculateAandBFactor(float x1, float y1, float x2, float y2) {		
@@ -1377,9 +1406,7 @@ public class LuceneDBGenerator {
 			System.out.println("Add word 2 entry: " + entry.getEntryId());
 			
 			// wyliczenie boost'era
-			// FM_FIXME: do poprawienia
 			Float boostFloat = getBoostFloat(entry);
-
 															
 			// dodanie do lucynki
 			Document document = new Document();
@@ -1400,15 +1427,19 @@ public class LuceneDBGenerator {
 			for (KanjiKanaPair kanjiKanaPair : kanjiKanaPairList) {	
 				
 				// unique key
-				// FM_FIXME: do poprawienia
-				/*
-				String uniqueKey = dictionaryEntry.getUniqueKey();
-				
-				if (uniqueKey != null) {
-					document.add(new StringField(LuceneStatic.dictionaryEntry2_uniqueKey, uniqueKey, Field.Store.YES));
+				if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getEntries() != null) {
+					List<OldPolishJapaneseDictionaryInfoEntriesInfo> oldPolishJapaneseDictionaryInfoEntriesList = entry.getMisc().getOldPolishJapaneseDictionary().getEntries();
+					
+					for (OldPolishJapaneseDictionaryInfoEntriesInfo oldPolishJapaneseDictionaryInfoEntriesInfo : oldPolishJapaneseDictionaryInfoEntriesList) {
+						String uniqueKey = oldPolishJapaneseDictionaryInfoEntriesInfo.getUniqueKey();
+						
+						if (uniqueKey != null) {
+							document.add(new StringField(LuceneStatic.dictionaryEntry2_uniqueKey, uniqueKey, Field.Store.YES));
+						}					
+					}
 				}
-				*/
 				
+								
 				// kanji
 				String kanji = kanjiKanaPair.getKanji();
 				
@@ -1507,42 +1538,46 @@ public class LuceneDBGenerator {
 			
 			
 			// dictionary entry type list
-			// FM_FIXME: do poprawienia
-			/*
-			List<String> dictionaryEntryTypeStringList = DictionaryEntryType.convertToValues(dictionaryEntry.getDictionaryEntryTypeList());
-			
-			for (String dictionaryEntryTypeString : dictionaryEntryTypeStringList) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry2_dictionaryEntryTypeList, dictionaryEntryTypeString, Field.Store.YES));
+			if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getDictionaryEntryTypeList() != null) {
+				List<String> dictionaryEntryTypeStringList = entry.getMisc().getOldPolishJapaneseDictionary().getDictionaryEntryTypeList();
+				
+				for (String dictionaryEntryTypeString : dictionaryEntryTypeStringList) {
+					document.add(new StringField(LuceneStatic.dictionaryEntry2_dictionaryEntryTypeList, dictionaryEntryTypeString, Field.Store.YES));
+				}				
 			}
-			*/
-					
+											
 			// attributeList
-			// FM_FIXME: do poprawienia
-			/*
-			List<String> attributeStringList = dictionaryEntry.getAttributeList().convertAttributeListToListString();
-			
-			for (String currentAttribute : attributeStringList) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry2_attributeList, currentAttribute, Field.Store.YES));
+			// FM_FIXME: sprawdzic, czy to dziala
+			if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getAttributeList() != null) {
+				List<OldPolishJapaneseDictionaryInfoAttributeListInfo> attributeList = entry.getMisc().getOldPolishJapaneseDictionary().getAttributeList();
+				
+				for (OldPolishJapaneseDictionaryInfoAttributeListInfo attribute : attributeList) {
+					String dbValue = attribute.getType();
+					
+					if (attribute.getValue() != null) {
+						dbValue += " " + attribute.getValue();
+					}
+					
+					document.add(new StringField(LuceneStatic.dictionaryEntry2_attributeList, dbValue, Field.Store.YES));
+				}
 			}
-			*/
-			
+						
 			// groupsList
-			// FM_FIXME: do poprawienia
-			/*
-			List<String> groupsList = GroupEnum.convertToValues(dictionaryEntry.getGroups());
-			
-			for (String currentGroup : groupsList) {
-				document.add(new StringField(LuceneStatic.dictionaryEntry2_groupsList, currentGroup, Field.Store.YES));
+			if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getGroupsList() != null) {
+				List<String> groupsList = entry.getMisc().getOldPolishJapaneseDictionary().getGroupsList();
+
+				for (String currentGroup : groupsList) {
+					document.add(new StringField(LuceneStatic.dictionaryEntry2_groupsList, currentGroup, Field.Store.YES));
+				}
 			}
-			*/
-			
+						
 //			// prefixKana
 //			document.add(new StringField(LuceneStatic.dictionaryEntry_prefixKana, emptyIfNull(dictionaryEntry.getPrefixKana()), Field.Store.YES));
 //						
 //			// prefixRomaji
 //			document.add(new StringField(LuceneStatic.dictionaryEntry_prefixRomaji, emptyIfNull(dictionaryEntry.getPrefixRomaji()), Field.Store.YES));
 //			
-//			// example sentence groupIds - FM_FIXME: do przeniesienia
+//			// example sentence groupIds - FM_FIXME: do przeniesienia - to chyba nie bedzie przenoszone
 //			List<String> exampleSentenceGroupIdsList = dictionaryEntry.getExampleSentenceGroupIdsList();
 //					
 //			for (String currentExampleSenteceGroupId : exampleSentenceGroupIdsList) {

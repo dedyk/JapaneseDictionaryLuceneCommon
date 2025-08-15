@@ -5,7 +5,7 @@ public class LuceneStatic {
 	public static final String objectType = "objectType";
 	
 	// FM_FIXME: chyba do usuniecia - start
-	/*
+	// /*
 	public static final String dictionaryEntry_objectType = "dictionaryEntry";
 	
 	public static final String dictionaryEntry_id = "dictionaryEntry_id";
@@ -32,7 +32,7 @@ public class LuceneStatic {
 	public static final String dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList = "dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList";
 	public static final String dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList = "dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList";
 	public static final String dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList = "dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList";
-	*/
+	// */
 	// FM_FIXME: chyba do usuniecia - stop
 	
 	public static final String dictionaryEntry_exampleSentence_objectType = "dictionaryEntry_exampleSentence";
