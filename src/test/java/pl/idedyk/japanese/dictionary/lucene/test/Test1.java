@@ -90,7 +90,9 @@ public class Test1 {
 		// findWordRequest.word = "kot";
 		// findWordRequest.word = text; //"スプラッタ・ムービー";
 		// findWordRequest.word = "スプラッタムービー";
-		findWordRequest.word = "猫";
+		// findWordRequest.word = "猫";
+		// findWordRequest.word = "agaru";
+		findWordRequest.word = "ふくれあがる";
 
 		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values();
 		
@@ -105,11 +107,12 @@ public class Test1 {
 		
 		//findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
 		
-		findWordRequest.wordPlaceSearch = WordPlaceSearch.START_WITH;
+		findWordRequest.wordPlaceSearch = WordPlaceSearch.EXACT;
 		
-		//findWordRequest.searchTranslate = false;
-		findWordRequest.searchInfo = false;
-		//findWordRequest.searchRomaji = false;
+		findWordRequest.searchTranslate = true;
+		findWordRequest.searchInfo = true;
+		findWordRequest.searchRomaji = true;
+		findWordRequest.searchOnlyCommonWord = false;
 		
 		FindWordResult findWordResult = dictionaryManager.findWord(findWordRequest);
 				

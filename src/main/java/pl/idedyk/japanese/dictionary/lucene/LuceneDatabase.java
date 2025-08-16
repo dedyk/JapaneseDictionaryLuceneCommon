@@ -221,23 +221,21 @@ public class LuceneDatabase implements IDatabaseConnector {
 			query.add(objectTypeQuery, Occur.MUST);
 
 			// common word
-			// FM_FIXME: do naprawy/zaimplementowania
-			/*
+			// FM_FIXME: do naprawy/zaimplementowania -> sprawdzenia
 			if (findWordRequest.searchOnlyCommonWord == true) {	
 				PhraseQuery onlyCommonWordQuery = new PhraseQuery();
 				
-				onlyCommonWordQuery.add(new Term(LuceneStatic.dictionaryEntry_attributeList, AttributeType.COMMON_WORD.toString()));
+				onlyCommonWordQuery.add(new Term(LuceneStatic.dictionaryEntry2_attributeList, AttributeType.COMMON_WORD.toString()));
 				
 				query.add(onlyCommonWordQuery, Occur.MUST);
 				
 			} else {				
 				PhraseQuery onlyCommonWordQuery = new PhraseQuery();
 				
-				onlyCommonWordQuery.add(new Term(LuceneStatic.dictionaryEntry_attributeList, AttributeType.COMMON_WORD.toString()));
+				onlyCommonWordQuery.add(new Term(LuceneStatic.dictionaryEntry2_attributeList, AttributeType.COMMON_WORD.toString()));
 								
 				query.add(onlyCommonWordQuery, Occur.SHOULD);
 			}
-			*/
 			
 			BooleanQuery wordBooleanQuery = new BooleanQuery();
 

@@ -57,16 +57,17 @@ import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateResult;
 import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateResultType;
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon;
-import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon.KanjiKanaPair;
-import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon.PrintableSense;
-import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon.PrintableSenseEntry;
-import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon.PrintableSenseEntryGloss;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.Gloss;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.KanjiInfo;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.MiscInfo;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfo;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfoAttributeListInfo;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfoEntriesInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.ReadingInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.Sense;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.SenseAdditionalInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Kanjidic2;
 
@@ -1420,45 +1421,33 @@ public class LuceneDBGenerator {
 			// xml
 			document.add(new StoredField(LuceneStatic.dictionaryEntry2_entry, gson.toJson(entry)));
 			
-			// wygenerowanie wszystkich par kanji i kana i dodanie ich do jednego dokumentu - FM_FIXME: sprawdzic, czy to dobrze i czy dziala poprawnie cala funkcjonalnosc
+			// FM_FIXME: sprawdzic, czy to dobrze i czy dziala poprawnie cala funkcjonalnosc
 			// ze wszystkie kanji, kana i tlumaczenia sa w jednym dokumencie			
-			List<KanjiKanaPair> kanjiKanaPairList = Dictionary2HelperCommon.getKanjiKanaPairListStatic(entry);
 			
-			for (KanjiKanaPair kanjiKanaPair : kanjiKanaPairList) {	
+			List<KanjiInfo> kanjiInfoList = entry.getKanjiInfoList();
+			
+			// kanji
+			for (KanjiInfo kanjiInfo : kanjiInfoList) {
+				String kanji = kanjiInfo.getKanji();
 				
-				// unique key
-				if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getEntries() != null) {
-					List<OldPolishJapaneseDictionaryInfoEntriesInfo> oldPolishJapaneseDictionaryInfoEntriesList = entry.getMisc().getOldPolishJapaneseDictionary().getEntries();
+				document.add(new StringField(LuceneStatic.dictionaryEntry2_kanji, emptyIfNull(kanji), Field.Store.YES));
+				
+				addPrefixes(document, LuceneStatic.dictionaryEntry2_kanji, emptyIfNull(kanji), generatePrefixes, boostFloat);
+				
+				if (addSugestionList == true) {					
+					addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, emptyIfNull(kanji), false);
+					addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(kanji), false);
 					
-					for (OldPolishJapaneseDictionaryInfoEntriesInfo oldPolishJapaneseDictionaryInfoEntriesInfo : oldPolishJapaneseDictionaryInfoEntriesList) {
-						String uniqueKey = oldPolishJapaneseDictionaryInfoEntriesInfo.getUniqueKey();
-						
-						if (uniqueKey != null) {
-							document.add(new StringField(LuceneStatic.dictionaryEntry2_uniqueKey, uniqueKey, Field.Store.YES));
-						}					
-					}
-				}
-				
-								
-				// kanji
-				String kanji = kanjiKanaPair.getKanji();
-				
-				if (kanji != null) {
-					document.add(new StringField(LuceneStatic.dictionaryEntry2_kanji, emptyIfNull(kanji), Field.Store.YES));
-					
-					addPrefixes(document, LuceneStatic.dictionaryEntry2_kanji, emptyIfNull(kanji), generatePrefixes, boostFloat);
-					
-					if (addSugestionList == true) {					
-						addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, emptyIfNull(kanji), false);
-						addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(kanji), false);
-						
-						addSpellChecker(document, LuceneStatic.dictionaryEntry_android_spellCheckerList, emptyIfNull(kanji));
-						addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, emptyIfNull(kanji));
-					}
-				}
-				
+					addSpellChecker(document, LuceneStatic.dictionaryEntry_android_spellCheckerList, emptyIfNull(kanji));
+					addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, emptyIfNull(kanji));
+				}				
+			}
+			
+			List<ReadingInfo> readingInfoList = entry.getReadingInfoList();
+			
+			for (ReadingInfo readingInfo : readingInfoList) {
 				// kanaList
-				String kana = kanjiKanaPair.getKana();
+				String kana = readingInfo.getKana().getValue();
 				
 				document.add(new StringField(LuceneStatic.dictionaryEntry2_kana, kana, Field.Store.YES));
 				
@@ -1473,70 +1462,92 @@ public class LuceneDBGenerator {
 				}
 				
 				// romajiList
-				String romaji = kanjiKanaPair.getReadingInfo().getKana().getRomaji();
-						
-				document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_romaji, romaji, Field.Store.YES), boostFloat));
+				String romaji = readingInfo.getKana().getRomaji();
+				
+				if (romaji != null) {
+					// INFO: normalnie romaji zawsze powinno istniec, ale gdy slownik nie jest w pelni poprawny
+					// czyli nie przeszedl calej walidacji to moze zdarzyc sie
+					// ale podczas generowania slownika z wydaniem to nigdy nie powinno zdarzyc sie
+					
+					document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_romaji, romaji, Field.Store.YES), boostFloat));
 	
-				addPrefixes(document, LuceneStatic.dictionaryEntry2_romaji, romaji, generatePrefixes, boostFloat);
-				
-				// dodanie alternatyw romaji
-				addAlternativeRomaji(document, LuceneStatic.dictionaryEntry2_romaji, romaji, generatePrefixes, boostFloat);
-				
-				if (addSugestionList == true) {					
-					addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, romaji, false);
-					addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, romaji, false);
+					addPrefixes(document, LuceneStatic.dictionaryEntry2_romaji, romaji, generatePrefixes, boostFloat);
 					
-					addSpellChecker(document, LuceneStatic.dictionaryEntry_android_spellCheckerList, romaji);
-					addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, romaji);			
-				}
-
-				PrintableSense printableSense = Dictionary2HelperCommon.getPrintableSense(kanjiKanaPair);
-
-				for (PrintableSenseEntry printableSenseEntry : printableSense.getSenseEntryList()) {
+					// dodanie alternatyw romaji
+					addAlternativeRomaji(document, LuceneStatic.dictionaryEntry2_romaji, romaji, generatePrefixes, boostFloat);
 					
-					// translatesList
-					for (PrintableSenseEntryGloss printableSenseEntryGloss : printableSenseEntry.getGlossList()) {
+					if (addSugestionList == true) {					
+						addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, romaji, false);
+						addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, romaji, false);
 						
-						String currentTranslate = printableSenseEntryGloss.getGlossValue();
-						
-						document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_translatesList, currentTranslate, Field.Store.YES), boostFloat));
-						
-						addPrefixes(document, LuceneStatic.dictionaryEntry2_translatesList, currentTranslate, generatePrefixes, boostFloat);
-						
-						if (addSugestionList == true) {
-							addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, currentTranslate, true);
-							addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, currentTranslate, true);
-							
-							addSpellChecker(document, LuceneStatic.dictionaryEntry_android_spellCheckerList, currentTranslate);
-							addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, currentTranslate);
-						}
-						
-						String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
-							
-						document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_translatesList, currentTranslateWithoutPolishChars, Field.Store.NO), boostFloat));
-						
-						addPrefixes(document, LuceneStatic.dictionaryEntry2_translatesList, currentTranslateWithoutPolishChars, generatePrefixes, boostFloat);
-					}
-					
-					// info
-					String info = printableSenseEntry.getAdditionalInfoValue();
-					
-					if (info != null) {
-						document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_info, info, Field.Store.YES), boostFloat));
-						
-						addPrefixes(document, LuceneStatic.dictionaryEntry2_info, info, generatePrefixes, boostFloat);
-							
-						String infoWithoutPolishChars = Utils.removePolishChars(info);
-							
-						document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_info, infoWithoutPolishChars, Field.Store.NO), boostFloat));
-						
-						addPrefixes(document, LuceneStatic.dictionaryEntry2_info, infoWithoutPolishChars, generatePrefixes, boostFloat);
-						
+						addSpellChecker(document, LuceneStatic.dictionaryEntry_android_spellCheckerList, romaji);
+						addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, romaji);			
 					}
 				}
 			}
 			
+			List<Sense> senseList = entry.getSenseList();
 			
+			for (Sense sense : senseList) {
+				
+				List<Gloss> polishGlossList = Dictionary2HelperCommon.getPolishGlossList(sense.getGlossList());
+				
+				for (Gloss gloss : polishGlossList) {
+					// translatesList
+					String currentTranslate = gloss.getValue();
+					
+					document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_translatesList, currentTranslate, Field.Store.YES), boostFloat));
+					
+					addPrefixes(document, LuceneStatic.dictionaryEntry2_translatesList, currentTranslate, generatePrefixes, boostFloat);
+					
+					if (addSugestionList == true) {
+						addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, currentTranslate, true);
+						addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, currentTranslate, true);
+						
+						addSpellChecker(document, LuceneStatic.dictionaryEntry_android_spellCheckerList, currentTranslate);
+						addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, currentTranslate);
+					}
+					
+					String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
+						
+					document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_translatesList, currentTranslateWithoutPolishChars, Field.Store.NO), boostFloat));
+					
+					addPrefixes(document, LuceneStatic.dictionaryEntry2_translatesList, currentTranslateWithoutPolishChars, generatePrefixes, boostFloat);
+					
+					// info
+					SenseAdditionalInfo firstPolishAdditionalInfo = Dictionary2HelperCommon.findFirstPolishAdditionalInfo(sense.getAdditionalInfoList());
+					
+					if (firstPolishAdditionalInfo != null) {
+						String info = firstPolishAdditionalInfo.getValue();
+						
+						if (info != null) {
+							document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_info, info, Field.Store.YES), boostFloat));
+							
+							addPrefixes(document, LuceneStatic.dictionaryEntry2_info, info, generatePrefixes, boostFloat);
+								
+							String infoWithoutPolishChars = Utils.removePolishChars(info);
+								
+							document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_info, infoWithoutPolishChars, Field.Store.NO), boostFloat));
+							
+							addPrefixes(document, LuceneStatic.dictionaryEntry2_info, infoWithoutPolishChars, generatePrefixes, boostFloat);						
+						}
+					}
+				}				
+			}
+			
+			// unique key
+			if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getEntries() != null) {
+				List<OldPolishJapaneseDictionaryInfoEntriesInfo> oldPolishJapaneseDictionaryInfoEntriesList = entry.getMisc().getOldPolishJapaneseDictionary().getEntries();
+				
+				for (OldPolishJapaneseDictionaryInfoEntriesInfo oldPolishJapaneseDictionaryInfoEntriesInfo : oldPolishJapaneseDictionaryInfoEntriesList) {
+					String uniqueKey = oldPolishJapaneseDictionaryInfoEntriesInfo.getUniqueKey();
+					
+					if (uniqueKey != null) {
+						document.add(new StringField(LuceneStatic.dictionaryEntry2_uniqueKey, uniqueKey, Field.Store.YES));
+					}					
+				}
+			}
+						
 			// dictionary entry type list
 			if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getDictionaryEntryTypeList() != null) {
 				List<String> dictionaryEntryTypeStringList = entry.getMisc().getOldPolishJapaneseDictionary().getDictionaryEntryTypeList();
@@ -1584,7 +1595,6 @@ public class LuceneDBGenerator {
 //				document.add(new TextField(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList, currentExampleSenteceGroupId, Field.Store.YES));
 //			}
 
-			
 			//
 			
 			indexWriter.addDocument(document);
