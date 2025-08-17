@@ -642,6 +642,8 @@ public class LuceneDBGenerator {
 		// wyliczenie boost'era
 		Float boostFloat = getBoostFloat(dictionaryEntry);
 		
+		// FM_FIXME: te odmiany wgrac do dokumentu ze slowkiem
+		
 		if (addGrammaAndExample == false) {
 			
 			// count form for dictionary entry
