@@ -647,33 +647,43 @@ public class LuceneDBGenerator {
 		List<KanjiKanaPair> kanjiKanaPairList = Dictionary2HelperCommon.getKanjiKanaPairListStatic(word2Entry);
 		
 		for (KanjiKanaPair kanjiKanaPair : kanjiKanaPairList) {
-			
-			// gramma form cache
-			Map<GrammaFormConjugateResultType, GrammaFormConjugateResult> grammaFormCache = new HashMap<GrammaFormConjugateResultType, GrammaFormConjugateResult>();
-			
+						
 			// gramma form conjugate request
 			GrammaFormConjugateRequest grammaFormConjugateRequest = new GrammaFormConjugateRequest(kanjiKanaPair);
 			
-			GrammaConjugaterManager.getGrammaConjufateResult(keigoHelper, grammaFormConjugateRequest, grammaFormCache, null, true);
+			// example request
+			ExampleRequest exampleRequest = new ExampleRequest(kanjiKanaPair);
 			
-			for (DictionaryEntryType currentDictionaryEntryType : grammaFormConjugateRequest.getDictionaryEntryTypeList()) {
-				List<GrammaFormConjugateGroupTypeElements> grammaConjufateResult = GrammaConjugaterManager.getGrammaConjufateResult(keigoHelper, grammaFormConjugateRequest, grammaFormCache, currentDictionaryEntryType, true);
+			{
+				// gramma form cache
+				Map<GrammaFormConjugateResultType, GrammaFormConjugateResult> grammaFormCache = new HashMap<GrammaFormConjugateResultType, GrammaFormConjugateResult>();
 				
-				if (addGrammaAndExample == true) {
-					addGrammaFormConjugateGroupList(document, grammaConjufateResult, addSugestionList, boostFloat);
+				List<GrammaFormConjugateGroupTypeElements> grammaConjufateResult = GrammaConjugaterManager.getGrammaConjufateResult(keigoHelper, grammaFormConjugateRequest, grammaFormCache, null, true);
+				
+				if (grammaConjufateResult != null) {
+					ExampleManager.getExamples(keigoHelper, exampleRequest, grammaFormCache, null, true);
 				}
 			}
 			
-			// example request
-			ExampleRequest exampleRequest = new ExampleRequest(kanjiKanaPair);			
+			// 
 			
-			ExampleManager.getExamples(keigoHelper, exampleRequest, grammaFormCache, null, true);
-			
-			for (DictionaryEntryType currentDictionaryEntryType : exampleRequest.getDictionaryEntryTypeList()) {
-				List<ExampleGroupTypeElements> examples = ExampleManager.getExamples(keigoHelper, exampleRequest, grammaFormCache, currentDictionaryEntryType, true);
+			for (DictionaryEntryType currentDictionaryEntryType : grammaFormConjugateRequest.getDictionaryEntryTypeList()) {
+				// gramma form cache
+				Map<GrammaFormConjugateResultType, GrammaFormConjugateResult> grammaFormCache = new HashMap<GrammaFormConjugateResultType, GrammaFormConjugateResult>(); 
 				
-				if (addGrammaAndExample == true) {
-					addExampleGroupTypeList(document, examples, addSugestionList, boostFloat);
+				List<GrammaFormConjugateGroupTypeElements> grammaConjufateResult = GrammaConjugaterManager.getGrammaConjufateResult(keigoHelper, grammaFormConjugateRequest, grammaFormCache, currentDictionaryEntryType, true);
+				
+				if (grammaConjufateResult != null) {
+					
+					List<ExampleGroupTypeElements> examples = ExampleManager.getExamples(keigoHelper, exampleRequest, grammaFormCache, currentDictionaryEntryType, true);
+					
+					if (addGrammaAndExample == true) {
+						addGrammaFormConjugateGroupList(document, grammaConjufateResult, addSugestionList, boostFloat);
+						
+						if (examples != null) {
+							addExampleGroupTypeList(document, examples, addSugestionList, boostFloat);
+						}
+					}
 				}
 			}
 		}
