@@ -12,9 +12,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -1373,7 +1375,7 @@ public class LuceneDBGenerator {
 	}
 	
 	private static void addWord2Xml(IndexWriter indexWriter, String word2XmlFilePath, boolean addGrammaAndExample, boolean addSugestionList, boolean generatePrefixes) throws JAXBException, IOException {
-		
+				
 		JAXBContext jaxbContext = JAXBContext.newInstance(JMdict.class);              
 
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -1537,10 +1539,16 @@ public class LuceneDBGenerator {
 			}
 						
 			// dictionary entry type list
-			if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getDictionaryEntryTypeList() != null) {
-				List<String> dictionaryEntryTypeStringList = entry.getMisc().getOldPolishJapaneseDictionary().getDictionaryEntryTypeList();
+			if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getEntries() != null) {
+				List<OldPolishJapaneseDictionaryInfoEntriesInfo> oldPolishJapaneseDictionaryInfoEntriesList = entry.getMisc().getOldPolishJapaneseDictionary().getEntries();
 				
-				for (String dictionaryEntryTypeString : dictionaryEntryTypeStringList) {
+				LinkedHashSet<String> allDictionaryEntryTypeStringList = new LinkedHashSet<String>(); 
+				
+				for (OldPolishJapaneseDictionaryInfoEntriesInfo oldPolishJapaneseDictionaryInfoEntriesInfo : oldPolishJapaneseDictionaryInfoEntriesList) {
+					allDictionaryEntryTypeStringList.addAll(Arrays.asList(oldPolishJapaneseDictionaryInfoEntriesInfo.getDictionaryEntryTypeList().split(",")).stream().collect(Collectors.toList()));					
+				}
+								
+				for (String dictionaryEntryTypeString : allDictionaryEntryTypeStringList) {
 					document.add(new StringField(LuceneStatic.dictionaryEntry2_dictionaryEntryTypeList, dictionaryEntryTypeString, Field.Store.YES));
 				}				
 			}
@@ -1589,8 +1597,7 @@ public class LuceneDBGenerator {
 			//
 			
 			indexWriter.addDocument(document);
-		}
-		
+		}		
 	}
 		
 	private static String emptyIfNull(String text) {
