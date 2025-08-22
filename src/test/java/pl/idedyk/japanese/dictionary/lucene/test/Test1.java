@@ -84,7 +84,7 @@ public class Test1 {
 
 		FindWordRequest findWordRequest = new FindWordRequest();
 		
-		//findWordRequest.searchGrammaFormAndExamples = false;		
+		findWordRequest.searchGrammaFormAndExamples = true;		
 		//findWordRequest.word = "shukujitsu";
 		
 		// findWordRequest.word = "kot";
@@ -92,7 +92,7 @@ public class Test1 {
 		// findWordRequest.word = "スプラッタムービー";
 		// findWordRequest.word = "猫";
 		// findWordRequest.word = "agaru";
-		findWordRequest.word = "ふくれあがる";
+		findWordRequest.word = "猫みたいです ";
 
 		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values();
 		
