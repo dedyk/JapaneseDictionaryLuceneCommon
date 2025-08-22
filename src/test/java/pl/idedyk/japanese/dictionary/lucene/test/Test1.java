@@ -1,6 +1,7 @@
 package pl.idedyk.japanese.dictionary.lucene.test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.lucene.analysis.TokenStream;
@@ -92,9 +93,9 @@ public class Test1 {
 		// findWordRequest.word = "スプラッタムービー";
 		// findWordRequest.word = "猫";
 		// findWordRequest.word = "agaru";
-		findWordRequest.word = "猫みたいです ";
+		findWordRequest.word = "事が";
 
-		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values();
+		DictionaryEntryType[] dictionaryEntryTypeValues = Arrays.asList(DictionaryEntryType.WORD_VERB_RU, DictionaryEntryType.WORD_NOUN).toArray(new DictionaryEntryType[] { }); // DictionaryEntryType.values();
 		
 		List<DictionaryEntryType> dictionaryEntryTypeList = new ArrayList<DictionaryEntryType>();
 		
@@ -105,14 +106,14 @@ public class Test1 {
 		//dictionaryEntryTypeList.remove(DictionaryEntryType.WORD_NOUN);
 		//..dictionaryEntryTypeList.remove(DictionaryEntryType.WORD_ADJECTIVE_NO);
 		
-		//findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
+		findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
 		
-		findWordRequest.wordPlaceSearch = WordPlaceSearch.EXACT;
+		findWordRequest.wordPlaceSearch = WordPlaceSearch.START_WITH;
 		
 		findWordRequest.searchTranslate = true;
 		findWordRequest.searchInfo = true;
 		findWordRequest.searchRomaji = true;
-		findWordRequest.searchOnlyCommonWord = false;
+		findWordRequest.searchOnlyCommonWord = true;
 		
 		FindWordResult findWordResult = dictionaryManager.findWord(findWordRequest);
 				

@@ -1297,7 +1297,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 							
 							if (findWordRequest.searchOnlyCommonWord == true) { // sprawdzenie, czy wystepuje atrybut COMMON_WORD
 								
-								boolean existsAttributeCommonWord = oldPolishJapaneseDictionaryAttributeList.stream().filter(f -> f.getType().equals(AttributeType.COMMON_WORD)).count() == 0;
+								boolean existsAttributeCommonWord = oldPolishJapaneseDictionaryAttributeList.stream().filter(f -> f.getType().equals(AttributeType.COMMON_WORD.name())).count() > 0;
 								
 								if (existsAttributeCommonWord == false) {
 									addDictionaryEntry = false;
