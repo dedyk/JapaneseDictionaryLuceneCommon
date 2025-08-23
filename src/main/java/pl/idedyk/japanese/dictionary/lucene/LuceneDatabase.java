@@ -1467,7 +1467,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				entry.setName(true);
 				
-				findWordResult.result.add(new FindWordResult.ResultItem(entry));
+				findWordResult.result.add(new FindWordResult.ResultItem(entry, true, false));
 				
 				findWordResult.setFoundNames(true);
 			}			

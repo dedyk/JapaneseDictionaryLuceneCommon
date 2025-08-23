@@ -93,9 +93,9 @@ public class Test1 {
 		// findWordRequest.word = "スプラッタムービー";
 		// findWordRequest.word = "猫";
 		// findWordRequest.word = "agaru";
-		findWordRequest.word = "事が";
+		findWordRequest.word = "岡村初博";
 
-		DictionaryEntryType[] dictionaryEntryTypeValues = Arrays.asList(DictionaryEntryType.WORD_VERB_RU, DictionaryEntryType.WORD_NOUN).toArray(new DictionaryEntryType[] { }); // DictionaryEntryType.values();
+		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values(); // Arrays.asList(DictionaryEntryType.WORD_VERB_RU, DictionaryEntryType.WORD_NOUN).toArray(new DictionaryEntryType[] { }); // ;
 		
 		List<DictionaryEntryType> dictionaryEntryTypeList = new ArrayList<DictionaryEntryType>();
 		
@@ -113,7 +113,8 @@ public class Test1 {
 		findWordRequest.searchTranslate = true;
 		findWordRequest.searchInfo = true;
 		findWordRequest.searchRomaji = true;
-		findWordRequest.searchOnlyCommonWord = true;
+		findWordRequest.searchOnlyCommonWord = false;
+		findWordRequest.searchName = true;
 		
 		FindWordResult findWordResult = dictionaryManager.findWord(findWordRequest);
 				
@@ -121,16 +122,24 @@ public class Test1 {
 			
 			Entry entry = resultItem.getEntry();
 			
-			System.out.println(entry.getEntryId());
-			System.out.println(resultItem.getKanjiList());
-			System.out.println(resultItem.getKanaList());
-			System.out.println(resultItem.getRomajiList());
-			System.out.println(resultItem.getTranslates());
+			if (entry != null) {
+				System.out.println("Entry");
+				System.out.println(entry.getEntryId());
+				System.out.println(resultItem.getKanjiList());
+				System.out.println(resultItem.getKanaList());
+				System.out.println(resultItem.getRomajiList());
+				System.out.println(resultItem.getTranslates());
+			}
 			
-			/* + " - " + dictionaryEntry.getDictionaryEntryTypeList() + " - " + dictionaryEntry.getKanji() + " - " + 
-					dictionaryEntry.getKana() + " - " + dictionaryEntry.getRomaji() + " - " + dictionaryEntry.getTranslates() + " - " +
-					dictionaryEntry.getInfo()); */
+			DictionaryEntry oldDictionaryEntry = resultItem.getOldDictionaryEntry();
 			
+			if (oldDictionaryEntry != null) {
+				System.out.println("oldDictionaryEntry");
+				System.out.println(oldDictionaryEntry.getId() + " - " + oldDictionaryEntry.getDictionaryEntryTypeList() + " - " + oldDictionaryEntry.getKanji() + " - " + 
+						oldDictionaryEntry.getKana() + " - " + oldDictionaryEntry.getRomaji() + " - " + oldDictionaryEntry.getTranslates() + " - " +
+						oldDictionaryEntry.getInfo());				
+			}
+						
 			System.out.println("--------");
 		}
 		
