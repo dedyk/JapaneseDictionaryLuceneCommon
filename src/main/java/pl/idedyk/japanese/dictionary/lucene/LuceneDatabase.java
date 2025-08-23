@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -493,6 +492,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 	@Override
 	public DictionaryEntry getDictionaryEntryByUniqueKey(String uniqueKey) throws DictionaryException {
 
+		// FM_FIXME: prawdopodobnie do usuniecia lub modyfikacji
+		
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
@@ -507,6 +508,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 	
 	private DictionaryEntry getCommonDictionaryEntryByIdUniqueKey(BooleanQuery query) throws DictionaryException {
+		
+		// FM_FIXME: prawdopodobnie do usuniecia lub modyfikacji		
 		
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
@@ -660,6 +663,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	@Override
 	public DictionaryEntry getNthDictionaryEntry(int nth) throws DictionaryException {
+		
+		// FM_FIXME: prawdopodobnie do usuniecia lub modyfikacji
 
 		BooleanQuery query = new BooleanQuery();
 
@@ -838,6 +843,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	@Override
 	public int getDictionaryEntriesSize() {
+		
+		// FM_FIXME: prawdopodobnie do usuniecia lub modyfikacji
 
 		BooleanQuery query = new BooleanQuery();
 
@@ -910,6 +917,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	@Override
 	public List<DictionaryEntry> getGroupDictionaryEntries(GroupEnum groupEnum) throws DictionaryException {
+		
+		// FM_FIXME: prawdopodobnie do usuniecia lub modyfikacji
 
 		BooleanQuery query = new BooleanQuery();
 
