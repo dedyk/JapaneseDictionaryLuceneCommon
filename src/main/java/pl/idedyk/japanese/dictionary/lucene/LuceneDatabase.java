@@ -844,13 +844,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 	@Override
 	public int getDictionaryEntriesSize() {
 		
-		// FM_FIXME: prawdopodobnie do usuniecia lub modyfikacji
-
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 

@@ -83,17 +83,18 @@ public class Test1 {
 		
 		//		
 
+		/*
 		FindWordRequest findWordRequest = new FindWordRequest();
 		
 		findWordRequest.searchGrammaFormAndExamples = true;		
 		//findWordRequest.word = "shukujitsu";
 		
-		// findWordRequest.word = "kot";
+		findWordRequest.word = "a";
 		// findWordRequest.word = text; //"スプラッタ・ムービー";
 		// findWordRequest.word = "スプラッタムービー";
 		// findWordRequest.word = "猫";
 		// findWordRequest.word = "agaru";
-		findWordRequest.word = "岡村初博";
+		// findWordRequest.word = "岡村初博";
 
 		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values(); // Arrays.asList(DictionaryEntryType.WORD_VERB_RU, DictionaryEntryType.WORD_NOUN).toArray(new DictionaryEntryType[] { }); // ;
 		
@@ -108,7 +109,7 @@ public class Test1 {
 		
 		findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
 		
-		findWordRequest.wordPlaceSearch = WordPlaceSearch.START_WITH;
+		findWordRequest.wordPlaceSearch = WordPlaceSearch.ANY_PLACE;
 		
 		findWordRequest.searchTranslate = true;
 		findWordRequest.searchInfo = true;
@@ -142,6 +143,7 @@ public class Test1 {
 						
 			System.out.println("--------");
 		}
+		*/
 		
 		/*
 		FindKanjiRequest findKanjiRequest = new FindKanjiRequest();
@@ -206,6 +208,10 @@ public class Test1 {
 		System.out.println(kanjiEntry.getKanji());
 		System.out.println(kanjiEntry.getMisc2().getStrokePaths());
 		*/
+		
+		int dictionaryEntriesSize = dictionaryManager.getDictionaryEntriesSize();
+		
+		System.out.println("dictionaryEntriesSize: " + dictionaryEntriesSize);
 		
 		luceneDatabase.close();
 	}

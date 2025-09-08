@@ -25,6 +25,7 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntField;
+import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
@@ -1391,6 +1392,9 @@ public class LuceneDBGenerator {
 
 		// pobranie listy wpisow
 		List<Entry> entryList = jmdict.getEntryList();
+		
+		// inicjalizacja licznika, aby latwiej bylo wyszukiwac konkretne dokumenty
+		int counter = 1;
 
 		for (Entry entry : entryList) {
 			
@@ -1405,8 +1409,9 @@ public class LuceneDBGenerator {
 			// object type
 			document.add(new StringField(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType, Field.Store.YES));
 
-			// id
+			// id i counter
 			document.add(new IntField(LuceneStatic.dictionaryEntry2_id, entry.getEntryId(), Field.Store.YES));
+			document.add(new IntField(LuceneStatic.dictionaryEntry2_counter, counter, Field.Store.YES));			
 			
 			// xml
 			document.add(new StoredField(LuceneStatic.dictionaryEntry2_entry, gson.toJson(entry)));
@@ -1525,16 +1530,22 @@ public class LuceneDBGenerator {
 				}				
 			}
 			
-			// unique key
+			// unique key i identyfikatory w starym slowniku
 			if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getEntries() != null) {
 				List<OldPolishJapaneseDictionaryInfoEntriesInfo> oldPolishJapaneseDictionaryInfoEntriesList = entry.getMisc().getOldPolishJapaneseDictionary().getEntries();
 				
 				for (OldPolishJapaneseDictionaryInfoEntriesInfo oldPolishJapaneseDictionaryInfoEntriesInfo : oldPolishJapaneseDictionaryInfoEntriesList) {
+					// unique key
 					String uniqueKey = oldPolishJapaneseDictionaryInfoEntriesInfo.getUniqueKey();
 					
 					if (uniqueKey != null) {
 						document.add(new StringField(LuceneStatic.dictionaryEntry2_uniqueKey, uniqueKey, Field.Store.YES));
-					}					
+					}
+					
+					// identyfikatory w starym slowniku					
+					long oldPolishJapaneseDictionaryId = oldPolishJapaneseDictionaryInfoEntriesInfo.getId();
+					
+					document.add(new LongField(LuceneStatic.dictionaryEntry2_oldPolishJapaneseDictionaryId, oldPolishJapaneseDictionaryId, Field.Store.YES));					
 				}
 			}
 						
@@ -1597,6 +1608,9 @@ public class LuceneDBGenerator {
 			//
 			
 			indexWriter.addDocument(document);
+			
+			// zwiekszenie licznika
+			counter++;
 		}		
 	}
 		

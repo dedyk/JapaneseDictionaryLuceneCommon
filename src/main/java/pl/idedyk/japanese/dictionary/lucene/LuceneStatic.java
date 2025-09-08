@@ -102,6 +102,7 @@ public class LuceneStatic {
 	public static final String dictionaryEntry2_objectType = "dictionaryEntry2";
 	
 	public static final String dictionaryEntry2_id = "dictionaryEntry2_id";
+	public static final String dictionaryEntry2_counter = "dictionaryEntry2_counter";
 	public static final String dictionaryEntry2_entry = "dictionaryEntry2_entry";
 		
 	public static final String dictionaryEntry2_kanji = "dictionaryEntry2_kanji";
@@ -109,6 +110,9 @@ public class LuceneStatic {
 	public static final String dictionaryEntry2_romaji = "dictionaryEntry2_romaji";
 	public static final String dictionaryEntry2_translatesList = "dictionaryEntry2_translatesList";
 	public static final String dictionaryEntry2_info = "dictionaryEntry2_info";
+	
+	
+	public static final String dictionaryEntry2_oldPolishJapaneseDictionaryId = "dictionaryEntry2_oldPolishJapaneseDictionaryId";
 	
 	// FM_FIXME: do wykorzystania ???
 	public static final String dictionaryEntry2_uniqueKey = "dictionaryEntry2_uniqueKey";
