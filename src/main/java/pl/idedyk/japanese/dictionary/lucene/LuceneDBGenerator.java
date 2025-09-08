@@ -647,7 +647,7 @@ public class LuceneDBGenerator {
 	private static void countGrammaFormAndExamples(Document document, Entry word2Entry, KeigoHelper keigoHelper, boolean addGrammaAndExample, boolean addSugestionList, Float boostFloat) throws IOException {
 		
 		// count form for word 2 entry		
-		List<KanjiKanaPair> kanjiKanaPairList = Dictionary2HelperCommon.getKanjiKanaPairListStatic(word2Entry);
+		List<KanjiKanaPair> kanjiKanaPairList = Dictionary2HelperCommon.getKanjiKanaPairListStatic(word2Entry, false);
 		
 		for (KanjiKanaPair kanjiKanaPair : kanjiKanaPairList) {
 						
