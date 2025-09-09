@@ -209,9 +209,13 @@ public class Test1 {
 		System.out.println(kanjiEntry.getMisc2().getStrokePaths());
 		*/
 		
-		int dictionaryEntriesSize = dictionaryManager.getDictionaryEntriesSize();
+		// int dictionaryEntriesSize = dictionaryManager.getDictionaryEntriesSize();
 		
-		System.out.println("dictionaryEntriesSize: " + dictionaryEntriesSize);
+		// System.out.println("dictionaryEntriesSize: " + dictionaryEntriesSize);
+		
+		Entry entry = dictionaryManager.getDictionaryEntry2ByOldPolishJapaneseDictionaryId(99296);
+		
+		System.out.println("AAAAA: " + entry.getEntryId());
 		
 		luceneDatabase.close();
 	}

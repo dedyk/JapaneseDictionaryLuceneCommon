@@ -551,9 +551,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	@Override
 	public JMdict.Entry getDictionaryEntry2ById(Integer entryId) throws DictionaryException {
-		
-		// FM_FIXME: prawdopodobnie do usuniecia, a moze nie, do ustalenia
-		
+				
 		Gson gson = new Gson();
 
 		BooleanQuery query = new BooleanQuery();
@@ -599,6 +597,40 @@ public class LuceneDatabase implements IDatabaseConnector {
 		query.add(phraseQuery, Occur.MUST);
 
 		query.add(NumericRangeQuery.newIntRange(LuceneStatic.dictionaryEntry2_counter, counter, counter, true, true), Occur.MUST);
+
+		try {
+			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
+
+			if (scoreDocs.length == 0) {
+				return null;
+			}
+
+			Document foundDocument = searcher.doc(scoreDocs[0].doc);
+
+			//String idString = foundDocument.get(LuceneStatic.dictionaryEntry2_id);
+			String entryBody = foundDocument.get(LuceneStatic.dictionaryEntry2_entry);
+			
+			return gson.fromJson(entryBody, JMdict.Entry.class);
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
+		}		
+	}
+	
+	@Override
+	public JMdict.Entry getDictionaryEntry2ByOldPolishJapaneseDictionaryId(long oldPolishJapaneseDictionaryId) throws DictionaryException {
+				
+		Gson gson = new Gson();
+
+		BooleanQuery query = new BooleanQuery();
+
+		// object type
+		PhraseQuery phraseQuery = new PhraseQuery();
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType));
+
+		query.add(phraseQuery, Occur.MUST);
+
+		query.add(NumericRangeQuery.newLongRange(LuceneStatic.dictionaryEntry2_oldPolishJapaneseDictionaryId, oldPolishJapaneseDictionaryId, oldPolishJapaneseDictionaryId, true, true), Occur.MUST);
 
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
@@ -1835,7 +1867,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	@Override
 	public GroupWithTatoebaSentenceList getTatoebaSentenceGroup(String groupId) throws DictionaryException {
-				
+		
+		// FM_FIXME: prawdopodobnie do usuniecia lub nie, do ustalenia
+		
 		// znajdowanie identyfikatorow zdan		
 		BooleanQuery groupQuery = new BooleanQuery();
 
