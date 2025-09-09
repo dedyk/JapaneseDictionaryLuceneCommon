@@ -112,9 +112,9 @@ public class LuceneStatic {
 	public static final String dictionaryEntry2_info = "dictionaryEntry2_info";
 	
 	public static final String dictionaryEntry2_oldPolishJapaneseDictionaryId = "dictionaryEntry2_oldPolishJapaneseDictionaryId";
+	public static final String dictionaryEntry2_oldPolishJapaneseDictionaryUniqueKey = "dictionaryEntry2_oldPolishJapaneseDictionaryUniqueKey";
 	
-	// FM_FIXME: do wykorzystania ???
-	public static final String dictionaryEntry2_uniqueKey = "dictionaryEntry2_uniqueKey";
+	// FM_FIXME: do wykorzystania ???	
 	public static final String dictionaryEntry2_dictionaryEntryTypeList = "dictionaryEntry2_dictionaryEntryTypeList";
 
 	public static final String dictionaryEntry2_attributeList = "dictionaryEntry2_attributeList";

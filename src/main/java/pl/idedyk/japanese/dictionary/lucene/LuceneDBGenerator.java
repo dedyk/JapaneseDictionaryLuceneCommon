@@ -1539,7 +1539,7 @@ public class LuceneDBGenerator {
 					String uniqueKey = oldPolishJapaneseDictionaryInfoEntriesInfo.getUniqueKey();
 					
 					if (uniqueKey != null) {
-						document.add(new StringField(LuceneStatic.dictionaryEntry2_uniqueKey, uniqueKey, Field.Store.YES));
+						document.add(new StringField(LuceneStatic.dictionaryEntry2_oldPolishJapaneseDictionaryUniqueKey, uniqueKey, Field.Store.YES));
 					}
 					
 					// identyfikatory w starym slowniku					
