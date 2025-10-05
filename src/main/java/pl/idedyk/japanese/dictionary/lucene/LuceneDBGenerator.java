@@ -1337,42 +1337,51 @@ public class LuceneDBGenerator {
 	}
 	
 	private static void addWord2Xml(IndexWriter indexWriter, String word2XmlFilePath) throws JAXBException, IOException {
-		
-		JAXBContext jaxbContext = JAXBContext.newInstance(JMdict.class);              
-
+				
+		JAXBContext jaxbContext = JAXBContext.newInstance(JMdict.class);
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-		
-		JMdict jmdict = (JMdict) jaxbUnmarshaller.unmarshal(new File(word2XmlFilePath));
-		
-		//
 		
 		Gson gson = new Gson();
 		
-		//
+		// pobranie listy plikow word2.xml
+		File[] word2XmlFileList = new File(word2XmlFilePath).getParentFile().listFiles(new FileFilter() {
+			
+			@Override
+			public boolean accept(File pathname) {				
+				return pathname.getPath().startsWith(word2XmlFilePath);
+			}
+		});
+		
+		Arrays.sort(word2XmlFileList);
+		
+		for (File currentword2XmlFile : word2XmlFileList) {
+			
+			JMdict jmdict = (JMdict) jaxbUnmarshaller.unmarshal(currentword2XmlFile);
+			
+			// pobranie listy wpisow
+			List<Entry> entryList = jmdict.getEntryList();
 
-		// pobranie listy wpisow
-		List<Entry> entryList = jmdict.getEntryList();
+			for (Entry entry : entryList) {
+				
+				System.out.println("Add word 2 entry: " + entry.getEntryId());
+																
+				// dodanie do lucynki
+				Document document = new Document();
+				
+				// object type
+				document.add(new StringField(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType, Field.Store.YES));
 
-		for (Entry entry : entryList) {
-			
-			System.out.println("Add word 2 entry: " + entry.getEntryId());
-															
-			// dodanie do lucynki
-			Document document = new Document();
-			
-			// object type
-			document.add(new StringField(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType, Field.Store.YES));
-
-			// id
-			document.add(new IntField(LuceneStatic.dictionaryEntry2_id, entry.getEntryId(), Field.Store.YES));
-			
-			// xml
-			document.add(new StoredField(LuceneStatic.dictionaryEntry2_entry, gson.toJson(entry)));
-			
-			//
-			
-			indexWriter.addDocument(document);
-		}
+				// id
+				document.add(new IntField(LuceneStatic.dictionaryEntry2_id, entry.getEntryId(), Field.Store.YES));
+				
+				// xml
+				document.add(new StoredField(LuceneStatic.dictionaryEntry2_entry, gson.toJson(entry)));
+				
+				//
+				
+				indexWriter.addDocument(document);
+			}
+		}		
 	}
 		
 	private static String emptyIfNull(String text) {
