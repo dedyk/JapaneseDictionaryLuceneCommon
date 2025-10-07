@@ -471,11 +471,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 	*/
 
+	/*
 	@Override
 	public DictionaryEntry getDictionaryEntryById(String id) throws DictionaryException {
 		
-		// FM_FIXME: prawdopodobnie do usuniecia, gdyz jest analogiczna metoda z dictionary 2
-
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
@@ -491,8 +490,6 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	@Override
 	public DictionaryEntry getDictionaryEntryByUniqueKey(String uniqueKey) throws DictionaryException {
-
-		// FM_FIXME: prawdopodobnie do usuniecia lub modyfikacji
 		
 		BooleanQuery query = new BooleanQuery();
 
@@ -548,6 +545,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
 		}		
 	}
+	*/
 
 	@Override
 	public JMdict.Entry getDictionaryEntry2ById(Integer entryId) throws DictionaryException {
