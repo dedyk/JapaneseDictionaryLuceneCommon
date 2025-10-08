@@ -283,36 +283,6 @@ public class LuceneDBGenerator {
 		return entry;		
 	}
 	
-	private static List<DictionaryEntry> readDictionaryFile(IndexWriter indexWriter, InputStream dictionaryInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
-		
-		// FM_FIXME: do usuniecia i zabrania potrzebnych rzeczy, np. sugestie
-		
-		List<DictionaryEntry> dictionaryEntryList = new ArrayList<DictionaryEntry>();
-
-		CsvReader csvReader = new CsvReader(new InputStreamReader(dictionaryInputStream), ',');
-
-		Set<GroupEnum> uniqueDictionaryEntryGroupEnumSet = new HashSet<GroupEnum>();
-
-		while (csvReader.readRecord()) {
-
-			DictionaryEntry entry = parseDictionaryEntry(csvReader);
-			
-			System.out.println(String.format("DictionaryEntry id = %s", entry.getId()));
-
-			// addDictionaryEntry(indexWriter, entry, addSugestionList, generatePrefixes);
-
-			uniqueDictionaryEntryGroupEnumSet.addAll(entry.getGroups());
-			
-			dictionaryEntryList.add(entry);			
-		}
-
-		addDictionaryEntryUniqueGroupEnum(indexWriter, uniqueDictionaryEntryGroupEnumSet);
-
-		csvReader.close();
-		
-		return dictionaryEntryList;
-	}
-
 	private static void addDictionaryEntry_TO_DELETE(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 		
 		/*
@@ -1394,6 +1364,9 @@ public class LuceneDBGenerator {
 		
 		Arrays.sort(word2XmlFileList);
 		
+		// unikalne grupy
+		Set<GroupEnum> uniqueDictionaryEntryGroupEnumSet = new HashSet<GroupEnum>();
+		
 		// inicjalizacja licznika, aby latwiej bylo wyszukiwac konkretne dokumenty
 		int counter = 1;
 		
@@ -1595,6 +1568,8 @@ public class LuceneDBGenerator {
 					for (String currentGroup : groupsList) {
 						document.add(new StringField(LuceneStatic.dictionaryEntry2_groupsList, currentGroup, Field.Store.YES));
 					}
+					
+					uniqueDictionaryEntryGroupEnumSet.addAll(groupsList.stream().map(grr -> GroupEnum.valueOf(grr)).collect(Collectors.toList()));
 				}
 			
 				// add grammas and examples			
@@ -1620,7 +1595,10 @@ public class LuceneDBGenerator {
 				// zwiekszenie licznika
 				counter++;
 			}
-		}		
+		}
+		
+		// dodanie unikalnych grup
+		addDictionaryEntryUniqueGroupEnum(indexWriter, uniqueDictionaryEntryGroupEnumSet);
 	}
 		
 	private static String emptyIfNull(String text) {
