@@ -17,6 +17,7 @@ import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPowerList;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
+import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePairWithDictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
@@ -213,9 +214,14 @@ public class Test1 {
 		
 		// System.out.println("dictionaryEntriesSize: " + dictionaryEntriesSize);
 		
-		Entry entry = dictionaryManager.getDictionaryEntry2ByOldPolishJapaneseDictionaryId(99296);
+		// Entry entry = dictionaryManager.getDictionaryEntry2ByOldPolishJapaneseDictionaryId(99296);
+		// System.out.println("AAAAA: " + entry.getEntryId());
 		
-		System.out.println("AAAAA: " + entry.getEntryId());
+		List<Entry> groupDictionaryEntry2List = dictionaryManager.getGroupDictionaryEntry2List(GroupEnum.GENKI_1_1);
+		
+		for (Entry entry : groupDictionaryEntry2List) {
+			System.out.println(entry.getReadingInfoList().get(0).getKana().getRomaji());
+		}
 		
 		luceneDatabase.close();
 	}

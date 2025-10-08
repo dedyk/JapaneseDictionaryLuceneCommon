@@ -60,6 +60,7 @@ import pl.idedyk.japanese.dictionary.api.dto.GroupWithTatoebaSentenceList;
 import pl.idedyk.japanese.dictionary.api.dto.TatoebaSentence;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.MiscInfo;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfo;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfoAttributeListInfo;
@@ -1012,60 +1013,37 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 
 	@Override
-	public List<DictionaryEntry> getGroupDictionaryEntries(GroupEnum groupEnum) throws DictionaryException {
+	public List<Entry> getGroupDictionaryEntry2List(GroupEnum groupEnum) throws DictionaryException {
 		
-		// FM_FIXME: prawdopodobnie do usuniecia lub modyfikacji
+		List<Entry> result = new ArrayList<>();
+		Gson gson = new Gson();
 
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 
-		query.add(createQuery(groupEnum.getValue(), LuceneStatic.dictionaryEntry_groupsList, WordPlaceSearch.EXACT), Occur.MUST);
-
+		query.add(createQuery(groupEnum.name(), LuceneStatic.dictionaryEntry2_groupsList, WordPlaceSearch.EXACT), Occur.MUST);
+		
 		try {
-			List<DictionaryEntry> result = new ArrayList<DictionaryEntry>();
-
 			ScoreDoc[] scoreDocs = searcher.search(query, null, Integer.MAX_VALUE).scoreDocs;
 
 			for (ScoreDoc scoreDoc : scoreDocs) {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
-
-				String idString = foundDocument.get(LuceneStatic.dictionaryEntry_id);
-
-				List<String> dictionaryEntryTypeList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_dictionaryEntryTypeList));
-				List<String> attributeList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_attributeList));
-				List<String> groupsList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_groupsList));
-
-				String prefixKanaString = foundDocument.get(LuceneStatic.dictionaryEntry_prefixKana);
-
-				String kanjiString = foundDocument.get(LuceneStatic.dictionaryEntry_kanji);
-				String kana = foundDocument.get(LuceneStatic.dictionaryEntry_kana);
-
-				String prefixRomajiString = foundDocument.get(LuceneStatic.dictionaryEntry_prefixRomaji);
-
-				String romaji = foundDocument.get(LuceneStatic.dictionaryEntry_romaji);				
-				List<String> translateList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_translatesList));
-
-				String infoString = foundDocument.get(LuceneStatic.dictionaryEntry_info);
 				
-				List<String> exampleSentenceGroupIdsList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList));
-
-				DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
-						groupsList, prefixKanaString, kanjiString, kana, prefixRomajiString, romaji,
-						translateList, infoString, exampleSentenceGroupIdsList);
-
-				result.add(entry);
+				String entryBody = foundDocument.get(LuceneStatic.dictionaryEntry2_entry);
+				
+				result.add(gson.fromJson(entryBody, JMdict.Entry.class));				
 			}
-
-			return result;
-
+			
+			return result;			
+			
 		} catch (IOException e) {
-			throw new DictionaryException("Błąd podczas pobierania słówek dla grupy: " + e);
+			throw new DictionaryException("Błąd podczas pobierania słów: " + e);
 		}		
 	}
 
