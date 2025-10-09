@@ -43,7 +43,6 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
-import pl.idedyk.japanese.dictionary.api.dto.Attribute;
 import pl.idedyk.japanese.dictionary.api.dto.AttributeType;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
@@ -283,9 +282,9 @@ public class LuceneDBGenerator {
 		return entry;		
 	}
 	
-	private static void addDictionaryEntry_TO_DELETE(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
+	/*
+	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 		
-		/*
 		// wyliczenie boost'era
 		Float boostFloat = getBoostFloat(dictionaryEntry);
 		
@@ -430,8 +429,8 @@ public class LuceneDBGenerator {
 		}
 		
 		indexWriter.addDocument(document);
-		*/
 	}
+	*/
 	
 	private static Float getBoostFloat(Integer boostInteger) {
 		Float boostFloat = null;
@@ -459,17 +458,7 @@ public class LuceneDBGenerator {
 		
 		return boostFloat;
 	}
-	
-	private static Float getBoostFloat(DictionaryEntry dictionaryEntry) {
-		// FM_FIXME: do usuniecia, a logike do przerzucenia dla odpowiednika dla Entry
 		
-		List<Attribute> priorityList = dictionaryEntry.getAttributeList().getAttributeList(AttributeType.PRIORITY);
-		
-		Integer boostInteger = priorityList != null && priorityList.size() > 0 ? Integer.parseInt(priorityList.get(0).getAttributeValue().get(0)) : Integer.MAX_VALUE;
-		
-		return getBoostFloat(boostInteger);		
-	}
-	
 	private static Float getBoostFloat(Entry entry) {
 		// FM_FIXME: do implementacji
 		
@@ -597,23 +586,7 @@ public class LuceneDBGenerator {
 			document.add(setBoost(new TextField(fieldName + "_" + LuceneStatic.prefix, prefix, Field.Store.NO), boostFloat));			
 		}
 	}
-	
-	private static void countGrammaFormAndExamples_TO_DELETE(List<DictionaryEntry> dictionaryEntryList, IndexWriter indexWriter, boolean addGrammaAndExample, boolean addSugestionList) throws IOException {
 		
-		// FM_FIXME: do uzycia z word2 xml
-		// FM_FIXME: do usuniecia
-		
-		KeigoHelper keigoHelper = new KeigoHelper();
-		
-		for (DictionaryEntry dictionaryEntry : dictionaryEntryList) {
-			
-			System.out.println(String.format("DictionaryEntry(countGrammaFormAndExamples) id = %s", dictionaryEntry.getId()));
-			
-			// count form for dictionary entry
-			// countGrammaFormAndExamples(indexWriter, dictionaryEntry, keigoHelper, addGrammaAndExample, addSugestionList);	
-		}
-	}
-	
 	private static void countGrammaFormAndExamples(Document document, Entry word2Entry, KeigoHelper keigoHelper, boolean addGrammaAndExample, boolean addSugestionList, Float boostFloat) throws IOException {
 		
 		// count form for word 2 entry		

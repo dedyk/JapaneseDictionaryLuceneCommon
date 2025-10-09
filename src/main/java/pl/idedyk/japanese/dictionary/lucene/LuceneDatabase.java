@@ -225,7 +225,6 @@ public class LuceneDatabase implements IDatabaseConnector {
 			query.add(objectTypeQuery, Occur.MUST);
 
 			// common word
-			// FM_FIXME: do naprawy/zaimplementowania -> sprawdzenia
 			if (findWordRequest.searchOnlyCommonWord == true) {	
 				PhraseQuery onlyCommonWordQuery = new PhraseQuery();
 				
@@ -269,14 +268,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			query.add(wordBooleanQuery, Occur.MUST);
 
-			// FM_FIXME: do naprawy zaimplementowania
-			/*
 			BooleanQuery dictionaryEntryTypeListFilter = createDictionaryEntryTypeListFilter(LuceneStatic.dictionaryEntry2_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
 			
 			if (dictionaryEntryTypeListFilter != null) {
 				query.add(dictionaryEntryTypeListFilter, Occur.MUST);
 			}
-			*/			
 			
 			ScoreDoc[] scoreDocs = searcher.search(query, null, maxResult + 1).scoreDocs;
 
@@ -756,11 +752,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}		
 	}
 	
+	/*
 	@Override
 	public DictionaryEntry getNthDictionaryEntry(int nth) throws DictionaryException {
 		
-		// FM_FIXME: prawdopodobnie do usuniecia lub modyfikacji
-
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
@@ -806,6 +801,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			throw new DictionaryException("Błąd podczas pobierania n-tego słowa: " + e);
 		}				
 	}
+	*/
 
 	private Query createQuery(String rejoinedWord, String[] wordSplited, String fieldName, WordPlaceSearch wordPlaceSearch, boolean useSpanFirstQuery) {
 
@@ -1873,9 +1869,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	@Override
 	public GroupWithTatoebaSentenceList getTatoebaSentenceGroup(String groupId) throws DictionaryException {
-		
-		// FM_FIXME: prawdopodobnie do usuniecia lub nie, do ustalenia
-		
+				
 		// znajdowanie identyfikatorow zdan		
 		BooleanQuery groupQuery = new BooleanQuery();
 
