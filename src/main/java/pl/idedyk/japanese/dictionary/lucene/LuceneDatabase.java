@@ -199,8 +199,6 @@ public class LuceneDatabase implements IDatabaseConnector {
 	@Override
 	public FindWordResult findDictionaryEntries(FindWordRequest findWordRequest) throws DictionaryException {
 		
-		// FM_FIXME: wygenerowac slowka ze starego formatu w nowy dla brakujacych pozycji
-
 		FindWordResult findWordResult = new FindWordResult();
 		findWordResult.result = new ArrayList<FindWordResult.ResultItem>();
 		
@@ -506,9 +504,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 	
 	private DictionaryEntry getCommonDictionaryEntryByIdUniqueKey(BooleanQuery query) throws DictionaryException {
-		
-		// FM_FIXME: prawdopodobnie do usuniecia lub modyfikacji		
-		
+				
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
 
