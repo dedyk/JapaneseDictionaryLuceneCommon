@@ -170,13 +170,13 @@ public class LuceneDBGenerator {
 		
 		IndexWriter indexWriter = new IndexWriter(index, indexWriterConfig);
 
-		// otwarcie pliku ze slownikiem - FM_FIXME - do usuniecia
+		// otwarcie pliku ze slownikiem - stary plik
 		FileInputStream dictionaryInputStream = new FileInputStream(dictionaryFilePath);
 
-		// wczytywanie slownika - FM_FIXME: do usuniecia
+		// wczytywanie slownika
 		// List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList, generateDictionaryEntryPrefixes);
 
-		// przeliczenie form - FM_FIXME: do usuniecia
+		// przeliczenie form
 		// countGrammaFormAndExamples(dictionaryEntryList, indexWriter, addGrammaAndExample, addSugestionList);
 		
 		dictionaryInputStream.close();
@@ -459,9 +459,7 @@ public class LuceneDBGenerator {
 		return boostFloat;
 	}
 		
-	private static Float getBoostFloat(Entry entry) {
-		// FM_FIXME: do implementacji
-		
+	private static Float getBoostFloat(Entry entry) {		
 		MiscInfo misc = entry.getMisc();
 		
 		if (misc == null) {
@@ -1369,10 +1367,7 @@ public class LuceneDBGenerator {
 			
 				// xml
 				document.add(new StoredField(LuceneStatic.dictionaryEntry2_entry, gson.toJson(entry)));
-			
-				// FM_FIXME: sprawdzic, czy to dobrze i czy dziala poprawnie cala funkcjonalnosc
-				// ze wszystkie kanji, kana i tlumaczenia sa w jednym dokumencie			
-			
+						
 				List<KanjiInfo> kanjiInfoList = entry.getKanjiInfoList();
 			
 				// kanji
@@ -1519,7 +1514,6 @@ public class LuceneDBGenerator {
 				}
 			
 				// attributeList
-				// FM_FIXME: sprawdzic, czy to dziala
 				if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getAttributeList() != null) {
 					List<OldPolishJapaneseDictionaryInfoAttributeListInfo> attributeList = entry.getMisc().getOldPolishJapaneseDictionary().getAttributeList();
 			
@@ -1548,18 +1542,20 @@ public class LuceneDBGenerator {
 				// add grammas and examples			
 				countGrammaFormAndExamples(document, entry, keigoHelper, addGrammaAndExample, addSugestionList, boostFloat);
 			
-				//			// prefixKana
-				//			document.add(new StringField(LuceneStatic.dictionaryEntry_prefixKana, emptyIfNull(dictionaryEntry.getPrefixKana()), Field.Store.YES));
-				//						
-				//			// prefixRomaji
-				//			document.add(new StringField(LuceneStatic.dictionaryEntry_prefixRomaji, emptyIfNull(dictionaryEntry.getPrefixRomaji()), Field.Store.YES));
-				//			
-				//			// example sentence groupIds - FM_FIXME: do przeniesienia - to chyba nie bedzie przenoszone
-				//			List<String> exampleSentenceGroupIdsList = dictionaryEntry.getExampleSentenceGroupIdsList();
-				//					
-				//			for (String currentExampleSenteceGroupId : exampleSentenceGroupIdsList) {
-				//				document.add(new TextField(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList, currentExampleSenteceGroupId, Field.Store.YES));
-				//			}
+				/*
+				// prefixKana
+				document.add(new StringField(LuceneStatic.dictionaryEntry_prefixKana, emptyIfNull(dictionaryEntry.getPrefixKana()), Field.Store.YES));
+							
+				// prefixRomaji
+				document.add(new StringField(LuceneStatic.dictionaryEntry_prefixRomaji, emptyIfNull(dictionaryEntry.getPrefixRomaji()), Field.Store.YES));
+				
+				// example sentence groupIds
+				List<String> exampleSentenceGroupIdsList = dictionaryEntry.getExampleSentenceGroupIdsList();
+						
+				for (String currentExampleSenteceGroupId : exampleSentenceGroupIdsList) {
+					document.add(new TextField(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList, currentExampleSenteceGroupId, Field.Store.YES));
+				}
+				*/
 			
 				//
 			
