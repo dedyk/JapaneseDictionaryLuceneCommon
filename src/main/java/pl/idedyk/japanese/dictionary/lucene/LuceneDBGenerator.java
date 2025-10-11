@@ -12,9 +12,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -23,6 +25,7 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntField;
+import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
@@ -40,7 +43,6 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
-import pl.idedyk.japanese.dictionary.api.dto.Attribute;
 import pl.idedyk.japanese.dictionary.api.dto.AttributeType;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
@@ -49,15 +51,28 @@ import pl.idedyk.japanese.dictionary.api.dto.GroupWithTatoebaSentenceList;
 import pl.idedyk.japanese.dictionary.api.dto.TatoebaSentence;
 import pl.idedyk.japanese.dictionary.api.example.ExampleManager;
 import pl.idedyk.japanese.dictionary.api.example.dto.ExampleGroupTypeElements;
+import pl.idedyk.japanese.dictionary.api.example.dto.ExampleRequest;
 import pl.idedyk.japanese.dictionary.api.example.dto.ExampleResult;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
 import pl.idedyk.japanese.dictionary.api.gramma.GrammaConjugaterManager;
 import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateGroupTypeElements;
+import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateRequest;
 import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateResult;
 import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateResultType;
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
+import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon;
+import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon.KanjiKanaPair;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.Gloss;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.KanjiInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.MiscInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfoAttributeListInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfoEntriesInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.ReadingInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.Sense;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.SenseAdditionalInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Kanjidic2;
 
@@ -155,16 +170,21 @@ public class LuceneDBGenerator {
 		
 		IndexWriter indexWriter = new IndexWriter(index, indexWriterConfig);
 
-		// otwarcie pliku ze slownikiem
+		// otwarcie pliku ze slownikiem - stary plik
 		FileInputStream dictionaryInputStream = new FileInputStream(dictionaryFilePath);
 
 		// wczytywanie slownika
-		List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList, generateDictionaryEntryPrefixes);
+		// List<DictionaryEntry> dictionaryEntryList = readDictionaryFile(indexWriter, dictionaryInputStream, addSugestionList, generateDictionaryEntryPrefixes);
 
 		// przeliczenie form
-		countGrammaFormAndExamples(dictionaryEntryList, indexWriter, addGrammaAndExample, addSugestionList);
+		// countGrammaFormAndExamples(dictionaryEntryList, indexWriter, addGrammaAndExample, addSugestionList);
 		
 		dictionaryInputStream.close();
+		
+		// dodawanie pliku word2.xml
+		if (addWord2Xml == true) {			
+			addWord2Xml(indexWriter, word2XmlFilePath, addGrammaAndExample, addSugestionList, generateDictionaryEntryPrefixes);
+		}
 		
 		// otwarcie pliku ze zdaniami
 		FileInputStream sentencesInputStream = new FileInputStream(sentencesFilePath);
@@ -224,12 +244,7 @@ public class LuceneDBGenerator {
 				namesInputStream.close();
 			}		
 		}	
-		
-		// dodawanie pliku word2.xml
-		if (addWord2Xml == true) {			
-			addWord2Xml(indexWriter, word2XmlFilePath);
-		}
-				
+						
 		// zakonczenie zapisywania indeksu
 		indexWriter.close();
 		
@@ -267,34 +282,7 @@ public class LuceneDBGenerator {
 		return entry;		
 	}
 	
-	private static List<DictionaryEntry> readDictionaryFile(IndexWriter indexWriter, InputStream dictionaryInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
-		
-		List<DictionaryEntry> dictionaryEntryList = new ArrayList<DictionaryEntry>();
-
-		CsvReader csvReader = new CsvReader(new InputStreamReader(dictionaryInputStream), ',');
-
-		Set<GroupEnum> uniqueDictionaryEntryGroupEnumSet = new HashSet<GroupEnum>();
-
-		while (csvReader.readRecord()) {
-
-			DictionaryEntry entry = parseDictionaryEntry(csvReader);
-			
-			System.out.println(String.format("DictionaryEntry id = %s", entry.getId()));
-
-			addDictionaryEntry(indexWriter, entry, addSugestionList, generatePrefixes);
-
-			uniqueDictionaryEntryGroupEnumSet.addAll(entry.getGroups());
-			
-			dictionaryEntryList.add(entry);			
-		}
-
-		addDictionaryEntryUniqueGroupEnum(indexWriter, uniqueDictionaryEntryGroupEnumSet);
-
-		csvReader.close();
-		
-		return dictionaryEntryList;
-	}
-
+	/*
 	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 		
 		// wyliczenie boost'era
@@ -442,11 +430,9 @@ public class LuceneDBGenerator {
 		
 		indexWriter.addDocument(document);
 	}
+	*/
 	
-	private static Float getBoostFloat(DictionaryEntry dictionaryEntry) {
-		List<Attribute> priorityList = dictionaryEntry.getAttributeList().getAttributeList(AttributeType.PRIORITY);
-		
-		Integer boostInteger = priorityList != null && priorityList.size() > 0 ? Integer.parseInt(priorityList.get(0).getAttributeValue().get(0)) : Integer.MAX_VALUE;
+	private static Float getBoostFloat(Integer boostInteger) {
 		Float boostFloat = null;
 		
 		if (boostInteger == Integer.MAX_VALUE) {
@@ -471,6 +457,30 @@ public class LuceneDBGenerator {
 		*/
 		
 		return boostFloat;
+	}
+		
+	private static Float getBoostFloat(Entry entry) {		
+		MiscInfo misc = entry.getMisc();
+		
+		if (misc == null) {
+			return null;
+		}
+		
+		OldPolishJapaneseDictionaryInfo oldPolishJapaneseDictionary = misc.getOldPolishJapaneseDictionary();
+		
+		if (oldPolishJapaneseDictionary == null) {
+			return getBoostFloat(Integer.MAX_VALUE);
+		}
+		
+		OldPolishJapaneseDictionaryInfoAttributeListInfo priorityAttribute = oldPolishJapaneseDictionary.getAttributeList().stream().filter(f -> f.getType().equals(AttributeType.PRIORITY.name())).findFirst().orElse(null);
+		
+		if (priorityAttribute == null) {
+			return getBoostFloat(Integer.MAX_VALUE);
+		}
+		
+		Integer boostInteger = Integer.parseInt(priorityAttribute.getValue());
+		
+		return getBoostFloat(boostInteger);
 	}
 	
 	private static float[] calculateAandBFactor(float x1, float y1, float x2, float y2) {		
@@ -574,83 +584,56 @@ public class LuceneDBGenerator {
 			document.add(setBoost(new TextField(fieldName + "_" + LuceneStatic.prefix, prefix, Field.Store.NO), boostFloat));			
 		}
 	}
-	
-	private static void countGrammaFormAndExamples(List<DictionaryEntry> dictionaryEntryList, IndexWriter indexWriter, boolean addGrammaAndExample, boolean addSugestionList) throws IOException {
 		
-		KeigoHelper keigoHelper = new KeigoHelper();
+	private static void countGrammaFormAndExamples(Document document, Entry word2Entry, KeigoHelper keigoHelper, boolean addGrammaAndExample, boolean addSugestionList, Float boostFloat) throws IOException {
 		
-		for (DictionaryEntry dictionaryEntry : dictionaryEntryList) {
+		// count form for word 2 entry		
+		List<KanjiKanaPair> kanjiKanaPairList = Dictionary2HelperCommon.getKanjiKanaPairListStatic(word2Entry, false);
+		
+		for (KanjiKanaPair kanjiKanaPair : kanjiKanaPairList) {
+						
+			// gramma form conjugate request
+			GrammaFormConjugateRequest grammaFormConjugateRequest = new GrammaFormConjugateRequest(kanjiKanaPair);
 			
-			System.out.println(String.format("DictionaryEntry(countGrammaFormAndExamples) id = %s", dictionaryEntry.getId()));
+			// example request
+			ExampleRequest exampleRequest = new ExampleRequest(kanjiKanaPair);
 			
-			// count form for dictionary entry
-			countGrammaFormAndExamples(indexWriter, dictionaryEntry, keigoHelper, addGrammaAndExample, addSugestionList);	
+			{
+				// gramma form cache
+				Map<GrammaFormConjugateResultType, GrammaFormConjugateResult> grammaFormCache = new HashMap<GrammaFormConjugateResultType, GrammaFormConjugateResult>();
+				
+				List<GrammaFormConjugateGroupTypeElements> grammaConjufateResult = GrammaConjugaterManager.getGrammaConjufateResult(keigoHelper, grammaFormConjugateRequest, grammaFormCache, null, true);
+				
+				if (grammaConjufateResult != null) {
+					ExampleManager.getExamples(keigoHelper, exampleRequest, grammaFormCache, null, true);
+				}
+			}
+			
+			// 
+			
+			for (DictionaryEntryType currentDictionaryEntryType : grammaFormConjugateRequest.getDictionaryEntryTypeList()) {
+				// gramma form cache
+				Map<GrammaFormConjugateResultType, GrammaFormConjugateResult> grammaFormCache = new HashMap<GrammaFormConjugateResultType, GrammaFormConjugateResult>(); 
+				
+				List<GrammaFormConjugateGroupTypeElements> grammaConjufateResult = GrammaConjugaterManager.getGrammaConjufateResult(keigoHelper, grammaFormConjugateRequest, grammaFormCache, currentDictionaryEntryType, true);
+				
+				if (grammaConjufateResult != null) {
+					
+					List<ExampleGroupTypeElements> examples = ExampleManager.getExamples(keigoHelper, exampleRequest, grammaFormCache, currentDictionaryEntryType, true);
+					
+					if (addGrammaAndExample == true) {
+						addGrammaFormConjugateGroupList(document, grammaConjufateResult, addSugestionList, boostFloat);
+						
+						if (examples != null) {
+							addExampleGroupTypeList(document, examples, addSugestionList, boostFloat);
+						}
+					}
+				}
+			}
 		}
 	}
 	
-	private static void countGrammaFormAndExamples(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, KeigoHelper keigoHelper, boolean addGrammaAndExample, boolean addSugestionList) throws IOException {
-		
-		// wyliczenie boost'era
-		Float boostFloat = getBoostFloat(dictionaryEntry);
-		
-		if (addGrammaAndExample == false) {
-			
-			// count form for dictionary entry
-			Map<GrammaFormConjugateResultType, GrammaFormConjugateResult> grammaFormCache = new HashMap<GrammaFormConjugateResultType, GrammaFormConjugateResult>();
-			
-			GrammaConjugaterManager.getGrammaConjufateResult(keigoHelper, dictionaryEntry, grammaFormCache, null, true);
-			
-			for (DictionaryEntryType currentDictionaryEntryType : dictionaryEntry.getDictionaryEntryTypeList()) {
-				GrammaConjugaterManager.getGrammaConjufateResult(keigoHelper, dictionaryEntry, grammaFormCache, currentDictionaryEntryType, true);
-			}
-			
-			ExampleManager.getExamples(keigoHelper, dictionaryEntry, grammaFormCache, null, true);
-			
-			for (DictionaryEntryType currentDictionaryEntryType : dictionaryEntry.getDictionaryEntryTypeList()) {
-				ExampleManager.getExamples(keigoHelper, dictionaryEntry, grammaFormCache, currentDictionaryEntryType, true);
-			}
-			
-		} else {
-			
-			// create document
-			Document grammaAndExampleDocument = new Document();
-			
-			// object type
-			grammaAndExampleDocument.add(new StringField(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_objectType, Field.Store.YES));
-			
-			// id
-			grammaAndExampleDocument.add(new IntField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_dictionaryEntry_id, dictionaryEntry.getId(), Field.Store.YES));
-
-			// count gramma
-			Map<GrammaFormConjugateResultType, GrammaFormConjugateResult> grammaFormCache = new HashMap<GrammaFormConjugateResultType, GrammaFormConjugateResult>();
-
-			GrammaConjugaterManager.getGrammaConjufateResult(keigoHelper, dictionaryEntry, grammaFormCache, null, true);
-			
-			for (DictionaryEntryType currentDictionaryEntryType : dictionaryEntry.getDictionaryEntryTypeList()) {
-				
-				List<GrammaFormConjugateGroupTypeElements> grammaConjufateResult = GrammaConjugaterManager.getGrammaConjufateResult(keigoHelper, dictionaryEntry, grammaFormCache,
-						currentDictionaryEntryType, true);
-				
-				addGrammaFormConjugateGroupList(grammaAndExampleDocument, indexWriter, dictionaryEntry, grammaConjufateResult, addSugestionList, boostFloat);
-			}
-
-			List<ExampleGroupTypeElements> examples = ExampleManager.getExamples(keigoHelper, dictionaryEntry, grammaFormCache, null, true);
-			
-						
-			for (DictionaryEntryType currentDictionaryEntryType : dictionaryEntry.getDictionaryEntryTypeList()) {
-				examples = ExampleManager.getExamples(keigoHelper, dictionaryEntry, grammaFormCache, currentDictionaryEntryType, true);
-				
-				addExampleGroupTypeList(grammaAndExampleDocument, indexWriter, dictionaryEntry, examples, addSugestionList, boostFloat);
-			}
-			
-			if (grammaAndExampleDocument.getFields().size() > 2) {
-				indexWriter.addDocument(grammaAndExampleDocument);
-			}
-		}		
-	}
-	
-	private static void addGrammaFormConjugateGroupList(Document document, IndexWriter indexWriter, DictionaryEntry dictionaryEntry, 
-			List<GrammaFormConjugateGroupTypeElements> grammaConjufateResult, boolean addSugestionList, Float boostFloat) throws IOException {
+	private static void addGrammaFormConjugateGroupList(Document document, List<GrammaFormConjugateGroupTypeElements> grammaConjufateResult, boolean addSugestionList, Float boostFloat) throws IOException {
 		
 		if (grammaConjufateResult == null) {
 			return;
@@ -661,13 +644,12 @@ public class LuceneDBGenerator {
 			List<GrammaFormConjugateResult> grammaFormConjugateResults = grammaFormConjugateGroupTypeElements.getGrammaFormConjugateResults();
 			
 			for (GrammaFormConjugateResult grammaFormConjugateResult : grammaFormConjugateResults) {				
-				addGrammaFormConjugateResult(document, indexWriter, dictionaryEntry, grammaFormConjugateResult, addSugestionList, boostFloat);
+				addGrammaFormConjugateResult(document, grammaFormConjugateResult, addSugestionList, boostFloat);
 			}
 		}		
 	}
 	
-	private static void addExampleGroupTypeList(Document document, IndexWriter indexWriter, DictionaryEntry dictionaryEntry, 
-			List<ExampleGroupTypeElements> exampleGroupTypeElementsList, boolean addSugestionList, Float boostFloat) throws IOException {
+	private static void addExampleGroupTypeList(Document document, List<ExampleGroupTypeElements> exampleGroupTypeElementsList, boolean addSugestionList, Float boostFloat) throws IOException {
 		
 		if (exampleGroupTypeElementsList == null) {
 			return;
@@ -678,17 +660,16 @@ public class LuceneDBGenerator {
 			List<ExampleResult> exampleResults = exampleGroupTypeElements.getExampleResults();
 			
 			for (ExampleResult currentExampleResult : exampleResults) {
-				addExampleResult(document, indexWriter, dictionaryEntry, currentExampleResult, addSugestionList, boostFloat);
+				addExampleResult(document, currentExampleResult, addSugestionList, boostFloat);
 			}
 		}		
 	}
 	
-	private static void addGrammaFormConjugateResult(Document document, IndexWriter indexWriter, DictionaryEntry dictionaryEntry, 
-			GrammaFormConjugateResult grammaFormConjugateResult, boolean addSugestionList, Float boostFloat) throws IOException {
+	private static void addGrammaFormConjugateResult(Document document, GrammaFormConjugateResult grammaFormConjugateResult, boolean addSugestionList, Float boostFloat) throws IOException {
 				
 		// kanji
 		if (grammaFormConjugateResult.isKanjiExists() == true) {					
-			document.add(new StringField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanji, grammaFormConjugateResult.getKanji(), Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanji, grammaFormConjugateResult.getKanji(), Field.Store.YES));
 			
 			if (addSugestionList == true) {
 				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(grammaFormConjugateResult.getKanji()), false);
@@ -699,7 +680,7 @@ public class LuceneDBGenerator {
 		List<String> kanaList = grammaFormConjugateResult.getKanaList();
 		
 		for (String currentKana : kanaList) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList, currentKana, Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList, currentKana, Field.Store.YES));
 			
 			if (addSugestionList == true) {
 				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentKana), false);
@@ -710,10 +691,10 @@ public class LuceneDBGenerator {
 		List<String> romajiList = grammaFormConjugateResult.getRomajiList();
 		
 		for (String currentRomaji : romajiList) {
-			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES), boostFloat));
+			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES), boostFloat));
 			
 			// dodanie alternatyw romaji
-			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji, false, boostFloat);
+			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, false, boostFloat);
 						
 			if (addSugestionList == true) {
 				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentRomaji), false);
@@ -721,16 +702,15 @@ public class LuceneDBGenerator {
 		}
 		
 		if (grammaFormConjugateResult.getAlternative() != null) {
-			addGrammaFormConjugateResult(document, indexWriter, dictionaryEntry, grammaFormConjugateResult.getAlternative(), addSugestionList, boostFloat);
+			addGrammaFormConjugateResult(document, grammaFormConjugateResult.getAlternative(), addSugestionList, boostFloat);
 		}
 	}
 	
-	private static void addExampleResult(Document document, IndexWriter indexWriter, DictionaryEntry dictionaryEntry, ExampleResult exampleResult,
-			boolean addSugestionList, Float boostFloat) throws IOException {
+	private static void addExampleResult(Document document, ExampleResult exampleResult, boolean addSugestionList, Float boostFloat) throws IOException {
 		
 		// kanji
 		if (exampleResult.isKanjiExists() == true) {					
-			document.add(new StringField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanji, exampleResult.getKanji(), Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanji, exampleResult.getKanji(), Field.Store.YES));
 			
 			if (addSugestionList == true) {
 				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(exampleResult.getKanji()), false);
@@ -741,7 +721,7 @@ public class LuceneDBGenerator {
 		List<String> kanaList = exampleResult.getKanaList();
 		
 		for (String currentKana : kanaList) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList, currentKana, Field.Store.YES));
+			document.add(new StringField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList, currentKana, Field.Store.YES));
 			
 			if (addSugestionList == true) {
 				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentKana), false);
@@ -752,10 +732,10 @@ public class LuceneDBGenerator {
 		List<String> romajiList = exampleResult.getRomajiList();
 		
 		for (String currentRomaji : romajiList) {
-			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES), boostFloat));
+			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES), boostFloat));
 			
 			// dodanie alternatyw romaji
-			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, currentRomaji, false, boostFloat);
+			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, false, boostFloat);
 			
 			if (addSugestionList == true) {
 				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentRomaji), false);
@@ -763,7 +743,7 @@ public class LuceneDBGenerator {
 		}
 		
 		if (exampleResult.getAlternative() != null) {
-			addExampleResult(document, indexWriter, dictionaryEntry, exampleResult.getAlternative(), addSugestionList, boostFloat);
+			addExampleResult(document, exampleResult.getAlternative(), addSugestionList, boostFloat);
 		}		
 	}
 	
@@ -1336,12 +1316,13 @@ public class LuceneDBGenerator {
 		}
 	}
 	
-	private static void addWord2Xml(IndexWriter indexWriter, String word2XmlFilePath) throws JAXBException, IOException {
+	private static void addWord2Xml(IndexWriter indexWriter, String word2XmlFilePath, boolean addGrammaAndExample, boolean addSugestionList, boolean generatePrefixes) throws JAXBException, IOException {
 				
-		JAXBContext jaxbContext = JAXBContext.newInstance(JMdict.class);
+		JAXBContext jaxbContext = JAXBContext.newInstance(JMdict.class);              
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 		
 		Gson gson = new Gson();
+		KeigoHelper keigoHelper = new KeigoHelper();
 		
 		// pobranie listy plikow word2.xml
 		File[] word2XmlFileList = new File(word2XmlFilePath).getParentFile().listFiles(new FileFilter() {
@@ -1354,34 +1335,239 @@ public class LuceneDBGenerator {
 		
 		Arrays.sort(word2XmlFileList);
 		
+		// unikalne grupy
+		Set<GroupEnum> uniqueDictionaryEntryGroupEnumSet = new HashSet<GroupEnum>();
+		
+		// inicjalizacja licznika, aby latwiej bylo wyszukiwac konkretne dokumenty
+		int counter = 1;
+		
 		for (File currentword2XmlFile : word2XmlFileList) {
 			
 			JMdict jmdict = (JMdict) jaxbUnmarshaller.unmarshal(currentword2XmlFile);
 			
 			// pobranie listy wpisow
 			List<Entry> entryList = jmdict.getEntryList();
-
+		
 			for (Entry entry : entryList) {
-				
+			
 				System.out.println("Add word 2 entry: " + entry.getEntryId());
-																
+			
+				// wyliczenie boost'era
+				Float boostFloat = getBoostFloat(entry);
+			
 				// dodanie do lucynki
 				Document document = new Document();
-				
+			
 				// object type
 				document.add(new StringField(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType, Field.Store.YES));
-
-				// id
+			
+				// id i counter
 				document.add(new IntField(LuceneStatic.dictionaryEntry2_id, entry.getEntryId(), Field.Store.YES));
-				
+				document.add(new IntField(LuceneStatic.dictionaryEntry2_counter, counter, Field.Store.YES));			
+			
 				// xml
 				document.add(new StoredField(LuceneStatic.dictionaryEntry2_entry, gson.toJson(entry)));
+						
+				List<KanjiInfo> kanjiInfoList = entry.getKanjiInfoList();
+			
+				// kanji
+				for (KanjiInfo kanjiInfo : kanjiInfoList) {
+					String kanji = kanjiInfo.getKanji();
+			
+					document.add(new StringField(LuceneStatic.dictionaryEntry2_kanji, emptyIfNull(kanji), Field.Store.YES));
+			
+					addPrefixes(document, LuceneStatic.dictionaryEntry2_kanji, emptyIfNull(kanji), generatePrefixes, boostFloat);
+			
+					if (addSugestionList == true) {					
+						addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, emptyIfNull(kanji), false);
+						addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(kanji), false);
+			
+						addSpellChecker(document, LuceneStatic.dictionaryEntry_android_spellCheckerList, emptyIfNull(kanji));
+						addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, emptyIfNull(kanji));
+					}				
+				}
+			
+				List<ReadingInfo> readingInfoList = entry.getReadingInfoList();
+			
+				for (ReadingInfo readingInfo : readingInfoList) {
+					// kanaList
+					String kana = readingInfo.getKana().getValue();
+			
+					document.add(new StringField(LuceneStatic.dictionaryEntry2_kana, kana, Field.Store.YES));
+			
+					addPrefixes(document, LuceneStatic.dictionaryEntry2_kana, kana, generatePrefixes, boostFloat);
+			
+					if (addSugestionList == true) {
+						addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, kana, false);
+						addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, kana, false);
+			
+						addSpellChecker(document, LuceneStatic.dictionaryEntry_android_spellCheckerList, kana);
+						addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, kana);
+					}
+			
+					// romajiList
+					String romaji = readingInfo.getKana().getRomaji();
+			
+					if (romaji != null) {
+						// INFO: normalnie romaji zawsze powinno istniec, ale gdy slownik nie jest w pelni poprawny
+						// czyli nie przeszedl calej walidacji to moze zdarzyc sie
+						// ale podczas generowania slownika z wydaniem to nigdy nie powinno zdarzyc sie
+			
+						document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_romaji, romaji, Field.Store.YES), boostFloat));
+			
+						addPrefixes(document, LuceneStatic.dictionaryEntry2_romaji, romaji, generatePrefixes, boostFloat);
+			
+						// dodanie alternatyw romaji
+						addAlternativeRomaji(document, LuceneStatic.dictionaryEntry2_romaji, romaji, generatePrefixes, boostFloat);
+			
+						if (addSugestionList == true) {					
+							addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, romaji, false);
+							addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, romaji, false);
+			
+							addSpellChecker(document, LuceneStatic.dictionaryEntry_android_spellCheckerList, romaji);
+							addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, romaji);			
+						}
+					}
+				}
+			
+				List<Sense> senseList = entry.getSenseList();
+			
+				for (Sense sense : senseList) {
+			
+					List<Gloss> polishGlossList = Dictionary2HelperCommon.getPolishGlossList(sense.getGlossList());
+			
+					for (Gloss gloss : polishGlossList) {
+						// translatesList
+						String currentTranslate = gloss.getValue();
+			
+						document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_translatesList, currentTranslate, Field.Store.YES), boostFloat));
+			
+						addPrefixes(document, LuceneStatic.dictionaryEntry2_translatesList, currentTranslate, generatePrefixes, boostFloat);
+			
+						if (addSugestionList == true) {
+							addSuggestion(document, LuceneStatic.dictionaryEntry_android_sugestionList, currentTranslate, true);
+							addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, currentTranslate, true);
+			
+							addSpellChecker(document, LuceneStatic.dictionaryEntry_android_spellCheckerList, currentTranslate);
+							addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, currentTranslate);
+						}
+			
+						String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
+			
+						document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_translatesList, currentTranslateWithoutPolishChars, Field.Store.NO), boostFloat));
+			
+						addPrefixes(document, LuceneStatic.dictionaryEntry2_translatesList, currentTranslateWithoutPolishChars, generatePrefixes, boostFloat);
+			
+						// info
+						SenseAdditionalInfo firstPolishAdditionalInfo = Dictionary2HelperCommon.findFirstPolishAdditionalInfo(sense.getAdditionalInfoList());
+			
+						if (firstPolishAdditionalInfo != null) {
+							String info = firstPolishAdditionalInfo.getValue();
+			
+							if (info != null) {
+								document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_info, info, Field.Store.YES), boostFloat));
+			
+								addPrefixes(document, LuceneStatic.dictionaryEntry2_info, info, generatePrefixes, boostFloat);
+			
+								String infoWithoutPolishChars = Utils.removePolishChars(info);
+			
+								document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_info, infoWithoutPolishChars, Field.Store.NO), boostFloat));
+			
+								addPrefixes(document, LuceneStatic.dictionaryEntry2_info, infoWithoutPolishChars, generatePrefixes, boostFloat);						
+							}
+						}
+					}				
+				}
+			
+				// unique key i identyfikatory w starym slowniku
+				if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getEntries() != null) {
+					List<OldPolishJapaneseDictionaryInfoEntriesInfo> oldPolishJapaneseDictionaryInfoEntriesList = entry.getMisc().getOldPolishJapaneseDictionary().getEntries();
+			
+					for (OldPolishJapaneseDictionaryInfoEntriesInfo oldPolishJapaneseDictionaryInfoEntriesInfo : oldPolishJapaneseDictionaryInfoEntriesList) {
+						// unique key
+						String uniqueKey = oldPolishJapaneseDictionaryInfoEntriesInfo.getUniqueKey();
+			
+						if (uniqueKey != null) {
+							document.add(new StringField(LuceneStatic.dictionaryEntry2_oldPolishJapaneseDictionaryUniqueKey, uniqueKey, Field.Store.YES));
+						}
+			
+						// identyfikatory w starym slowniku					
+						long oldPolishJapaneseDictionaryId = oldPolishJapaneseDictionaryInfoEntriesInfo.getId();
+			
+						document.add(new LongField(LuceneStatic.dictionaryEntry2_oldPolishJapaneseDictionaryId, oldPolishJapaneseDictionaryId, Field.Store.YES));					
+					}
+				}
+			
+				// dictionary entry type list
+				if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getEntries() != null) {
+					List<OldPolishJapaneseDictionaryInfoEntriesInfo> oldPolishJapaneseDictionaryInfoEntriesList = entry.getMisc().getOldPolishJapaneseDictionary().getEntries();
+			
+					LinkedHashSet<String> allDictionaryEntryTypeStringList = new LinkedHashSet<String>(); 
+			
+					for (OldPolishJapaneseDictionaryInfoEntriesInfo oldPolishJapaneseDictionaryInfoEntriesInfo : oldPolishJapaneseDictionaryInfoEntriesList) {
+						allDictionaryEntryTypeStringList.addAll(Arrays.asList(oldPolishJapaneseDictionaryInfoEntriesInfo.getDictionaryEntryTypeList().split(",")).stream().collect(Collectors.toList()));					
+					}
+			
+					for (String dictionaryEntryTypeString : allDictionaryEntryTypeStringList) {
+						document.add(new StringField(LuceneStatic.dictionaryEntry2_dictionaryEntryTypeList, dictionaryEntryTypeString, Field.Store.YES));
+					}				
+				}
+			
+				// attributeList
+				if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getAttributeList() != null) {
+					List<OldPolishJapaneseDictionaryInfoAttributeListInfo> attributeList = entry.getMisc().getOldPolishJapaneseDictionary().getAttributeList();
+			
+					for (OldPolishJapaneseDictionaryInfoAttributeListInfo attribute : attributeList) {
+						String dbValue = attribute.getType();
+			
+						if (attribute.getValue() != null) {
+							dbValue += " " + attribute.getValue();
+						}
+			
+						document.add(new StringField(LuceneStatic.dictionaryEntry2_attributeList, dbValue, Field.Store.YES));
+					}
+				}
+			
+				// groupsList
+				if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getGroupsList() != null) {
+					List<String> groupsList = entry.getMisc().getOldPolishJapaneseDictionary().getGroupsList();
+			
+					for (String currentGroup : groupsList) {
+						document.add(new StringField(LuceneStatic.dictionaryEntry2_groupsList, currentGroup, Field.Store.YES));
+					}
+					
+					uniqueDictionaryEntryGroupEnumSet.addAll(groupsList.stream().map(grr -> GroupEnum.valueOf(grr)).collect(Collectors.toList()));
+				}
+			
+				// add grammas and examples			
+				countGrammaFormAndExamples(document, entry, keigoHelper, addGrammaAndExample, addSugestionList, boostFloat);
+			
+				/*
+				// prefixKana
+				document.add(new StringField(LuceneStatic.dictionaryEntry_prefixKana, emptyIfNull(dictionaryEntry.getPrefixKana()), Field.Store.YES));
+							
+				// prefixRomaji
+				document.add(new StringField(LuceneStatic.dictionaryEntry_prefixRomaji, emptyIfNull(dictionaryEntry.getPrefixRomaji()), Field.Store.YES));
 				
+				// example sentence groupIds
+				List<String> exampleSentenceGroupIdsList = dictionaryEntry.getExampleSentenceGroupIdsList();
+						
+				for (String currentExampleSenteceGroupId : exampleSentenceGroupIdsList) {
+					document.add(new TextField(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList, currentExampleSenteceGroupId, Field.Store.YES));
+				}
+				*/
+			
 				//
-				
+			
 				indexWriter.addDocument(document);
+			
+				// zwiekszenie licznika
+				counter++;
 			}
-		}		
+		}
+		
+		// dodanie unikalnych grup
+		addDictionaryEntryUniqueGroupEnum(indexWriter, uniqueDictionaryEntryGroupEnumSet);
 	}
 		
 	private static String emptyIfNull(String text) {

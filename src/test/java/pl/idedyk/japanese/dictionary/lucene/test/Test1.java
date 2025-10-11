@@ -9,6 +9,7 @@ import org.apache.lucene.util.Version;
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPowerList;
+import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePairWithDictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
@@ -16,7 +17,7 @@ import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary.api.tools.KanaHelper;
 import pl.idedyk.japanese.dictionary.lucene.LuceneAnalyzer;
 import pl.idedyk.japanese.dictionary.lucene.LuceneDatabase;
-import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
 
 public class Test1 {
 
@@ -65,7 +66,7 @@ public class Test1 {
 		
 		//
 		
-		LuceneDatabase luceneDatabase = new LuceneDatabase("/tmp/a/db-lucene");
+		LuceneDatabase luceneDatabase = new LuceneDatabase("db-lucene");
 		
 		luceneDatabase.open();
 		
@@ -78,14 +79,17 @@ public class Test1 {
 		/*
 		FindWordRequest findWordRequest = new FindWordRequest();
 		
-		//findWordRequest.searchGrammaFormAndExamples = false;		
+		findWordRequest.searchGrammaFormAndExamples = true;		
 		//findWordRequest.word = "shukujitsu";
 		
-		findWordRequest.word = "kot";
-		//findWordRequest.word = text; //"スプラッタ・ムービー";
-		//findWordRequest.word = "スプラッタムービー";
+		findWordRequest.word = "a";
+		// findWordRequest.word = text; //"スプラッタ・ムービー";
+		// findWordRequest.word = "スプラッタムービー";
+		// findWordRequest.word = "猫";
+		// findWordRequest.word = "agaru";
+		// findWordRequest.word = "岡村初博";
 
-		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values();
+		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values(); // Arrays.asList(DictionaryEntryType.WORD_VERB_RU, DictionaryEntryType.WORD_NOUN).toArray(new DictionaryEntryType[] { }); // ;
 		
 		List<DictionaryEntryType> dictionaryEntryTypeList = new ArrayList<DictionaryEntryType>();
 		
@@ -96,24 +100,40 @@ public class Test1 {
 		//dictionaryEntryTypeList.remove(DictionaryEntryType.WORD_NOUN);
 		//..dictionaryEntryTypeList.remove(DictionaryEntryType.WORD_ADJECTIVE_NO);
 		
-		//findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
+		findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
 		
-		findWordRequest.wordPlaceSearch = WordPlaceSearch.START_WITH;
+		findWordRequest.wordPlaceSearch = WordPlaceSearch.ANY_PLACE;
 		
-		//findWordRequest.searchTranslate = false;
-		findWordRequest.searchInfo = false;
-		//findWordRequest.searchRomaji = false;
+		findWordRequest.searchTranslate = true;
+		findWordRequest.searchInfo = true;
+		findWordRequest.searchRomaji = true;
+		findWordRequest.searchOnlyCommonWord = false;
+		findWordRequest.searchName = true;
 		
 		FindWordResult findWordResult = dictionaryManager.findWord(findWordRequest);
 				
 		for (ResultItem resultItem : findWordResult.result) {
 			
-			DictionaryEntry dictionaryEntry = resultItem.getDictionaryEntry();
+			Entry entry = resultItem.getEntry();
 			
-			System.out.println(dictionaryEntry.getId() + " - " + dictionaryEntry.getDictionaryEntryTypeList() + " - " + dictionaryEntry.getKanji() + " - " + 
-					dictionaryEntry.getKana() + " - " + dictionaryEntry.getRomaji() + " - " + dictionaryEntry.getTranslates() + " - " +
-					dictionaryEntry.getInfo());
+			if (entry != null) {
+				System.out.println("Entry");
+				System.out.println(entry.getEntryId());
+				System.out.println(resultItem.getKanjiList());
+				System.out.println(resultItem.getKanaList());
+				System.out.println(resultItem.getRomajiList());
+				System.out.println(resultItem.getTranslates());
+			}
 			
+			DictionaryEntry oldDictionaryEntry = resultItem.getOldDictionaryEntry();
+			
+			if (oldDictionaryEntry != null) {
+				System.out.println("oldDictionaryEntry");
+				System.out.println(oldDictionaryEntry.getId() + " - " + oldDictionaryEntry.getDictionaryEntryTypeList() + " - " + oldDictionaryEntry.getKanji() + " - " + 
+						oldDictionaryEntry.getKana() + " - " + oldDictionaryEntry.getRomaji() + " - " + oldDictionaryEntry.getTranslates() + " - " +
+						oldDictionaryEntry.getInfo());				
+			}
+						
 			System.out.println("--------");
 		}
 		*/
@@ -174,11 +194,26 @@ public class Test1 {
 		
 		System.out.println(entry.getEntryId());
 		*/
-					
+		
+		/*
 		KanjiCharacterInfo kanjiEntry = dictionaryManager.getKanjiEntryById(15);
 		
 		System.out.println(kanjiEntry.getKanji());
 		System.out.println(kanjiEntry.getMisc2().getStrokePaths());
+		*/
+		
+		// int dictionaryEntriesSize = dictionaryManager.getDictionaryEntriesSize();
+		
+		// System.out.println("dictionaryEntriesSize: " + dictionaryEntriesSize);
+		
+		// Entry entry = dictionaryManager.getDictionaryEntry2ByOldPolishJapaneseDictionaryId(99296);
+		// System.out.println("AAAAA: " + entry.getEntryId());
+		
+		List<Entry> groupDictionaryEntry2List = dictionaryManager.getGroupDictionaryEntry2List(GroupEnum.GENKI_1_1);
+		
+		for (Entry entry : groupDictionaryEntry2List) {
+			System.out.println(entry.getReadingInfoList().get(0).getKana().getRomaji());
+		}
 		
 		luceneDatabase.close();
 	}

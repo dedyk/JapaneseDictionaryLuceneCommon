@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -59,6 +60,11 @@ import pl.idedyk.japanese.dictionary.api.dto.GroupWithTatoebaSentenceList;
 import pl.idedyk.japanese.dictionary.api.dto.TatoebaSentence;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.MiscInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfoAttributeListInfo;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfoEntriesInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Misc2Info;
 
@@ -75,7 +81,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, Lookup> lookupSuggesterMap;
 	private ConcurrentMap<LuceneDatabaseSuggesterAndSpellCheckerSource, SpellCheckerIndex> spellCheckerMap;
 	
-	private static final int MAX_DICTIONARY_RESULT = 100;
+	private static final int MAX_DICTIONARY_RESULT = 50;
 	
 	private static final int MAX_KANJI_RESULT = 100;
 	private static final int MAX_KANJI_STROKE_COUNT_RESULT = 2000;
@@ -192,9 +198,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	@Override
 	public FindWordResult findDictionaryEntries(FindWordRequest findWordRequest) throws DictionaryException {
-
+		
 		FindWordResult findWordResult = new FindWordResult();
 		findWordResult.result = new ArrayList<FindWordResult.ResultItem>();
+		
+		Gson gson = new Gson();
 		
 		if (findWordRequest.searchMainDictionary == false) {
 			return findWordResult;
@@ -212,23 +220,22 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			// object type
 			PhraseQuery objectTypeQuery = new PhraseQuery();
-			objectTypeQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_objectType));
+			objectTypeQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType));
 
 			query.add(objectTypeQuery, Occur.MUST);
 
-			// common word				
+			// common word
 			if (findWordRequest.searchOnlyCommonWord == true) {	
 				PhraseQuery onlyCommonWordQuery = new PhraseQuery();
 				
-				onlyCommonWordQuery.add(new Term(LuceneStatic.dictionaryEntry_attributeList, AttributeType.COMMON_WORD.toString()));
+				onlyCommonWordQuery.add(new Term(LuceneStatic.dictionaryEntry2_attributeList, AttributeType.COMMON_WORD.toString()));
 				
 				query.add(onlyCommonWordQuery, Occur.MUST);
 				
-			} else {
-				
+			} else {				
 				PhraseQuery onlyCommonWordQuery = new PhraseQuery();
 				
-				onlyCommonWordQuery.add(new Term(LuceneStatic.dictionaryEntry_attributeList, AttributeType.COMMON_WORD.toString()));
+				onlyCommonWordQuery.add(new Term(LuceneStatic.dictionaryEntry2_attributeList, AttributeType.COMMON_WORD.toString()));
 								
 				query.add(onlyCommonWordQuery, Occur.SHOULD);
 			}
@@ -236,39 +243,36 @@ public class LuceneDatabase implements IDatabaseConnector {
 			BooleanQuery wordBooleanQuery = new BooleanQuery();
 
 			if (findWordRequest.searchKanji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchKana == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_kana, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_kana, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_virtual_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchTranslate == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_translatesList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_translatesListWithoutPolishChars, 
-						findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_translatesList, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchInfo == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_info, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_infoWithoutPolishChars, 
-						findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_info, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			query.add(wordBooleanQuery, Occur.MUST);
 
-			BooleanQuery dictionaryEntryTypeListFilter = createDictionaryEntryTypeListFilter(LuceneStatic.dictionaryEntry_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
+			BooleanQuery dictionaryEntryTypeListFilter = createDictionaryEntryTypeListFilter(LuceneStatic.dictionaryEntry2_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
 			
 			if (dictionaryEntryTypeListFilter != null) {
 				query.add(dictionaryEntryTypeListFilter, Occur.MUST);
-			}			
+			}
 			
 			ScoreDoc[] scoreDocs = searcher.search(query, null, maxResult + 1).scoreDocs;
 
@@ -276,31 +280,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
 
-				String idString = foundDocument.get(LuceneStatic.dictionaryEntry_id);
-
-				List<String> dictionaryEntryTypeList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_dictionaryEntryTypeList));
-				List<String> attributeList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_attributeList));
-				List<String> groupsList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_groupsList));
-
-				String prefixKanaString = foundDocument.get(LuceneStatic.dictionaryEntry_prefixKana);
-
-				String kanjiString = foundDocument.get(LuceneStatic.dictionaryEntry_kanji);
-				String kana = foundDocument.get(LuceneStatic.dictionaryEntry_kana);
-
-				String prefixRomajiString = foundDocument.get(LuceneStatic.dictionaryEntry_prefixRomaji);
-
-				String romaji = foundDocument.get(LuceneStatic.dictionaryEntry_romaji);				
-				List<String> translateList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_translatesList));
-
-				String infoString = foundDocument.get(LuceneStatic.dictionaryEntry_info);
-
-				List<String> exampleSentenceGroupIdsList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList));
+				// String idString = foundDocument.get(LuceneStatic.dictionaryEntry2_id);
+				String entryBody = foundDocument.get(LuceneStatic.dictionaryEntry2_entry);
 				
-				DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
-						groupsList, prefixKanaString, kanjiString, kana, prefixRomajiString, romaji,
-						translateList, infoString, exampleSentenceGroupIdsList);
+				JMdict.Entry entry = gson.fromJson(entryBody, JMdict.Entry.class);
 
-				findWordResult.result.add(new FindWordResult.ResultItem(entry));
+				findWordResult.result.add(new FindWordResult.ResultItem(entry, false, false));
 			}
 
 /*
@@ -481,9 +466,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 	*/
 
+	/*
 	@Override
 	public DictionaryEntry getDictionaryEntryById(String id) throws DictionaryException {
-
+		
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
@@ -499,7 +485,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	@Override
 	public DictionaryEntry getDictionaryEntryByUniqueKey(String uniqueKey) throws DictionaryException {
-
+		
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
@@ -514,7 +500,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 	
 	private DictionaryEntry getCommonDictionaryEntryByIdUniqueKey(BooleanQuery query) throws DictionaryException {
-		
+				
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
 
@@ -552,10 +538,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
 		}		
 	}
+	*/
 
 	@Override
 	public JMdict.Entry getDictionaryEntry2ById(Integer entryId) throws DictionaryException {
-		
+				
 		Gson gson = new Gson();
 
 		BooleanQuery query = new BooleanQuery();
@@ -568,6 +555,108 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		query.add(NumericRangeQuery.newIntRange(LuceneStatic.dictionaryEntry2_id, entryId, entryId, true, true), Occur.MUST);
 
+		try {
+			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
+
+			if (scoreDocs.length == 0) {
+				return null;
+			}
+
+			Document foundDocument = searcher.doc(scoreDocs[0].doc);
+
+			//String idString = foundDocument.get(LuceneStatic.dictionaryEntry2_id);
+			String entryBody = foundDocument.get(LuceneStatic.dictionaryEntry2_entry);
+			
+			return gson.fromJson(entryBody, JMdict.Entry.class);
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
+		}		
+	}
+	
+	@Override
+	public JMdict.Entry getDictionaryEntry2ByCounter(int counter) throws DictionaryException {
+				
+		Gson gson = new Gson();
+
+		BooleanQuery query = new BooleanQuery();
+
+		// object type
+		PhraseQuery phraseQuery = new PhraseQuery();
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType));
+
+		query.add(phraseQuery, Occur.MUST);
+
+		query.add(NumericRangeQuery.newIntRange(LuceneStatic.dictionaryEntry2_counter, counter, counter, true, true), Occur.MUST);
+
+		try {
+			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
+
+			if (scoreDocs.length == 0) {
+				return null;
+			}
+
+			Document foundDocument = searcher.doc(scoreDocs[0].doc);
+
+			//String idString = foundDocument.get(LuceneStatic.dictionaryEntry2_id);
+			String entryBody = foundDocument.get(LuceneStatic.dictionaryEntry2_entry);
+			
+			return gson.fromJson(entryBody, JMdict.Entry.class);
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
+		}		
+	}
+	
+	@Override
+	public JMdict.Entry getDictionaryEntry2ByOldPolishJapaneseDictionaryId(long oldPolishJapaneseDictionaryId) throws DictionaryException {
+				
+		Gson gson = new Gson();
+
+		BooleanQuery query = new BooleanQuery();
+
+		// object type
+		PhraseQuery phraseQuery = new PhraseQuery();
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType));
+
+		query.add(phraseQuery, Occur.MUST);
+
+		query.add(NumericRangeQuery.newLongRange(LuceneStatic.dictionaryEntry2_oldPolishJapaneseDictionaryId, oldPolishJapaneseDictionaryId, oldPolishJapaneseDictionaryId, true, true), Occur.MUST);
+
+		try {
+			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
+
+			if (scoreDocs.length == 0) {
+				return null;
+			}
+
+			Document foundDocument = searcher.doc(scoreDocs[0].doc);
+
+			//String idString = foundDocument.get(LuceneStatic.dictionaryEntry2_id);
+			String entryBody = foundDocument.get(LuceneStatic.dictionaryEntry2_entry);
+			
+			return gson.fromJson(entryBody, JMdict.Entry.class);
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
+		}		
+	}
+	
+	@Override
+	public JMdict.Entry getDictionaryEntry2ByOldPolishJapaneseDictionaryUniqueKey(String uniqueKey) throws DictionaryException {
+				
+		Gson gson = new Gson();
+
+		BooleanQuery query = new BooleanQuery();
+
+		// object type
+		PhraseQuery phraseQuery = new PhraseQuery();
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType));
+
+		query.add(phraseQuery, Occur.MUST);
+
+		query.add(createQuery(uniqueKey, LuceneStatic.dictionaryEntry2_oldPolishJapaneseDictionaryUniqueKey, WordPlaceSearch.EXACT), Occur.MUST);
+		
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
 
@@ -663,9 +752,10 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}		
 	}
 	
+	/*
 	@Override
 	public DictionaryEntry getNthDictionaryEntry(int nth) throws DictionaryException {
-
+		
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
@@ -711,6 +801,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			throw new DictionaryException("Błąd podczas pobierania n-tego słowa: " + e);
 		}				
 	}
+	*/
 
 	private Query createQuery(String rejoinedWord, String[] wordSplited, String fieldName, WordPlaceSearch wordPlaceSearch, boolean useSpanFirstQuery) {
 
@@ -843,12 +934,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 	@Override
 	public int getDictionaryEntriesSize() {
-
+		
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 
@@ -914,58 +1005,37 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 
 	@Override
-	public List<DictionaryEntry> getGroupDictionaryEntries(GroupEnum groupEnum) throws DictionaryException {
+	public List<Entry> getGroupDictionaryEntry2List(GroupEnum groupEnum) throws DictionaryException {
+		
+		List<Entry> result = new ArrayList<>();
+		Gson gson = new Gson();
 
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 
-		query.add(createQuery(groupEnum.getValue(), LuceneStatic.dictionaryEntry_groupsList, WordPlaceSearch.EXACT), Occur.MUST);
-
+		query.add(createQuery(groupEnum.name(), LuceneStatic.dictionaryEntry2_groupsList, WordPlaceSearch.EXACT), Occur.MUST);
+		
 		try {
-			List<DictionaryEntry> result = new ArrayList<DictionaryEntry>();
-
 			ScoreDoc[] scoreDocs = searcher.search(query, null, Integer.MAX_VALUE).scoreDocs;
 
 			for (ScoreDoc scoreDoc : scoreDocs) {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
-
-				String idString = foundDocument.get(LuceneStatic.dictionaryEntry_id);
-
-				List<String> dictionaryEntryTypeList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_dictionaryEntryTypeList));
-				List<String> attributeList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_attributeList));
-				List<String> groupsList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_groupsList));
-
-				String prefixKanaString = foundDocument.get(LuceneStatic.dictionaryEntry_prefixKana);
-
-				String kanjiString = foundDocument.get(LuceneStatic.dictionaryEntry_kanji);
-				String kana = foundDocument.get(LuceneStatic.dictionaryEntry_kana);
-
-				String prefixRomajiString = foundDocument.get(LuceneStatic.dictionaryEntry_prefixRomaji);
-
-				String romaji = foundDocument.get(LuceneStatic.dictionaryEntry_romaji);				
-				List<String> translateList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_translatesList));
-
-				String infoString = foundDocument.get(LuceneStatic.dictionaryEntry_info);
 				
-				List<String> exampleSentenceGroupIdsList = Arrays.asList(foundDocument.getValues(LuceneStatic.dictionaryEntry_exampleSentenceGroupIdsList));
-
-				DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
-						groupsList, prefixKanaString, kanjiString, kana, prefixRomajiString, romaji,
-						translateList, infoString, exampleSentenceGroupIdsList);
-
-				result.add(entry);
+				String entryBody = foundDocument.get(LuceneStatic.dictionaryEntry2_entry);
+				
+				result.add(gson.fromJson(entryBody, JMdict.Entry.class));				
 			}
-
-			return result;
-
+			
+			return result;			
+			
 		} catch (IOException e) {
-			throw new DictionaryException("Błąd podczas pobierania słówek dla grupy: " + e);
+			throw new DictionaryException("Błąd podczas pobierania słów: " + e);
 		}		
 	}
 
@@ -1218,7 +1288,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	@Override
 	public void findDictionaryEntriesInGrammaFormAndExamples(FindWordRequest findWordRequest, FindWordResult findWordResult)
 			throws DictionaryException {
-
+				
 		if (findWordRequest.searchGrammaFormAndExamples == false) {
 			return;
 		}
@@ -1232,6 +1302,8 @@ public class LuceneDatabase implements IDatabaseConnector {
 			return;
 		}
 		*/
+		
+		Gson gson = new Gson();
 		
 		final int maxResult = MAX_DICTIONARY_RESULT - findWordResult.result.size();
 		
@@ -1248,23 +1320,22 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			// object type
 			PhraseQuery objectTypeQuery = new PhraseQuery();
-			objectTypeQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_objectType));
+			objectTypeQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.dictionaryEntry2_objectType));
 
 			query.add(objectTypeQuery, Occur.MUST);
 			
 			BooleanQuery wordBooleanQuery = new BooleanQuery();
 
 			if (findWordRequest.searchKanji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchKana == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);				
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);				
 			}
 
 			query.add(wordBooleanQuery, Occur.MUST);
@@ -1275,58 +1346,89 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
 
-				String dictionaryEntryId = foundDocument.get(LuceneStatic.dictionaryEntry_grammaConjufateResult_and_exampleResult_dictionaryEntry_id);
+				// dodajemy tylko te wpisy, ktorych jeszcze nie bylo
+				String idString = foundDocument.get(LuceneStatic.dictionaryEntry2_id);
+				int idStringAsInt = Integer.parseInt(idString);
 				
-				DictionaryEntry dictionaryEntry = getDictionaryEntryById(dictionaryEntryId);
+				boolean alreadyExistsInResult = findWordResult.result.stream().filter(f -> f.getEntry() != null && f.getEntry().getEntryId().intValue() == idStringAsInt).count() > 0;
 				
-				boolean addDictionaryEntry = true;
-				
-				// common word				
-				if (findWordRequest.searchOnlyCommonWord == true && dictionaryEntry.getAttributeList().contains(AttributeType.COMMON_WORD) == false) {					
-					addDictionaryEntry = false;
-				}
-				
-				if (addDictionaryEntry == true) {
+				if (alreadyExistsInResult == false) { // jezeli nie ma to sprawdzamy dalej
 					
-					if (findWordRequest.dictionaryEntryTypeList != null && findWordRequest.dictionaryEntryTypeList.size() > 0) {
-						
-						boolean isInNeededDictionaryEntryTypeList = false;
-						
-						List<DictionaryEntryType> dictionaryEntryTypeList = dictionaryEntry.getDictionaryEntryTypeList();
+					// zamieniamy na Entry
+					String entryBody = foundDocument.get(LuceneStatic.dictionaryEntry2_entry);
 					
-						for (DictionaryEntryType dictionaryEntryType : dictionaryEntryTypeList) {
+					JMdict.Entry entry = gson.fromJson(entryBody, JMdict.Entry.class);
+					
+					// czy dodac pozycje
+					boolean addDictionaryEntry = true;
+					
+					MiscInfo misc = entry.getMisc();
+					
+					if (misc != null) {
+						OldPolishJapaneseDictionaryInfo oldPolishJapaneseDictionary = misc.getOldPolishJapaneseDictionary();
+						
+						if (oldPolishJapaneseDictionary != null) {
+							List<OldPolishJapaneseDictionaryInfoAttributeListInfo> oldPolishJapaneseDictionaryAttributeList = oldPolishJapaneseDictionary.getAttributeList();
 							
-							if (findWordRequest.dictionaryEntryTypeList.contains(dictionaryEntryType) == true) {
-								isInNeededDictionaryEntryTypeList = true;
+							if (findWordRequest.searchOnlyCommonWord == true) { // sprawdzenie, czy wystepuje atrybut COMMON_WORD
 								
-								break;
+								boolean existsAttributeCommonWord = oldPolishJapaneseDictionaryAttributeList.stream().filter(f -> f.getType().equals(AttributeType.COMMON_WORD.name())).count() > 0;
+								
+								if (existsAttributeCommonWord == false) {
+									addDictionaryEntry = false;
+									
+									break;
+								}									
 							}
 						}
-						
-						if (isInNeededDictionaryEntryTypeList == false) {
-							addDictionaryEntry = false;
-						}					
 					}
-				}
-				
-				if (addDictionaryEntry == true) {
 					
-					boolean alreadyInResult = false;
-					
-					for (FindWordResult.ResultItem currentResultItem : findWordResult.result) {
+					// jezeli mozna dodac to sprawdzamy dalej
+					if (addDictionaryEntry == true) {
 						
-						if (currentResultItem.getDictionaryEntry().getId() == dictionaryEntry.getId()) {
-							alreadyInResult = true;
+						// sprawdzenie typow
+						if (findWordRequest.dictionaryEntryTypeList != null && findWordRequest.dictionaryEntryTypeList.size() > 0) {
 							
-							break;
+							boolean isInNeededDictionaryEntryTypeList = false;
+														
+							if (misc != null) {
+								OldPolishJapaneseDictionaryInfo oldPolishJapaneseDictionary = misc.getOldPolishJapaneseDictionary();
+								
+								if (oldPolishJapaneseDictionary != null) {
+									
+									FOR_OLD_ENTRY:
+									for (OldPolishJapaneseDictionaryInfoEntriesInfo oldEntry : oldPolishJapaneseDictionary.getEntries()) {
+										List<DictionaryEntryType> dictionaryEntryTypeList = 
+												Arrays.asList(oldEntry.getDictionaryEntryTypeList().split(",")).stream().map(m -> DictionaryEntryType.valueOf(m)).collect(Collectors.toList());
+										
+										for (DictionaryEntryType dictionaryEntryType : dictionaryEntryTypeList) {
+											
+											if (findWordRequest.dictionaryEntryTypeList.contains(dictionaryEntryType) == true) {
+												isInNeededDictionaryEntryTypeList = true;
+												
+												break FOR_OLD_ENTRY;
+											}
+										}
+									}
+								}
+							}
+							
+							if (isInNeededDictionaryEntryTypeList == false) {
+								addDictionaryEntry = false;
+							}							
 						}						
 					}
 					
-					if (alreadyInResult == false) {
-						findWordResult.foundGrammaAndExamples = true;
+					if (addDictionaryEntry == true) {
 						
-						findWordResult.result.add(new FindWordResult.ResultItem(dictionaryEntry));						
-					}					
+						boolean alreadyInResult = false;
+														
+						if (alreadyInResult == false) {
+							findWordResult.foundGrammaAndExamples = true;
+							
+							findWordResult.result.add(new FindWordResult.ResultItem(entry, false, true));						
+						}					
+					}
 				}
 			}			
 			
@@ -1440,7 +1542,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				entry.setName(true);
 				
-				findWordResult.result.add(new FindWordResult.ResultItem(entry));
+				findWordResult.result.add(new FindWordResult.ResultItem(entry, true, false));
 				
 				findWordResult.setFoundNames(true);
 			}			
