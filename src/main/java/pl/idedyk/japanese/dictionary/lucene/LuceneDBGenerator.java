@@ -16,6 +16,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBContext;
@@ -1581,12 +1583,34 @@ public class LuceneDBGenerator {
 	private static void addSuggestion(Document document, String fieldName, String fieldValue, boolean isPolishTranslate) { 
 		
 		if (isPolishTranslate == false) {
-			
 			document.add(new StringField(fieldName, fieldValue, Field.Store.YES));
 			
 		} else {
-			
 			document.add(new StringField(fieldName, fieldValue, Field.Store.YES));
+			
+			// usuwamy wartosci w nawiasach
+			String fieldValueWithoutBrackets = fieldValue.replaceAll("\\s*\\([^()]*\\)\\s*", "").trim();
+			
+			// dodajemy jesli sa rozne wartosci
+			if (fieldValueWithoutBrackets.equals(fieldValue) == false) {
+				document.add(new StringField(fieldName, fieldValueWithoutBrackets, Field.Store.YES));
+			}
+
+			// dodanie wartosci w nawiasach
+			Pattern pattern = Pattern.compile("\\(([^)]*)\\)");
+			Matcher matcher = pattern.matcher(fieldValue);
+
+			while (matcher.find()) {
+				String fieldValueBracketValue = matcher.group(1);
+				
+				// ususiecie np.
+				if (fieldValueBracketValue.startsWith("np.") == true) {
+					fieldValueBracketValue = fieldValueBracketValue.substring(3).trim();
+				}
+				
+				document.add(new StringField(fieldName, fieldValueBracketValue, Field.Store.YES));
+			}
+
 			
 			/*
 			String fieldValueWithoutPolishChars = Utils.removePolishChars(fieldValue);
