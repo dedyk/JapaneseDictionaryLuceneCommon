@@ -64,6 +64,7 @@ import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateResultTyp
 import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon;
 import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon.KanjiKanaPair;
+import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2NameHelperCommon;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.Gloss;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
@@ -76,6 +77,8 @@ import pl.idedyk.japanese.dictionary2.jmdict.xsd.ReadingInfo;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.Sense;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.SenseAdditionalInfo;
 import pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict;
+import pl.idedyk.japanese.dictionary2.jmnedict.xsd.TranslationalInfo;
+import pl.idedyk.japanese.dictionary2.jmnedict.xsd.TranslationalInfoTransDet;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Kanjidic2;
 
@@ -1155,7 +1158,10 @@ public class LuceneDBGenerator {
 				System.out.println("Add name 2 entry: " + entry.getEntryId());
 		
 				// dodanie wpisu do bazy danych
-				addNameDictionaryEntry(indexWriter, entry, counter, addSugestionList, generatePrefixes);				
+				addNameDictionaryEntry(indexWriter, entry, counter, addSugestionList, generatePrefixes);	
+				
+				// zwiekszenie licznika
+				counter++;
 			}
 		}
 		
@@ -1204,8 +1210,113 @@ public class LuceneDBGenerator {
 		// xml
 		document.add(new StoredField(LuceneStatic.nameDictionaryEntry2_entry, gson.toJson(entry)));
 		
-		// FM_FIXME: dalej !!!!!, wyjac pola
+		// FM_FIXME: dalej !!!!!, wyjac pola dla lucynki
 		
+		// kanji
+		List<pl.idedyk.japanese.dictionary2.jmnedict.xsd.KanjiInfo> kanjiInfoList = entry.getKanjiInfoList();
+		
+		for (pl.idedyk.japanese.dictionary2.jmnedict.xsd.KanjiInfo kanjiInfo : kanjiInfoList) {
+			String kanji = kanjiInfo.getKanji();
+			
+			document.add(new StringField(LuceneStatic.nameDictionaryEntry2_kanji, emptyIfNull(kanji), Field.Store.YES));
+			
+			addPrefixes(document, LuceneStatic.nameDictionaryEntry2_kanji, emptyIfNull(kanji), generatePrefixes);
+			
+			if (addSugestionList == true) {
+				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(kanji), false);
+				addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, emptyIfNull(kanji));
+			}
+		}
+		
+		// reading
+		List<pl.idedyk.japanese.dictionary2.jmnedict.xsd.ReadingInfo> readingInfoList = entry.getReadingInfoList();
+		
+		for (pl.idedyk.japanese.dictionary2.jmnedict.xsd.ReadingInfo readingInfo : readingInfoList) {
+			// kanaList
+			String kana = readingInfo.getKana();
+			
+			document.add(new StringField(LuceneStatic.nameDictionaryEntry2_kana, kana, Field.Store.YES));
+		
+			addPrefixes(document, LuceneStatic.nameDictionaryEntry2_kana, kana, generatePrefixes);
+			
+			if (addSugestionList == true) {
+				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, kana, false);
+				addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, emptyIfNull(kana));
+			}
+			
+			// romajiList
+			String romaji = readingInfo.getRomaji();
+			
+			if (romaji != null) { // romaji zawsze powinno istniec
+				document.add(new TextField(LuceneStatic.nameDictionaryEntry2_romaji, romaji, Field.Store.YES));
+				
+				addPrefixes(document, LuceneStatic.nameDictionaryEntry2_romaji, romaji, generatePrefixes);
+				
+				addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry2_romaji, romaji, generatePrefixes, null);
+						
+				if (addSugestionList == true) {
+					addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, romaji, false);
+					addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, emptyIfNull(romaji));
+				}
+			}
+		}
+		
+		// translatesList i info
+		List<TranslationalInfo> translationalInfoList = entry.getTranslationInfo();
+		
+		for (TranslationalInfo currentTranslationalInfo : translationalInfoList) {
+			
+			// pobieramy znaczenie polskie lub angielskie
+			List<TranslationalInfoTransDet> englishOrPolishTranslationalInfoTransDetList = Dictionary2NameHelperCommon.getEnglishOrPolishTranslationalInfoTransDet(currentTranslationalInfo.getTransDet());
+			
+			for (TranslationalInfoTransDet translationalInfoTransDet : englishOrPolishTranslationalInfoTransDetList) {
+				
+				String currentTranslate = translationalInfoTransDet.getValue();
+				
+				document.add(new TextField(LuceneStatic.nameDictionaryEntry2_translatesList, currentTranslate, Field.Store.YES));
+				
+				addPrefixes(document, LuceneStatic.nameDictionaryEntry2_translatesList, currentTranslate, generatePrefixes);
+				
+				if (addSugestionList == true) {									
+					addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, currentTranslate, true);
+					addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, emptyIfNull(currentTranslate));
+				}
+
+				String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
+				
+				document.add(new TextField(LuceneStatic.nameDictionaryEntry2_translatesList, currentTranslateWithoutPolishChars, Field.Store.NO));
+				
+				addPrefixes(document, LuceneStatic.nameDictionaryEntry2_translatesList, currentTranslateWithoutPolishChars, generatePrefixes);				
+			}
+		}
+		
+		// info - FM_FIXME: dodac info do xsd - ponizej stary kod:
+		/*
+		String info = emptyIfNull(dictionaryEntry.getInfo());
+		
+		document.add(new TextField(LuceneStatic.nameDictionaryEntry_info, info, Field.Store.YES));
+		
+		addPrefixes(document, LuceneStatic.nameDictionaryEntry_info, info, generatePrefixes);
+			
+		String infoWithoutPolishChars = Utils.removePolishChars(info);
+			
+		document.add(new TextField(LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.NO));
+		
+		addPrefixes(document, LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, generatePrefixes);
+		*/
+		
+		
+		
+		
+		/*
+		 * FM_FIXME: stary kod
+		 * 
+		
+		
+
+		*/
+		
+		// dodanie dokumentu do lucynki
 		indexWriter.addDocument(document);
 		
 		// FM_FIXME: do zmiany !!!!!!
@@ -1241,72 +1352,6 @@ public class LuceneDBGenerator {
 			document.add(new StringField(LuceneStatic.nameDictionaryEntry_attributeList, currentAttribute, Field.Store.YES));
 		}
 				
-		// kanji
-		document.add(new StringField(LuceneStatic.nameDictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), Field.Store.YES));
-		
-		addPrefixes(document, LuceneStatic.nameDictionaryEntry_kanji, emptyIfNull(dictionaryEntry.getKanji()), generatePrefixes);
-		
-		if (addSugestionList == true) {
-			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(dictionaryEntry.getKanji()), false);
-		}
-		
-		// kanaList
-		String kana = dictionaryEntry.getKana();
-		
-		document.add(new StringField(LuceneStatic.nameDictionaryEntry_kana, kana, Field.Store.YES));
-		
-		addPrefixes(document, LuceneStatic.nameDictionaryEntry_kana, kana, generatePrefixes);
-		
-		if (addSugestionList == true) {
-			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, kana, false);
-		}
-				
-		// romajiList
-		String romaji = dictionaryEntry.getRomaji();
-		
-		document.add(new TextField(LuceneStatic.nameDictionaryEntry_romaji, romaji, Field.Store.YES));
-		
-		addPrefixes(document, LuceneStatic.nameDictionaryEntry_romaji, romaji, generatePrefixes);
-		
-		addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry_virtual_romaji, romaji, generatePrefixes, null);
-				
-		if (addSugestionList == true) {
-			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, romaji, false);
-		}
-		
-		// translatesList
-		List<String> translates = dictionaryEntry.getTranslates();
-		
-		for (String currentTranslate : translates) {
-			
-			document.add(new TextField(LuceneStatic.nameDictionaryEntry_translatesList, currentTranslate, Field.Store.YES));
-			
-			addPrefixes(document, LuceneStatic.nameDictionaryEntry_translatesList, currentTranslate, generatePrefixes);
-			
-			if (addSugestionList == true) {
-								
-				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, currentTranslate, true);
-			}
-			
-			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
-				
-			document.add(new TextField(LuceneStatic.nameDictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.NO));
-			
-			addPrefixes(document, LuceneStatic.nameDictionaryEntry_translatesListWithoutPolishChars, currentTranslateWithoutPolishChars, generatePrefixes);
-		}
-		
-		// info
-		String info = emptyIfNull(dictionaryEntry.getInfo());
-		
-		document.add(new TextField(LuceneStatic.nameDictionaryEntry_info, info, Field.Store.YES));
-		
-		addPrefixes(document, LuceneStatic.nameDictionaryEntry_info, info, generatePrefixes);
-			
-		String infoWithoutPolishChars = Utils.removePolishChars(info);
-			
-		document.add(new TextField(LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.NO));
-		
-		addPrefixes(document, LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, generatePrefixes);
 				
 		
 		*/
