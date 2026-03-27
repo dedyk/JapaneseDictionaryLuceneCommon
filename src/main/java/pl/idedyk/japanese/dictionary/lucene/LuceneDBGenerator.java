@@ -75,6 +75,7 @@ import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfo
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.ReadingInfo;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.Sense;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.SenseAdditionalInfo;
+import pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Kanjidic2;
 
@@ -84,6 +85,56 @@ import com.google.gson.Gson;
 public class LuceneDBGenerator {	
 	
 	public static void main(String[] args) throws Exception {
+		
+		// FM_FIXME: tylko testy, do usuniecia
+		boolean addSugestionList = true;
+		boolean generateNameEntryPrefixes = true;
+		boolean generateNamesDictionary = true;
+		
+		String name2FilePath = "db/name2.xml";
+		String dbOutDir = "db-test";
+		
+		final File dbOutDirFile = new File(dbOutDir);
+		
+		if (dbOutDirFile.exists() == false) {
+			dbOutDirFile.mkdir();
+		}
+		
+		if (dbOutDirFile.isDirectory() == true) {
+			
+			File[] dbOutDirFileListFiles = dbOutDirFile.listFiles();
+			
+			for (File file : dbOutDirFileListFiles) {
+				file.delete();
+			}
+		}		
+		
+		// tworzenie indeksu lucene
+		Directory index = FSDirectory.open(dbOutDirFile);
+		
+		// tworzenie analizatora lucene
+		LuceneAnalyzer analyzer = new LuceneAnalyzer(Version.LUCENE_47, true);
+		
+		// tworzenie zapisywacza konfiguracji
+		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
+		indexWriterConfig.setOpenMode(OpenMode.CREATE);
+		
+		IndexWriter indexWriter = new IndexWriter(index, indexWriterConfig);
+		
+		// wczytywanie pliku z nazwami
+		if (generateNamesDictionary == true) {
+			readNames2File(indexWriter, name2FilePath, addSugestionList, generateNameEntryPrefixes);
+		}	
+
+		// zakonczenie zapisywania indeksu
+		indexWriter.close();		
+	}
+	
+	public static void main__ok(String[] args) throws Exception {
+		
+		// FM_FIXME: ok !!!!!!!!
+		// FM_FIXME: dostosowac do zmian name2
+		// FM_FIXME: zmienic db/names.csv -> xml
 		
 		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/names.csv db/word2.xml db-lucene
 		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/names.csv word2.xml db-lucene
@@ -96,7 +147,7 @@ public class LuceneDBGenerator {
 		String sentencesGroupsFilePath = args[3];
 		String kanjiFilePath = args[4];
 		// String radicalFilePath = args[5];
-		final String nameFilePath = args[6];
+		final String name2FilePath = args[6];
 		
 		final String word2XmlFilePath = args[7];
 		
@@ -260,6 +311,8 @@ public class LuceneDBGenerator {
 	}
 
 	private static DictionaryEntry parseDictionaryEntry(CsvReader csvReader) throws DictionaryException, IOException {
+		
+		// FM_FIXME: do usuniecia
 		
 		String idString = csvReader.get(0);
 		String dictionaryEntryTypeString = csvReader.get(1);
@@ -1071,7 +1124,43 @@ public class LuceneDBGenerator {
 		}
 	}
 	
-	private static List<DictionaryEntry> readNamesFile(IndexWriter indexWriter, InputStream namesInputStream, Counter idCounter, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException {
+	private static void readNames2File(IndexWriter indexWriter, String name2XmlFilePath, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException, JAXBException {
+		
+		JAXBContext jaxbContext = JAXBContext.newInstance(JMnedict.class);              
+		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+				
+		// pobranie listy plikow word2.xml
+		File[] name2XmlFileList = new File(name2XmlFilePath).getParentFile().listFiles(new FileFilter() {
+			
+			@Override
+			public boolean accept(File pathname) {				
+				return pathname.getPath().startsWith(name2XmlFilePath);
+			}
+		});
+		
+		Arrays.sort(name2XmlFileList);
+		
+		// inicjalizacja licznika, aby latwiej bylo wyszukiwac konkretne dokumenty
+		int counter = 1;
+		
+		for (File currentName2XmlFile : name2XmlFileList) {
+			
+			JMnedict jmnedict = (JMnedict) jaxbUnmarshaller.unmarshal(currentName2XmlFile);
+			
+			// pobranie listy wpisow
+			List<JMnedict.Entry> entryList = jmnedict.getEntryList();
+		
+			for (JMnedict.Entry entry : entryList) {
+			
+				System.out.println("Add name 2 entry: " + entry.getEntryId());
+		
+				// dodanie wpisu do bazy danych
+				addNameDictionaryEntry(indexWriter, entry, counter, addSugestionList, generatePrefixes);				
+			}
+		}
+		
+		/*
+		// FM_FIXME: stary kod
 		
 		List<DictionaryEntry> namesDictionaryEntryList = new ArrayList<DictionaryEntry>();
 
@@ -1095,11 +1184,35 @@ public class LuceneDBGenerator {
 		csvReader.close();
 		
 		return namesDictionaryEntryList;
+		*/
 	}
 	
-	private static void addNameDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
+	private static void addNameDictionaryEntry(IndexWriter indexWriter, JMnedict.Entry entry, int counter, boolean addSugestionList, boolean generatePrefixes) throws IOException {
+		
+		// pomocnik
+		Gson gson = new Gson();
 		
 		Document document = new Document();
+		
+		// object type
+		document.add(new StringField(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry2_objectType, Field.Store.YES));
+	
+		// id i counter
+		document.add(new IntField(LuceneStatic.nameDictionaryEntry2_id, entry.getEntryId(), Field.Store.YES));
+		document.add(new IntField(LuceneStatic.nameDictionaryEntry2_counter, counter, Field.Store.YES));			
+	
+		// xml
+		document.add(new StoredField(LuceneStatic.nameDictionaryEntry2_entry, gson.toJson(entry)));
+		
+		// FM_FIXME: dalej !!!!!, wyjac pola
+		
+		indexWriter.addDocument(document);
+		
+		// FM_FIXME: do zmiany !!!!!!
+		// FM_FIXME: stary kod
+		
+		/*
+		
 		
 		// object type
 		document.add(new StringField(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry_objectType, Field.Store.YES));
@@ -1195,7 +1308,8 @@ public class LuceneDBGenerator {
 		
 		addPrefixes(document, LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, generatePrefixes);
 				
-		indexWriter.addDocument(document);
+		
+		*/
 	}
 	
 	private static void addAvailableRadicalList(IndexWriter indexWriter, Set<String> allAvailableRadicalSet) throws IOException {

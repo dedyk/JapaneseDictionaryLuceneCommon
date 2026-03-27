@@ -50,6 +50,7 @@ public class LuceneStatic {
 	public static final String dictionaryEntry_android_spellCheckerList = "dictionaryEntry_android_spellCheckerList";
 	public static final String dictionaryEntry_web_spellCheckerList = "dictionaryEntry_web_spellCheckerList";
 	
+	// FM_FIXME: do usuniecia, przeniesienia - start
 	public static final String nameDictionaryEntry_objectType = "nameDictionaryEntry";
 	
 	public static final String nameDictionaryEntry_id = "nameDictionaryEntry_id";
@@ -64,6 +65,7 @@ public class LuceneStatic {
 	public static final String nameDictionaryEntry_translatesListWithoutPolishChars = "nameDictionaryEntry_translatesListWithoutPolishChars";
 	public static final String nameDictionaryEntry_info = "nameDictionaryEntry_info";
 	public static final String nameDictionaryEntry_infoWithoutPolishChars = "nameDictionaryEntry_infoWithoutPolishChars";
+	// FM_FIXME: - end
 	
 	// kanjiEntry	
 	public static final String kanjiEntry_objectType = "kanjiEntry";
@@ -132,6 +134,22 @@ public class LuceneStatic {
 	public static final String dictionaryEntry_infoWithoutPolishChars = "dictionaryEntry_infoWithoutPolishChars";
 	*/
 	public static final String dictionaryEntry2_exampleSentenceGroupIdsList = "dictionaryEntry2_exampleSentenceGroupIdsList";
+
+	// FM_FIXME - do uzycia, sprawdzic, czy jest uzywane w generatorze i LuceneDatabase - start
+	public static final String nameDictionaryEntry2_objectType = "nameDictionaryEntry2";
+	
+	public static final String nameDictionaryEntry2_id = "nameDictionaryEntry2_id";
+	
+	// FM_FIXME: to chyba nie potrzebne, sprawdzic
+	public static final String nameDictionaryEntry2_counter = "nameDictionaryEntry2_counter";
+	public static final String nameDictionaryEntry2_entry = "nameDictionaryEntry2_entry";
+		
+	public static final String nameDictionaryEntry2_kanji = "nameDictionaryEntry2_kanji";
+	public static final String nameDictionaryEntry2_kana = "nameDictionaryEntry2_kana";
+	public static final String nameDictionaryEntry2_romaji = "nameDictionaryEntry2_romaji";
+	public static final String nameDictionaryEntry2_translatesList = "nameDictionaryEntry2_translatesList";
+	public static final String nameDictionaryEntry2_info = "nameDictionaryEntry2_info";
+	// FM_FIXME - end
 	
 	//
 	
