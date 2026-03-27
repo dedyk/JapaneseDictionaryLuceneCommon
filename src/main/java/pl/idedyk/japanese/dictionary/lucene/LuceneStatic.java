@@ -139,17 +139,16 @@ public class LuceneStatic {
 	public static final String nameDictionaryEntry2_objectType = "nameDictionaryEntry2";
 	
 	public static final String nameDictionaryEntry2_id = "nameDictionaryEntry2_id";
-	
-	// FM_FIXME: to chyba nie potrzebne, sprawdzic
 	public static final String nameDictionaryEntry2_counter = "nameDictionaryEntry2_counter";
 	public static final String nameDictionaryEntry2_entry = "nameDictionaryEntry2_entry";
-		
+	
+	public static final String nameDictionaryEntry2_dictionaryEntryTypeList = "nameDictionaryEntry2_dictionaryEntryTypeList";
+	
 	public static final String nameDictionaryEntry2_kanji = "nameDictionaryEntry2_kanji";
 	public static final String nameDictionaryEntry2_kana = "nameDictionaryEntry2_kana";
 	public static final String nameDictionaryEntry2_romaji = "nameDictionaryEntry2_romaji";
 	public static final String nameDictionaryEntry2_translatesList = "nameDictionaryEntry2_translatesList";
 	public static final String nameDictionaryEntry2_info = "nameDictionaryEntry2_info";
-	// FM_FIXME - end
 	
 	//
 	

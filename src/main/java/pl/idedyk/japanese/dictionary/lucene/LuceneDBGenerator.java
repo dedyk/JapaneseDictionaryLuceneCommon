@@ -46,7 +46,6 @@ import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
 import pl.idedyk.japanese.dictionary.api.dto.AttributeType;
-import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
 import pl.idedyk.japanese.dictionary.api.dto.GroupWithTatoebaSentenceList;
@@ -79,6 +78,7 @@ import pl.idedyk.japanese.dictionary2.jmdict.xsd.SenseAdditionalInfo;
 import pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict;
 import pl.idedyk.japanese.dictionary2.jmnedict.xsd.TranslationalInfo;
 import pl.idedyk.japanese.dictionary2.jmnedict.xsd.TranslationalInfoTransDet;
+import pl.idedyk.japanese.dictionary2.jmnedict.xsd.TranslationalInfoTransDetAdditionalInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Kanjidic2;
 
@@ -139,8 +139,8 @@ public class LuceneDBGenerator {
 		// FM_FIXME: dostosowac do zmian name2
 		// FM_FIXME: zmienic db/names.csv -> xml
 		
-		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/names.csv db/word2.xml db-lucene
-		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/names.csv word2.xml db-lucene
+		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/name2.xml db/word2.xml db-lucene
+		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/name2.xml word2.xml db-lucene
 		
 		// parametry
 		String mode = args[0];
@@ -276,29 +276,7 @@ public class LuceneDBGenerator {
 		
 		// wczytywanie pliku z nazwami
 		if (generateNamesDictionary == true) {
-			
-			File[] namesList = new File(nameFilePath).getParentFile().listFiles(new FileFilter() {
-				
-				@Override
-				public boolean accept(File pathname) {				
-					return pathname.getPath().startsWith(nameFilePath);
-				}
-			});
-			
-			Arrays.sort(namesList);
-			
-			Counter idCounter = new Counter(1);
-			
-			for (File currentName : namesList) {
-				
-				FileInputStream namesInputStream = new FileInputStream(currentName);
-				
-				// wczytywanie slownika nazw
-				readNamesFile(indexWriter, namesInputStream, idCounter, addSugestionList, generateNameEntryPrefixes);
-		
-				// zamkniecie pliku
-				namesInputStream.close();
-			}		
+			readNames2File(indexWriter, name2FilePath, addSugestionList, generateNameEntryPrefixes);		
 		}	
 						
 		// zakonczenie zapisywania indeksu
@@ -313,10 +291,9 @@ public class LuceneDBGenerator {
 		System.out.println("DB Generator - done");
 	}
 
+	/*
 	private static DictionaryEntry parseDictionaryEntry(CsvReader csvReader) throws DictionaryException, IOException {
-		
-		// FM_FIXME: do usuniecia
-		
+				
 		String idString = csvReader.get(0);
 		String dictionaryEntryTypeString = csvReader.get(1);
 		String attributesString = csvReader.get(2);
@@ -339,6 +316,7 @@ public class LuceneDBGenerator {
 
 		return entry;		
 	}
+	*/
 	
 	/*
 	private static void addDictionaryEntry(IndexWriter indexWriter, DictionaryEntry dictionaryEntry, boolean addSugestionList, boolean generatePrefixes) throws IOException {
@@ -1164,33 +1142,6 @@ public class LuceneDBGenerator {
 				counter++;
 			}
 		}
-		
-		/*
-		// FM_FIXME: stary kod
-		
-		List<DictionaryEntry> namesDictionaryEntryList = new ArrayList<DictionaryEntry>();
-
-		CsvReader csvReader = new CsvReader(new InputStreamReader(namesInputStream), ',');
-
-		while (csvReader.readRecord()) {
-
-			DictionaryEntry entry = parseDictionaryEntry(csvReader);
-			
-			entry.setId(idCounter.getValue());
-			
-			idCounter.increment();
-			
-			System.out.println(String.format("DictionaryEntry (name) id = %s", entry.getId()));
-
-			addNameDictionaryEntry(indexWriter, entry, addSugestionList, generatePrefixes);
-			
-			namesDictionaryEntryList.add(entry);			
-		}
-
-		csvReader.close();
-		
-		return namesDictionaryEntryList;
-		*/
 	}
 	
 	private static void addNameDictionaryEntry(IndexWriter indexWriter, JMnedict.Entry entry, int counter, boolean addSugestionList, boolean generatePrefixes) throws IOException {
@@ -1209,9 +1160,7 @@ public class LuceneDBGenerator {
 	
 		// xml
 		document.add(new StoredField(LuceneStatic.nameDictionaryEntry2_entry, gson.toJson(entry)));
-		
-		// FM_FIXME: dalej !!!!!, wyjac pola dla lucynki
-		
+				
 		// kanji
 		List<pl.idedyk.japanese.dictionary2.jmnedict.xsd.KanjiInfo> kanjiInfoList = entry.getKanjiInfoList();
 		
@@ -1288,63 +1237,52 @@ public class LuceneDBGenerator {
 				
 				addPrefixes(document, LuceneStatic.nameDictionaryEntry2_translatesList, currentTranslateWithoutPolishChars, generatePrefixes);				
 			}
+			
+			// pobieramy informacje dodatkowe polskie lub angielskie (na razie nic nie bedzie)
+			TranslationalInfoTransDetAdditionalInfo firstEnglishOrPolishTranslationalInfoTransDetAdditionalInfo = Dictionary2NameHelperCommon.getFirstEnglishOrPolishTranslationalInfoTransDetAdditionalInfo(currentTranslationalInfo.getAddInfo());
+			
+			if (firstEnglishOrPolishTranslationalInfoTransDetAdditionalInfo != null) {
+				String info = firstEnglishOrPolishTranslationalInfoTransDetAdditionalInfo.getValue();
+				
+				document.add(new TextField(LuceneStatic.nameDictionaryEntry2_info, info, Field.Store.YES));
+				
+				addPrefixes(document, LuceneStatic.nameDictionaryEntry2_info, info, generatePrefixes);
+					
+				String infoWithoutPolishChars = Utils.removePolishChars(info);
+					
+				document.add(new TextField(LuceneStatic.nameDictionaryEntry2_info, infoWithoutPolishChars, Field.Store.NO));
+				
+				addPrefixes(document, LuceneStatic.nameDictionaryEntry2_info, infoWithoutPolishChars, generatePrefixes);
+			}
 		}
 		
-		// info - FM_FIXME: dodac info do xsd - ponizej stary kod:
-		/*
-		String info = emptyIfNull(dictionaryEntry.getInfo());
-		
-		document.add(new TextField(LuceneStatic.nameDictionaryEntry_info, info, Field.Store.YES));
-		
-		addPrefixes(document, LuceneStatic.nameDictionaryEntry_info, info, generatePrefixes);
+		// dictionary entry type list
+		if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getDictionaryEntryTypeList() != null) {
+			String dictionaryEntryTypeListString = entry.getMisc().getOldPolishJapaneseDictionary().getDictionaryEntryTypeList();
+	
+			LinkedHashSet<String> allDictionaryEntryTypeStringList = new LinkedHashSet<String>(); 
 			
-		String infoWithoutPolishChars = Utils.removePolishChars(info);
-			
-		document.add(new TextField(LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.NO));
-		
-		addPrefixes(document, LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, infoWithoutPolishChars, generatePrefixes);
-		*/
-		
-		
-		
-		
-		/*
-		 * FM_FIXME: stary kod
-		 * 
-		
-		
-
-		*/
-		
+			allDictionaryEntryTypeStringList.addAll(Arrays.asList(dictionaryEntryTypeListString.split(",")).stream().collect(Collectors.toList()));					
+	
+			for (String dictionaryEntryTypeString : allDictionaryEntryTypeStringList) {
+				document.add(new StringField(LuceneStatic.nameDictionaryEntry2_dictionaryEntryTypeList, dictionaryEntryTypeString, Field.Store.YES));
+			}				
+		}
+				
 		// dodanie dokumentu do lucynki
 		indexWriter.addDocument(document);
 		
 		// FM_FIXME: do zmiany !!!!!!
 		// FM_FIXME: stary kod
-		
 		/*
-		
-		
-		// object type
-		document.add(new StringField(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry_objectType, Field.Store.YES));
-		
-		// id
-		document.add(new IntField(LuceneStatic.nameDictionaryEntry_id, dictionaryEntry.getId(), Field.Store.YES));
-		
+				
 		// unique key
 		String uniqueKey = dictionaryEntry.getUniqueKey();
 		
 		if (uniqueKey != null) {
 			document.add(new StringField(LuceneStatic.nameDictionaryEntry_uniqueKey, uniqueKey, Field.Store.YES));
 		}
-		
-		// dictionary entry type list
-		List<String> dictionaryEntryTypeStringList = DictionaryEntryType.convertToValues(dictionaryEntry.getDictionaryEntryTypeList());
-		
-		for (String dictionaryEntryTypeString : dictionaryEntryTypeStringList) {
-			document.add(new StringField(LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList, dictionaryEntryTypeString, Field.Store.YES));
-		}
-		
+				
 		// attributeList
 		List<String> attributeStringList = dictionaryEntry.getAttributeList().convertAttributeListToListString();
 		
@@ -1783,22 +1721,5 @@ public class LuceneDBGenerator {
 	
 	private static void addSpellChecker(Document document, String fieldName, String fieldValue) { 		
 		document.add(new StringField(fieldName, fieldValue, Field.Store.YES));
-	}
-	
-	private static class Counter {
-		
-		private int value;
-		
-		public Counter(int value) {
-			this.value = value;
-		}
-		
-		public void increment() {
-			value++;
-		}
-
-		public int getValue() {
-			return value;
-		}
 	}
 }
