@@ -1,5 +1,6 @@
 package pl.idedyk.japanese.dictionary.lucene.test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.analysis.TokenStream;
@@ -8,7 +9,13 @@ import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult.ResultItem;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPowerList;
+import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
+import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePairWithDictionaryEntry;
@@ -75,14 +82,26 @@ public class Test1 {
 		DictionaryManagerTest dictionaryManager = new DictionaryManagerTest(luceneDatabase);
 		
 		//		
-
+		
+		//pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry nameDictionaryEntry2 = dictionaryManager.getNameDictionaryEntry2ById(5500097);
+		// pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry nameDictionaryEntry2 = dictionaryManager.getNameDictionaryEntry2ByCounter(2);
+		//pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry nameDictionaryEntry2 = dictionaryManager.getNameDictionaryEntry2ByOldPolishJapaneseDictionaryUniqueKey("醍醐鍵尾町/だいごかぎおちょう/1");
+		
+		// System.out.println("Name: " + nameDictionaryEntry2.getEntryId());
+		
+		List<pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry> nameDictionaryEntry2List = dictionaryManager.getWordsNameGroup(10, 1);
+		
+		for (pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry nameDictionaryEntry2 : nameDictionaryEntry2List) {
+			System.out.println("Name: " + nameDictionaryEntry2.getEntryId());
+		}
+		
 		/*
 		FindWordRequest findWordRequest = new FindWordRequest();
 		
 		findWordRequest.searchGrammaFormAndExamples = true;		
 		//findWordRequest.word = "shukujitsu";
 		
-		findWordRequest.word = "a";
+		findWordRequest.word = "尾 先";
 		// findWordRequest.word = text; //"スプラッタ・ムービー";
 		// findWordRequest.word = "スプラッタムービー";
 		// findWordRequest.word = "猫";
@@ -102,7 +121,7 @@ public class Test1 {
 		
 		findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
 		
-		findWordRequest.wordPlaceSearch = WordPlaceSearch.ANY_PLACE;
+		findWordRequest.wordPlaceSearch = WordPlaceSearch.START_WITH;
 		
 		findWordRequest.searchTranslate = true;
 		findWordRequest.searchInfo = true;
@@ -125,7 +144,7 @@ public class Test1 {
 				System.out.println(resultItem.getTranslates());
 			}
 			
-			DictionaryEntry oldDictionaryEntry = resultItem.getOldDictionaryEntry();
+			DictionaryEntry oldDictionaryEntry = resultItem.getDictionaryEntry();
 			
 			if (oldDictionaryEntry != null) {
 				System.out.println("oldDictionaryEntry");
@@ -209,11 +228,13 @@ public class Test1 {
 		// Entry entry = dictionaryManager.getDictionaryEntry2ByOldPolishJapaneseDictionaryId(99296);
 		// System.out.println("AAAAA: " + entry.getEntryId());
 		
+		/*
 		List<Entry> groupDictionaryEntry2List = dictionaryManager.getGroupDictionaryEntry2List(GroupEnum.GENKI_1_1);
 		
 		for (Entry entry : groupDictionaryEntry2List) {
 			System.out.println(entry.getReadingInfoList().get(0).getKana().getRomaji());
 		}
+		*/
 		
 		luceneDatabase.close();
 	}

@@ -65,6 +65,7 @@ import pl.idedyk.japanese.dictionary2.jmdict.xsd.MiscInfo;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfo;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfoAttributeListInfo;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.OldPolishJapaneseDictionaryInfoEntriesInfo;
+import pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Misc2Info;
 
@@ -677,39 +678,107 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 	
 	@Override
-	public DictionaryEntry getDictionaryEntryNameById(String id) throws DictionaryException {
-
+	public JMnedict.Entry getNameDictionaryEntry2ById(String id) throws DictionaryException {
+		
+		Gson gson = new Gson();
+		
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 
-		query.add(NumericRangeQuery.newIntRange(LuceneStatic.nameDictionaryEntry_id, Integer.parseInt(id), Integer.parseInt(id), true, true), Occur.MUST);
+		query.add(NumericRangeQuery.newIntRange(LuceneStatic.nameDictionaryEntry2_id, Integer.parseInt(id), Integer.parseInt(id), true, true), Occur.MUST);
 		
-		return getCommonDictionaryEntryNameByIdUniqueKey(query);
+		try {
+			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
+
+			if (scoreDocs.length == 0) {
+				return null;
+			}
+
+			Document foundDocument = searcher.doc(scoreDocs[0].doc);
+			
+			String entryBody = foundDocument.get(LuceneStatic.nameDictionaryEntry2_entry);
+			
+			return gson.fromJson(entryBody, JMnedict.Entry.class);
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
+		}		
 	}
 
 	@Override
-	public DictionaryEntry getDictionaryEntryNameByUniqueKey(String uniqueKey) throws DictionaryException {
-
+	public JMnedict.Entry getNameDictionaryEntry2ByCounter(int counter) throws DictionaryException {
+		
+		Gson gson = new Gson();
+		
 		BooleanQuery query = new BooleanQuery();
 
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry2_objectType));
+
+		query.add(phraseQuery, Occur.MUST);
+
+		query.add(NumericRangeQuery.newIntRange(LuceneStatic.nameDictionaryEntry2_counter, counter, counter, true, true), Occur.MUST);
+		
+		try {
+			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
+
+			if (scoreDocs.length == 0) {
+				return null;
+			}
+
+			Document foundDocument = searcher.doc(scoreDocs[0].doc);
+			
+			String entryBody = foundDocument.get(LuceneStatic.nameDictionaryEntry2_entry);
+			
+			return gson.fromJson(entryBody, JMnedict.Entry.class);
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
+		}		
+	}
+	
+	@Override
+	public JMnedict.Entry getNameDictionaryEntry2ByOldPolishJapaneseDictionaryUniqueKey(String uniqueKey) throws DictionaryException {
+		
+		Gson gson = new Gson();
+		
+		BooleanQuery query = new BooleanQuery();
+
+		// object type
+		PhraseQuery phraseQuery = new PhraseQuery();
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 		
-		query.add(createQuery(uniqueKey, LuceneStatic.nameDictionaryEntry_uniqueKey, WordPlaceSearch.EXACT), Occur.MUST);
+		query.add(createQuery(uniqueKey, LuceneStatic.nameDictionaryEntry2_uniqueKey, WordPlaceSearch.EXACT), Occur.MUST);
 		
-		return getCommonDictionaryEntryNameByIdUniqueKey(query);
+		try {
+			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
+
+			if (scoreDocs.length == 0) {
+				return null;
+			}
+
+			Document foundDocument = searcher.doc(scoreDocs[0].doc);
+			
+			String entryBody = foundDocument.get(LuceneStatic.nameDictionaryEntry2_entry);
+			
+			return gson.fromJson(entryBody, JMnedict.Entry.class);
+			
+		} catch (IOException e) {
+			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
+		}
 	}
 
+	/*
 	private DictionaryEntry getCommonDictionaryEntryNameByIdUniqueKey(BooleanQuery query) throws DictionaryException {
-		
+				
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
 
@@ -751,6 +820,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			throw new DictionaryException("Błąd podczas pobierania słowa: " + e);
 		}		
 	}
+	*/
 	
 	/*
 	@Override
@@ -958,7 +1028,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 

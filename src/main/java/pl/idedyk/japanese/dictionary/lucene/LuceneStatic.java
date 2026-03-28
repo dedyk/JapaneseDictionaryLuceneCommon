@@ -73,9 +73,15 @@ public class LuceneStatic {
 	public static final String kanjiEntry_id = "kanjiEntry_id";
 	public static final String kanjiEntry_kanji = "kanjiEntry_kanji";
 	public static final String kanjiEntry_polishTranslatesList = "kanjiEntry_polishTranslatesList";
+	
+	// FM_FIXME: usunac
 	public static final String kanjiEntry_polishTranslatesListWithoutPolishChars = "kanjiEntry_polishTranslatesListWithoutPolishChars";
+	
 	public static final String kanjiEntry_info = "kanjiEntry_info";
+	
+	// FM_FIXME: usunac
 	public static final String kanjiEntry_infoWithoutPolishChars = "kanjiEntry_infoWithoutPolishChars";
+	
 	public static final String kanjiEntry_strokeCount = "kanjiEntry_strokeCount";	
 	public static final String kanjiEntry_used = "kanjiEntry_used";
 	public static final String kanjiEntry_radicalsList = "kanjiEntry_radicalsList";

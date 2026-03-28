@@ -86,61 +86,11 @@ import com.csvreader.CsvReader;
 import com.google.gson.Gson;
 
 public class LuceneDBGenerator {	
-	
+		
 	public static void main(String[] args) throws Exception {
-		
-		// FM_FIXME: tylko testy, do usuniecia
-		boolean addSugestionList = true;
-		boolean generateNameEntryPrefixes = true;
-		boolean generateNamesDictionary = true;
-		
-		String name2FilePath = "db/name2.xml";
-		String dbOutDir = "db-test";
-		
-		final File dbOutDirFile = new File(dbOutDir);
-		
-		if (dbOutDirFile.exists() == false) {
-			dbOutDirFile.mkdir();
-		}
-		
-		if (dbOutDirFile.isDirectory() == true) {
-			
-			File[] dbOutDirFileListFiles = dbOutDirFile.listFiles();
-			
-			for (File file : dbOutDirFileListFiles) {
-				file.delete();
-			}
-		}		
-		
-		// tworzenie indeksu lucene
-		Directory index = FSDirectory.open(dbOutDirFile);
-		
-		// tworzenie analizatora lucene
-		LuceneAnalyzer analyzer = new LuceneAnalyzer(Version.LUCENE_47, true);
-		
-		// tworzenie zapisywacza konfiguracji
-		IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, analyzer);
-		indexWriterConfig.setOpenMode(OpenMode.CREATE);
-		
-		IndexWriter indexWriter = new IndexWriter(index, indexWriterConfig);
-		
-		// wczytywanie pliku z nazwami
-		if (generateNamesDictionary == true) {
-			readNames2File(indexWriter, name2FilePath, addSugestionList, generateNameEntryPrefixes);
-		}	
-
-		// zakonczenie zapisywania indeksu
-		indexWriter.close();		
-	}
-	
-	public static void main__ok(String[] args) throws Exception {
-		
-		// FM_FIXME: ok !!!!!!!!
-		// FM_FIXME: dostosowac do zmian name2
-		// FM_FIXME: zmienic db/names.csv -> xml
-		
-		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/name2.xml db/word2.xml db-lucene
-		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/name2.xml word2.xml db-lucene
+				
+		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/word2.xml db/name2.xml db-lucene
+		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv word2.xml db/name2.xml db-lucene
 		
 		// parametry
 		String mode = args[0];
@@ -150,9 +100,9 @@ public class LuceneDBGenerator {
 		String sentencesGroupsFilePath = args[3];
 		String kanjiFilePath = args[4];
 		// String radicalFilePath = args[5];
-		final String name2FilePath = args[6];
 		
-		final String word2XmlFilePath = args[7];
+		final String word2XmlFilePath = args[6];
+		final String name2FilePath = args[7];
 		
 		String dbOutDir = args[8];
 		
