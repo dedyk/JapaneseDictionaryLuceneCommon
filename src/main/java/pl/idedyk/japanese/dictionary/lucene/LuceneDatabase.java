@@ -1129,25 +1129,25 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 			// object type
 			PhraseQuery phraseQuery = new PhraseQuery();
-			phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry_objectType));
+			phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry2_objectType));
 
 			query.add(phraseQuery, Occur.MUST);
 
 			BooleanQuery kanjiBooleanQuery = new BooleanQuery();
 
 			// kanji
-			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry_kanji, findKanjiRequest.wordPlaceSearch, false), Occur.SHOULD);				
+			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry2_kanji, findKanjiRequest.wordPlaceSearch, false), Occur.SHOULD);				
 
 			// translate
 			//kanjiBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.kanjiEntry_polishTranslatesList, findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
 
-			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry_polishTranslatesListWithoutPolishChars, 
+			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry2_polishTranslatesList, 
 					findKanjiRequest.wordPlaceSearch, true), Occur.SHOULD);
 
 			// info
 			//kanjiBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.kanjiEntry_info, findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
 
-			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry_infoWithoutPolishChars, 
+			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry2_info, 
 					findKanjiRequest.wordPlaceSearch, true), Occur.SHOULD);
 
 			query.add(kanjiBooleanQuery, Occur.MUST);
@@ -1157,7 +1157,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 			Integer strokeCountTo = findKanjiRequest.strokeCountTo;
 							
 			if (strokeCountFrom != null || strokeCountTo != null) {
-				query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry_strokeCount, 
+				query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry2_strokeCount, 
 						strokeCountFrom != null ? strokeCountFrom.intValue() : 0,
 						strokeCountTo != null ? strokeCountTo.intValue() : 999999, true, true), Occur.MUST);					
 			}
@@ -1325,14 +1325,14 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				// object type
 				PhraseQuery phraseQuery = new PhraseQuery();
-				phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry_objectType));
+				phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry2_objectType));
 
 				query.add(phraseQuery, Occur.MUST);
 
 				BooleanQuery kanjiBooleanQuery = new BooleanQuery();
 
 				for (String currentRadical : radicals) {
-					kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry_radicalsList, WordPlaceSearch.EXACT), Occur.MUST);
+					kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry2_radicalsList, WordPlaceSearch.EXACT), Occur.MUST);
 				}
 
 				query.add(kanjiBooleanQuery, Occur.MUST);			
@@ -1343,7 +1343,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 					Document foundDocument = searcher.doc(scoreDoc.doc);
 
-					result.addAll(Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry_radicalsList)));
+					result.addAll(Arrays.asList(foundDocument.getValues(LuceneStatic.kanjiEntry2_radicalsList)));
 				}
 
 				return result;
@@ -1631,14 +1631,14 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 
 		BooleanQuery kanjiBooleanQuery = new BooleanQuery();
 
 		for (String currentRadical : radicals) {
-			kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry_radicalsList, WordPlaceSearch.EXACT), Occur.MUST);
+			kanjiBooleanQuery.add(createQuery(currentRadical, LuceneStatic.kanjiEntry2_radicalsList, WordPlaceSearch.EXACT), Occur.MUST);
 		}
 
 		query.add(kanjiBooleanQuery, Occur.MUST);
@@ -1674,11 +1674,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 
-		query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry_strokeCount, from, to, true, true), Occur.MUST);
+		query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry2_strokeCount, from, to, true, true), Occur.MUST);
 
 		final int maxResult = MAX_KANJI_STROKE_COUNT_RESULT;
 
@@ -1723,11 +1723,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 
-		query.add(createQuery(kanji, LuceneStatic.kanjiEntry_kanji, WordPlaceSearch.EXACT), Occur.MUST);
+		query.add(createQuery(kanji, LuceneStatic.kanjiEntry2_kanji, WordPlaceSearch.EXACT), Occur.MUST);
 
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
@@ -1777,11 +1777,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 		
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 		
-		query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry_id, Integer.parseInt(id), Integer.parseInt(id), true, true), Occur.MUST);
+		query.add(NumericRangeQuery.newIntRange(LuceneStatic.kanjiEntry2_id, Integer.parseInt(id), Integer.parseInt(id), true, true), Occur.MUST);
 		
 		try {
 			ScoreDoc[] scoreDocs = searcher.search(query, null, 1).scoreDocs;
@@ -1810,12 +1810,12 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 		// object type
 		PhraseQuery phraseQuery = new PhraseQuery();
-		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry_objectType));
+		phraseQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.kanjiEntry2_objectType));
 
 		query.add(phraseQuery, Occur.MUST);
 
 		if (onlyUsed == true) {
-			query.add(createQuery("true", LuceneStatic.kanjiEntry_used, WordPlaceSearch.EXACT), Occur.MUST);
+			query.add(createQuery("true", LuceneStatic.kanjiEntry2_used, WordPlaceSearch.EXACT), Occur.MUST);
 		}
 
 		try {
@@ -2077,7 +2077,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	private KanjiCharacterInfo createKanjiEntryFromLuceneDocument(Gson gson, Document luceneDocument, boolean addStroke) throws IOException {
 				
-		String entryBody = luceneDocument.get(LuceneStatic.kanjiEntry_entry);
+		String entryBody = luceneDocument.get(LuceneStatic.kanjiEntry2_entry);
 		
 		KanjiCharacterInfo kanjiCharacterInfo = gson.fromJson(entryBody, KanjiCharacterInfo.class);
 		

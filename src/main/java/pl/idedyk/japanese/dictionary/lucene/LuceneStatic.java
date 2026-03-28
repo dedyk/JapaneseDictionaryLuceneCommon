@@ -68,24 +68,17 @@ public class LuceneStatic {
 	// FM_FIXME: - end
 	
 	// kanjiEntry	
-	public static final String kanjiEntry_objectType = "kanjiEntry";
+	public static final String kanjiEntry2_objectType = "kanjiEntry2";
 	
-	public static final String kanjiEntry_id = "kanjiEntry_id";
-	public static final String kanjiEntry_kanji = "kanjiEntry_kanji";
-	public static final String kanjiEntry_polishTranslatesList = "kanjiEntry_polishTranslatesList";
-	
-	// FM_FIXME: usunac
-	public static final String kanjiEntry_polishTranslatesListWithoutPolishChars = "kanjiEntry_polishTranslatesListWithoutPolishChars";
-	
-	public static final String kanjiEntry_info = "kanjiEntry_info";
-	
-	// FM_FIXME: usunac
-	public static final String kanjiEntry_infoWithoutPolishChars = "kanjiEntry_infoWithoutPolishChars";
-	
-	public static final String kanjiEntry_strokeCount = "kanjiEntry_strokeCount";	
-	public static final String kanjiEntry_used = "kanjiEntry_used";
-	public static final String kanjiEntry_radicalsList = "kanjiEntry_radicalsList";
-	public static final String kanjiEntry_entry = "kanjiEntry_entry";
+	public static final String kanjiEntry2_id = "kanjiEntry2_id";
+	public static final String kanjiEntry2_kanji = "kanjiEntry2_kanji";
+	public static final String kanjiEntry2_polishTranslatesList = "kanjiEntry2_polishTranslatesList";	
+	public static final String kanjiEntry2_info = "kanjiEntry2_info";
+		
+	public static final String kanjiEntry2_strokeCount = "kanjiEntry2_strokeCount";	
+	public static final String kanjiEntry2_used = "kanjiEntry2_used";
+	public static final String kanjiEntry2_radicalsList = "kanjiEntry2_radicalsList";
+	public static final String kanjiEntry2_entry = "kanjiEntry2_entry";
 	
 	// kanjiEntryStrokePaths
 	public static final String kanjiEntryStrokePaths_objectType = "kanjiEntryStrokePaths";

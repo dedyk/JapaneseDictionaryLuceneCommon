@@ -923,7 +923,7 @@ public class LuceneDBGenerator {
 			kanjiCharacterInfo.setQueryCode(null);			
 			
 			// add
-			addKanjiEntry(indexWriter, kanjiCharacterInfo, addSugestionList, generatePrefixes);
+			addKanjiEntry2(indexWriter, kanjiCharacterInfo, addSugestionList, generatePrefixes);
 		}
 		
 		// add available radical list
@@ -946,7 +946,7 @@ public class LuceneDBGenerator {
 	}
 	*/
 	
-	private static void addKanjiEntry(IndexWriter indexWriter, KanjiCharacterInfo kanjiCharacterInfo, boolean addSugestionList, boolean generatePrefixes) throws IOException {
+	private static void addKanjiEntry2(IndexWriter indexWriter, KanjiCharacterInfo kanjiCharacterInfo, boolean addSugestionList, boolean generatePrefixes) throws IOException {
 
 		Gson gson = new Gson();
 		
@@ -955,15 +955,15 @@ public class LuceneDBGenerator {
 		Document document = new Document();
 		
 		// object type
-		document.add(new StringField(LuceneStatic.objectType, LuceneStatic.kanjiEntry_objectType, Field.Store.YES));
+		document.add(new StringField(LuceneStatic.objectType, LuceneStatic.kanjiEntry2_objectType, Field.Store.YES));
 		
 		// id
-		document.add(new IntField(LuceneStatic.kanjiEntry_id, kanjiCharacterInfo.getId(), Field.Store.YES));
+		document.add(new IntField(LuceneStatic.kanjiEntry2_id, kanjiCharacterInfo.getId(), Field.Store.YES));
 
 		// kanji
-		document.add(new StringField(LuceneStatic.kanjiEntry_kanji, emptyIfNull(kanjiCharacterInfo.getKanji()), Field.Store.YES));
+		document.add(new StringField(LuceneStatic.kanjiEntry2_kanji, emptyIfNull(kanjiCharacterInfo.getKanji()), Field.Store.YES));
 		
-		addPrefixes(document, LuceneStatic.kanjiEntry_kanji, emptyIfNull(kanjiCharacterInfo.getKanji()), generatePrefixes);
+		addPrefixes(document, LuceneStatic.kanjiEntry2_kanji, emptyIfNull(kanjiCharacterInfo.getKanji()), generatePrefixes);
 		
 		if (addSugestionList == true) {
 			
@@ -979,9 +979,9 @@ public class LuceneDBGenerator {
 		
 		for (String currentTranslate : polishtranslatesList) {
 			
-			document.add(new TextField(LuceneStatic.kanjiEntry_polishTranslatesList, currentTranslate, Field.Store.YES));
+			document.add(new TextField(LuceneStatic.kanjiEntry2_polishTranslatesList, currentTranslate, Field.Store.YES));
 			
-			addPrefixes(document, LuceneStatic.kanjiEntry_polishTranslatesList, currentTranslate, generatePrefixes);
+			addPrefixes(document, LuceneStatic.kanjiEntry2_polishTranslatesList, currentTranslate, generatePrefixes);
 			
 			if (addSugestionList == true) {
 								
@@ -994,36 +994,36 @@ public class LuceneDBGenerator {
 			
 			String currentTranslateWithoutPolishChars = Utils.removePolishChars(currentTranslate);
 				
-			document.add(new TextField(LuceneStatic.kanjiEntry_infoWithoutPolishChars, currentTranslateWithoutPolishChars, Field.Store.NO));
+			document.add(new TextField(LuceneStatic.kanjiEntry2_info, currentTranslateWithoutPolishChars, Field.Store.NO));
 			
-			addPrefixes(document, LuceneStatic.kanjiEntry_infoWithoutPolishChars, currentTranslateWithoutPolishChars, generatePrefixes);
+			addPrefixes(document, LuceneStatic.kanjiEntry2_info, currentTranslateWithoutPolishChars, generatePrefixes);
 		}
 		
 		// info
 		String info = emptyIfNull(Utils.getPolishAdditionalInfo(kanjiCharacterInfo));
 		
-		document.add(new TextField(LuceneStatic.kanjiEntry_info, info, Field.Store.YES));
+		document.add(new TextField(LuceneStatic.kanjiEntry2_info, info, Field.Store.YES));
 		
-		addPrefixes(document, LuceneStatic.kanjiEntry_info, info, generatePrefixes);
+		addPrefixes(document, LuceneStatic.kanjiEntry2_info, info, generatePrefixes);
 		
 		// infoWithoutPolishChars
 		String infoWithoutPolishChars = Utils.removePolishChars(info);
 			
-		document.add(new TextField(LuceneStatic.kanjiEntry_infoWithoutPolishChars, infoWithoutPolishChars, Field.Store.NO));
+		document.add(new TextField(LuceneStatic.kanjiEntry2_info, infoWithoutPolishChars, Field.Store.NO));
 		
-		addPrefixes(document, LuceneStatic.kanjiEntry_infoWithoutPolishChars, infoWithoutPolishChars, generatePrefixes);
+		addPrefixes(document, LuceneStatic.kanjiEntry2_info, infoWithoutPolishChars, generatePrefixes);
 
 		// strokeCount
-		document.add(new IntField(LuceneStatic.kanjiEntry_strokeCount, kanjiCharacterInfo.getMisc().getStrokeCountList().get(0), Field.Store.YES));
+		document.add(new IntField(LuceneStatic.kanjiEntry2_strokeCount, kanjiCharacterInfo.getMisc().getStrokeCountList().get(0), Field.Store.YES));
 		
 		// used
-		document.add(new StringField(LuceneStatic.kanjiEntry_used, String.valueOf(kanjiCharacterInfo.getMisc2().isUsed()), Field.Store.YES));
+		document.add(new StringField(LuceneStatic.kanjiEntry2_used, String.valueOf(kanjiCharacterInfo.getMisc2().isUsed()), Field.Store.YES));
 		
 		// kanjiDic2Entry_radicalsList
 		List<String> radicalsList = kanjiCharacterInfo.getMisc2().getRadicals();
 		
 		for (String currentRadical : radicalsList) {
-			document.add(new StringField(LuceneStatic.kanjiEntry_radicalsList, currentRadical, Field.Store.YES));
+			document.add(new StringField(LuceneStatic.kanjiEntry2_radicalsList, currentRadical, Field.Store.YES));
 		}
 		
 		// strokePaths - wynosimy z xml-a w celach optymalizacyjnych
@@ -1034,7 +1034,7 @@ public class LuceneDBGenerator {
 		kanjiCharacterInfo.getMisc2().getStrokePaths().clear();
 		
 		// xml
-		document.add(new StoredField(LuceneStatic.kanjiEntry_entry, gson.toJson(kanjiCharacterInfo)));	
+		document.add(new StoredField(LuceneStatic.kanjiEntry2_entry, gson.toJson(kanjiCharacterInfo)));	
 
 		indexWriter.addDocument(document);
 		

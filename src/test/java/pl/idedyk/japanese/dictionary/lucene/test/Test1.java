@@ -9,6 +9,9 @@ import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
+import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiRequest;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult.ResultItem;
@@ -25,6 +28,7 @@ import pl.idedyk.japanese.dictionary.api.tools.KanaHelper;
 import pl.idedyk.japanese.dictionary.lucene.LuceneAnalyzer;
 import pl.idedyk.japanese.dictionary.lucene.LuceneDatabase;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
+import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 
 public class Test1 {
 
@@ -89,19 +93,20 @@ public class Test1 {
 		
 		// System.out.println("Name: " + nameDictionaryEntry2.getEntryId());
 		
+		/*
 		List<pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry> nameDictionaryEntry2List = dictionaryManager.getWordsNameGroup(10, 1);
 		
 		for (pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry nameDictionaryEntry2 : nameDictionaryEntry2List) {
 			System.out.println("Name: " + nameDictionaryEntry2.getEntryId());
 		}
+		*/
 		
-		/*
 		FindWordRequest findWordRequest = new FindWordRequest();
 		
 		findWordRequest.searchGrammaFormAndExamples = true;		
 		//findWordRequest.word = "shukujitsu";
 		
-		findWordRequest.word = "尾 先";
+		findWordRequest.word = "尾先";
 		// findWordRequest.word = text; //"スプラッタ・ムービー";
 		// findWordRequest.word = "スプラッタムービー";
 		// findWordRequest.word = "猫";
@@ -155,13 +160,12 @@ public class Test1 {
 						
 			System.out.println("--------");
 		}
-		*/
 		
 		/*
 		FindKanjiRequest findKanjiRequest = new FindKanjiRequest();
 		
 		findKanjiRequest.word = "kot";
-		findKanjiRequest.wordPlaceSearch = WordPlaceSearch.ANY_PLACE;
+		findKanjiRequest.wordPlaceSearch = WordPlaceSearch.START_WITH;
 		// findKanjiRequest.strokeCountFrom =
 		// findKanjiRequest.strokeCountTo =
 		// findKanjiRequest.searchOnlyTop2500 = 
@@ -172,7 +176,7 @@ public class Test1 {
 			System.out.println(kanjiCharacterInfo.getKanji() + " - " + Utils.getPolishTranslates(kanjiCharacterInfo) + "- " + Utils.getPolishAdditionalInfo(kanjiCharacterInfo));			
 		}
 		*/
-				
+		
 		//
 		
 		////////////////////
