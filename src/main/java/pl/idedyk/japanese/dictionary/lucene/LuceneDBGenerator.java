@@ -1258,41 +1258,24 @@ public class LuceneDBGenerator {
 		
 		// dictionary entry type list
 		if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getDictionaryEntryTypeList() != null) {
-			String dictionaryEntryTypeListString = entry.getMisc().getOldPolishJapaneseDictionary().getDictionaryEntryTypeList();
-	
-			LinkedHashSet<String> allDictionaryEntryTypeStringList = new LinkedHashSet<String>(); 
+			List<String> dictionaryEntryTypeList = entry.getMisc().getOldPolishJapaneseDictionary().getDictionaryEntryTypeList();
 			
-			allDictionaryEntryTypeStringList.addAll(Arrays.asList(dictionaryEntryTypeListString.split(",")).stream().collect(Collectors.toList()));					
-	
-			for (String dictionaryEntryTypeString : allDictionaryEntryTypeStringList) {
-				document.add(new StringField(LuceneStatic.nameDictionaryEntry2_dictionaryEntryTypeList, dictionaryEntryTypeString, Field.Store.YES));
+			for (String currentDictionaryEntryType : dictionaryEntryTypeList) {
+				document.add(new StringField(LuceneStatic.nameDictionaryEntry2_dictionaryEntryTypeList, currentDictionaryEntryType, Field.Store.YES));
 			}				
 		}
-				
+		
+		// uniqueKey
+		if (entry.getMisc() != null && entry.getMisc().getOldPolishJapaneseDictionary() != null && entry.getMisc().getOldPolishJapaneseDictionary().getUniqueKeyList() != null) {
+			List<String> uniqueKeyList = entry.getMisc().getOldPolishJapaneseDictionary().getUniqueKeyList();
+			
+			for (String currentUniqueKey : uniqueKeyList) {
+				document.add(new StringField(LuceneStatic.nameDictionaryEntry2_uniqueKey, currentUniqueKey, Field.Store.YES));
+			}				
+		}
+		
 		// dodanie dokumentu do lucynki
 		indexWriter.addDocument(document);
-		
-		// FM_FIXME: do zmiany !!!!!!
-		// FM_FIXME: stary kod
-		/*
-				
-		// unique key
-		String uniqueKey = dictionaryEntry.getUniqueKey();
-		
-		if (uniqueKey != null) {
-			document.add(new StringField(LuceneStatic.nameDictionaryEntry_uniqueKey, uniqueKey, Field.Store.YES));
-		}
-				
-		// attributeList
-		List<String> attributeStringList = dictionaryEntry.getAttributeList().convertAttributeListToListString();
-		
-		for (String currentAttribute : attributeStringList) {
-			document.add(new StringField(LuceneStatic.nameDictionaryEntry_attributeList, currentAttribute, Field.Store.YES));
-		}
-				
-				
-		
-		*/
 	}
 	
 	private static void addAvailableRadicalList(IndexWriter indexWriter, Set<String> allAvailableRadicalSet) throws IOException {

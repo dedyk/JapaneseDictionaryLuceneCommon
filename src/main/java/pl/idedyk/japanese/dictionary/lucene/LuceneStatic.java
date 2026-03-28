@@ -143,6 +143,7 @@ public class LuceneStatic {
 	public static final String nameDictionaryEntry2_entry = "nameDictionaryEntry2_entry";
 	
 	public static final String nameDictionaryEntry2_dictionaryEntryTypeList = "nameDictionaryEntry2_dictionaryEntryTypeList";
+	public static final String nameDictionaryEntry2_uniqueKey = "nameDictionaryEntry2_uniqueKey";
 	
 	public static final String nameDictionaryEntry2_kanji = "nameDictionaryEntry2_kanji";
 	public static final String nameDictionaryEntry2_kana = "nameDictionaryEntry2_kana";
