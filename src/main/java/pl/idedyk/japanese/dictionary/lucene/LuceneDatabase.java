@@ -53,7 +53,6 @@ import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
 import pl.idedyk.japanese.dictionary.api.dto.AttributeType;
-import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry; // FM_FIXME: do usuniecia import i wszelkie uzycia
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
 import pl.idedyk.japanese.dictionary.api.dto.GroupWithTatoebaSentenceList;
@@ -1420,7 +1419,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 				String idString = foundDocument.get(LuceneStatic.dictionaryEntry2_id);
 				int idStringAsInt = Integer.parseInt(idString);
 				
-				boolean alreadyExistsInResult = findWordResult.result.stream().filter(f -> f.getEntry() != null && f.getEntry().getEntryId().intValue() == idStringAsInt).count() > 0;
+				boolean alreadyExistsInResult = findWordResult.result.stream().filter(f -> f.getWordEntry() != null && f.getWordEntry().getEntryId().intValue() == idStringAsInt).count() > 0;
 				
 				if (alreadyExistsInResult == false) { // jezeli nie ma to sprawdzamy dalej
 					
@@ -1532,47 +1531,48 @@ public class LuceneDatabase implements IDatabaseConnector {
 		
 		String[] wordSplited = getTokenizedWords(analyzerWithoutPolishChars, findWordRequest.word);
 		String rejoinedWord = createRejoinedWord(wordSplited);
-				
+		
+		Gson gson = new Gson();
+		
 		try {
 			
 			BooleanQuery query = new BooleanQuery();
 
 			// object type
 			PhraseQuery objectTypeQuery = new PhraseQuery();
-			objectTypeQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry_objectType));
+			objectTypeQuery.add(new Term(LuceneStatic.objectType, LuceneStatic.nameDictionaryEntry2_objectType));
 
 			query.add(objectTypeQuery, Occur.MUST);
 			
 			BooleanQuery wordBooleanQuery = new BooleanQuery();
 
 			if (findWordRequest.searchKanji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry2_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchKana == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_kana, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry2_kana, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_virtual_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry2_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchTranslate == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_translatesList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_translatesListWithoutPolishChars, 
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry2_translatesList, 
 						findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchInfo == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_info, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry_infoWithoutPolishChars, 
+				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry2_info, 
 						findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
 			}
 
-			BooleanQuery dictionaryEntryTypeListFilter = createDictionaryEntryTypeListFilter(LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
+			BooleanQuery dictionaryEntryTypeListFilter = createDictionaryEntryTypeListFilter(LuceneStatic.nameDictionaryEntry2_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
 			
 			if (dictionaryEntryTypeListFilter != null) {
 				query.add(dictionaryEntryTypeListFilter, Occur.MUST);
@@ -1586,32 +1586,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 
 				Document foundDocument = searcher.doc(scoreDoc.doc);
 				
-				String idString = foundDocument.get(LuceneStatic.nameDictionaryEntry_id);
+				// String idString = foundDocument.get(LuceneStatic.nameDictionaryEntry2_id);
+				String entryBody = foundDocument.get(LuceneStatic.nameDictionaryEntry2_entry);
 
-				List<String> dictionaryEntryTypeList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_dictionaryEntryTypeList));
-				List<String> attributeList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_attributeList));
-				List<String> groupsList = new ArrayList<String>();
-
-				String prefixKanaString = "";
-
-				String kanjiString = foundDocument.get(LuceneStatic.nameDictionaryEntry_kanji);
-				String kana = foundDocument.get(LuceneStatic.nameDictionaryEntry_kana);
-
-				String prefixRomajiString = "";
-
-				String romaji = foundDocument.get(LuceneStatic.nameDictionaryEntry_romaji);				
-				List<String> translateList = Arrays.asList(foundDocument.getValues(LuceneStatic.nameDictionaryEntry_translatesList));
-
-				String infoString = foundDocument.get(LuceneStatic.nameDictionaryEntry_info);
-
-				List<String> exampleSentenceGroupIdsList = new ArrayList<String>();
-				
-				DictionaryEntry entry = Utils.parseDictionaryEntry(idString, dictionaryEntryTypeList, attributeList,
-						groupsList, prefixKanaString, kanjiString, kana, prefixRomajiString, romaji,
-						translateList, infoString, exampleSentenceGroupIdsList);
-
-				entry.setName(true);
-				
+				JMnedict.Entry entry = gson.fromJson(entryBody, JMnedict.Entry.class);
+												
 				findWordResult.result.add(new FindWordResult.ResultItem(entry, true, false));
 				
 				findWordResult.setFoundNames(true);

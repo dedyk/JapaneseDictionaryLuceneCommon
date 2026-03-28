@@ -106,12 +106,11 @@ public class Test1 {
 		findWordRequest.searchGrammaFormAndExamples = true;		
 		//findWordRequest.word = "shukujitsu";
 		
-		findWordRequest.word = "尾先";
+		// findWordRequest.word = "おさ";
 		// findWordRequest.word = text; //"スプラッタ・ムービー";
 		// findWordRequest.word = "スプラッタムービー";
 		// findWordRequest.word = "猫";
-		// findWordRequest.word = "agaru";
-		// findWordRequest.word = "岡村初博";
+		findWordRequest.word = "岡村孝子";
 
 		DictionaryEntryType[] dictionaryEntryTypeValues = DictionaryEntryType.values(); // Arrays.asList(DictionaryEntryType.WORD_VERB_RU, DictionaryEntryType.WORD_NOUN).toArray(new DictionaryEntryType[] { }); // ;
 		
@@ -138,17 +137,29 @@ public class Test1 {
 				
 		for (ResultItem resultItem : findWordResult.result) {
 			
-			Entry entry = resultItem.getEntry();
+			Entry wordEntry = resultItem.getWordEntry();
 			
-			if (entry != null) {
-				System.out.println("Entry");
-				System.out.println(entry.getEntryId());
+			if (wordEntry != null) {
+				System.out.println("Word Entry");
+				System.out.println(wordEntry.getEntryId());
 				System.out.println(resultItem.getKanjiList());
 				System.out.println(resultItem.getKanaList());
 				System.out.println(resultItem.getRomajiList());
 				System.out.println(resultItem.getTranslates());
 			}
 			
+			pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry nameEntry = resultItem.getNameEntry();
+			
+			if (nameEntry != null) {
+				System.out.println("Name Entry");
+				System.out.println(nameEntry.getEntryId());
+				System.out.println(resultItem.getKanjiList());
+				System.out.println(resultItem.getKanaList());
+				System.out.println(resultItem.getRomajiList());
+				System.out.println(resultItem.getTranslates());
+			}
+
+			/*
 			DictionaryEntry oldDictionaryEntry = resultItem.getDictionaryEntry();
 			
 			if (oldDictionaryEntry != null) {
@@ -157,6 +168,7 @@ public class Test1 {
 						oldDictionaryEntry.getKana() + " - " + oldDictionaryEntry.getRomaji() + " - " + oldDictionaryEntry.getTranslates() + " - " +
 						oldDictionaryEntry.getInfo());				
 			}
+			*/
 						
 			System.out.println("--------");
 		}
