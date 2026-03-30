@@ -9,17 +9,12 @@ import org.apache.lucene.util.Version;
 
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
-import pl.idedyk.japanese.dictionary.api.dictionary.Utils;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiRequest;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindKanjiResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult.ResultItem;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPowerList;
-import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
-import pl.idedyk.japanese.dictionary.api.dto.GroupEnum;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
 import pl.idedyk.japanese.dictionary.api.dto.TransitiveIntransitivePairWithDictionaryEntry;
 import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
@@ -28,7 +23,6 @@ import pl.idedyk.japanese.dictionary.api.tools.KanaHelper;
 import pl.idedyk.japanese.dictionary.lucene.LuceneAnalyzer;
 import pl.idedyk.japanese.dictionary.lucene.LuceneDatabase;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
-import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.KanjiCharacterInfo;
 
 public class Test1 {
 
