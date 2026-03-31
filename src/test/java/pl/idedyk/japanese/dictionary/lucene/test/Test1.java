@@ -10,9 +10,6 @@ import org.apache.lucene.util.Version;
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordResult.ResultItem;
-import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPlaceSearch;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPowerList;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
@@ -22,7 +19,6 @@ import pl.idedyk.japanese.dictionary.api.keigo.KeigoHelper;
 import pl.idedyk.japanese.dictionary.api.tools.KanaHelper;
 import pl.idedyk.japanese.dictionary.lucene.LuceneAnalyzer;
 import pl.idedyk.japanese.dictionary.lucene.LuceneDatabase;
-import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
 
 public class Test1 {
 
@@ -139,7 +135,7 @@ public class Test1 {
 		
 		for (int idx = 1; idx < dictionaryEntriesNameSize; ++idx) {
 			
-			Entry wordEntry = null; //resultItem.getWordEntry();
+			//Entry wordEntry = null; //resultItem.getWordEntry();
 			//pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry nameEntry = resultItem.getNameEntry();
 			
 			pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry nameEntry = dictionaryManager.getNameDictionaryEntry2ByCounter(idx);
