@@ -117,6 +117,7 @@ public class Test1 {
 		//dictionaryEntryTypeList.remove(DictionaryEntryType.WORD_NOUN);
 		//..dictionaryEntryTypeList.remove(DictionaryEntryType.WORD_ADJECTIVE_NO);
 		
+		/*
 		findWordRequest.dictionaryEntryTypeList = dictionaryEntryTypeList;
 		
 		findWordRequest.wordPlaceSearch = WordPlaceSearch.START_WITH;
@@ -131,8 +132,28 @@ public class Test1 {
 				
 		for (ResultItem resultItem : findWordResult.result) {
 			
-			Entry wordEntry = resultItem.getWordEntry();
 			
+		*/
+		
+		int dictionaryEntriesNameSize = dictionaryManager.getDictionaryEntriesNameSize();
+		
+		for (int idx = 1; idx < dictionaryEntriesNameSize; ++idx) {
+			
+			Entry wordEntry = null; //resultItem.getWordEntry();
+			//pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry nameEntry = resultItem.getNameEntry();
+			
+			pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry nameEntry = dictionaryManager.getNameDictionaryEntry2ByCounter(idx);
+			
+//			if (nameEntry.getKanjiInfoList().size() > 1) {
+//				System.out.println("Entry: " + nameEntry.getEntryId());
+//			}
+			
+			if (nameEntry.getTranslationInfo().size() > 1) {
+			System.out.println("Entry: " + nameEntry.getEntryId());
+		}
+
+			
+			/*
 			if (wordEntry != null) {
 				System.out.println("Word Entry");
 				System.out.println(wordEntry.getEntryId());
@@ -142,8 +163,6 @@ public class Test1 {
 				System.out.println(resultItem.getTranslates());
 			}
 			
-			pl.idedyk.japanese.dictionary2.jmnedict.xsd.JMnedict.Entry nameEntry = resultItem.getNameEntry();
-			
 			if (nameEntry != null) {
 				System.out.println("Name Entry");
 				System.out.println(nameEntry.getEntryId());
@@ -152,6 +171,7 @@ public class Test1 {
 				System.out.println(resultItem.getRomajiList());
 				System.out.println(resultItem.getTranslates());
 			}
+			*/
 
 			/*
 			DictionaryEntry oldDictionaryEntry = resultItem.getDictionaryEntry();
@@ -164,7 +184,7 @@ public class Test1 {
 			}
 			*/
 						
-			System.out.println("--------");
+			//System.out.println("--------");
 		}
 		
 		/*
