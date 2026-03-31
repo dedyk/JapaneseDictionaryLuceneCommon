@@ -1154,7 +1154,7 @@ public class LuceneDBGenerator {
 				addAlternativeRomaji(document, LuceneStatic.nameDictionaryEntry2_romaji, romaji, generatePrefixes, null);
 						
 				if (addSugestionList == true) {
-					// addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, romaji, false);
+					addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, romaji, false);
 					// addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, emptyIfNull(romaji));
 				}
 			}
@@ -1177,7 +1177,7 @@ public class LuceneDBGenerator {
 				addPrefixes(document, LuceneStatic.nameDictionaryEntry2_translatesList, currentTranslate, generatePrefixes);
 				
 				if (addSugestionList == true) {									
-					// addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, currentTranslate, true);
+					addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, currentTranslate, true);
 					// addSpellChecker(document, LuceneStatic.dictionaryEntry_web_spellCheckerList, emptyIfNull(currentTranslate));
 				}
 
