@@ -3,36 +3,8 @@ package pl.idedyk.japanese.dictionary.lucene;
 public class LuceneStatic {
 
 	public static final String objectType = "objectType";
-	
-	/*
-	public static final String dictionaryEntry_objectType = "dictionaryEntry";
-	
-	public static final String dictionaryEntry_id = "dictionaryEntry_id";
-	public static final String dictionaryEntry_uniqueKey = "dictionaryEntry_uniqueKey";
-	public static final String dictionaryEntry_dictionaryEntryTypeList = "dictionaryEntry_dictionaryEntryTypeList";
-	public static final String dictionaryEntry_attributeList = "dictionaryEntry_attributeList";
-	public static final String dictionaryEntry_groupsList = "dictionaryEntry_groupsList";
-	public static final String dictionaryEntry_prefixKana = "dictionaryEntry_prefixKana";
-	public static final String dictionaryEntry_kanji = "dictionaryEntry_kanji";
-	public static final String dictionaryEntry_kana = "dictionaryEntry_kana";
-	public static final String dictionaryEntry_prefixRomaji = "dictionaryEntry_prefixRomaji";
-	public static final String dictionaryEntry_romaji = "dictionaryEntry_romaji";
-	public static final String dictionaryEntry_virtual_romaji = "dictionaryEntry_virtual_romaji";
-	public static final String dictionaryEntry_translatesList = "dictionaryEntry_translatesList";
-	public static final String dictionaryEntry_translatesListWithoutPolishChars = "dictionaryEntry_translatesListWithoutPolishChars";
-	public static final String dictionaryEntry_info = "dictionaryEntry_info";
-	public static final String dictionaryEntry_infoWithoutPolishChars = "dictionaryEntry_infoWithoutPolishChars";
-	public static final String dictionaryEntry_exampleSentenceGroupIdsList = "dictionaryEntry_exampleSentenceGroupIdsList";
-	
-	public static final String dictionaryEntry_grammaConjufateResult_and_exampleResult_objectType = "dictionaryEntry_grammaConjufateResult_and_exampleResult_objectType";	
-	public static final String dictionaryEntry_grammaConjufateResult_and_exampleResult_dictionaryEntry_id = "dictionaryEntry_grammaConjufateResult_and_exampleResult_dictionaryEntry_id";
-	
-	public static final String dictionaryEntry_grammaConjufateResult_and_exampleResult_kanji = "dictionaryEntry_grammaConjufateResult_and_exampleResult_kanji";
-	public static final String dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList = "dictionaryEntry_grammaConjufateResult_and_exampleResult_kanaList";
-	public static final String dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList = "dictionaryEntry_grammaConjufateResult_and_exampleResult_romajiList";
-	public static final String dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList = "dictionaryEntry_grammaConjufateResult_and_exampleResult_virtual_romajiList";
-	*/
-	
+		
+	// dictionaryEntry
 	public static final String dictionaryEntry_exampleSentence_objectType = "dictionaryEntry_exampleSentence";
 	
 	public static final String dictionaryEntry_exampleSentence_id = "dictionaryEntry_exampleSentence_id";
@@ -50,34 +22,18 @@ public class LuceneStatic {
 	public static final String dictionaryEntry_android_spellCheckerList = "dictionaryEntry_android_spellCheckerList";
 	public static final String dictionaryEntry_web_spellCheckerList = "dictionaryEntry_web_spellCheckerList";
 	
-	public static final String nameDictionaryEntry_objectType = "nameDictionaryEntry";
+	// kanjiEntry2	
+	public static final String kanjiEntry2_objectType = "kanjiEntry2";
 	
-	public static final String nameDictionaryEntry_id = "nameDictionaryEntry_id";
-	public static final String nameDictionaryEntry_uniqueKey = "nameDictionaryEntry_uniqueKey";
-	public static final String nameDictionaryEntry_dictionaryEntryTypeList = "nameDictionaryEntry_dictionaryEntryTypeList";
-	public static final String nameDictionaryEntry_attributeList = "nameDictionaryEntry_attributeList";
-	public static final String nameDictionaryEntry_kanji = "nameDictionaryEntry_kanji";
-	public static final String nameDictionaryEntry_kana = "nameDictionaryEntry_kana";
-	public static final String nameDictionaryEntry_romaji = "nameDictionaryEntry_romaji";
-	public static final String nameDictionaryEntry_virtual_romaji = "nameDictionaryEntry_virtual_romaji";
-	public static final String nameDictionaryEntry_translatesList = "nameDictionaryEntry_translatesList";
-	public static final String nameDictionaryEntry_translatesListWithoutPolishChars = "nameDictionaryEntry_translatesListWithoutPolishChars";
-	public static final String nameDictionaryEntry_info = "nameDictionaryEntry_info";
-	public static final String nameDictionaryEntry_infoWithoutPolishChars = "nameDictionaryEntry_infoWithoutPolishChars";
-	
-	// kanjiEntry	
-	public static final String kanjiEntry_objectType = "kanjiEntry";
-	
-	public static final String kanjiEntry_id = "kanjiEntry_id";
-	public static final String kanjiEntry_kanji = "kanjiEntry_kanji";
-	public static final String kanjiEntry_polishTranslatesList = "kanjiEntry_polishTranslatesList";
-	public static final String kanjiEntry_polishTranslatesListWithoutPolishChars = "kanjiEntry_polishTranslatesListWithoutPolishChars";
-	public static final String kanjiEntry_info = "kanjiEntry_info";
-	public static final String kanjiEntry_infoWithoutPolishChars = "kanjiEntry_infoWithoutPolishChars";
-	public static final String kanjiEntry_strokeCount = "kanjiEntry_strokeCount";	
-	public static final String kanjiEntry_used = "kanjiEntry_used";
-	public static final String kanjiEntry_radicalsList = "kanjiEntry_radicalsList";
-	public static final String kanjiEntry_entry = "kanjiEntry_entry";
+	public static final String kanjiEntry2_id = "kanjiEntry2_id";
+	public static final String kanjiEntry2_kanji = "kanjiEntry2_kanji";
+	public static final String kanjiEntry2_polishTranslatesList = "kanjiEntry2_polishTranslatesList";	
+	public static final String kanjiEntry2_info = "kanjiEntry2_info";
+		
+	public static final String kanjiEntry2_strokeCount = "kanjiEntry2_strokeCount";	
+	public static final String kanjiEntry2_used = "kanjiEntry2_used";
+	public static final String kanjiEntry2_radicalsList = "kanjiEntry2_radicalsList";
+	public static final String kanjiEntry2_entry = "kanjiEntry2_entry";
 	
 	// kanjiEntryStrokePaths
 	public static final String kanjiEntryStrokePaths_objectType = "kanjiEntryStrokePaths";
@@ -99,6 +55,7 @@ public class LuceneStatic {
 	public static final String allAvailableKanjiRadicals_objectType = "allAvailableKanjiRadicals";
 	public static final String allAvailableKanjiRadicals_radicalsList = "allAvailableKanjiRadicals_radicalsList";
 	
+	// dictionaryEntry2
 	public static final String dictionaryEntry2_objectType = "dictionaryEntry2";
 	
 	public static final String dictionaryEntry2_id = "dictionaryEntry2_id";
@@ -132,6 +89,22 @@ public class LuceneStatic {
 	public static final String dictionaryEntry_infoWithoutPolishChars = "dictionaryEntry_infoWithoutPolishChars";
 	*/
 	public static final String dictionaryEntry2_exampleSentenceGroupIdsList = "dictionaryEntry2_exampleSentenceGroupIdsList";
+	
+	// nameDictionaryEntry2
+	public static final String nameDictionaryEntry2_objectType = "nameDictionaryEntry2";
+	
+	public static final String nameDictionaryEntry2_id = "nameDictionaryEntry2_id";
+	public static final String nameDictionaryEntry2_counter = "nameDictionaryEntry2_counter";
+	public static final String nameDictionaryEntry2_entry = "nameDictionaryEntry2_entry";
+	
+	public static final String nameDictionaryEntry2_dictionaryEntryTypeList = "nameDictionaryEntry2_dictionaryEntryTypeList";
+	public static final String nameDictionaryEntry2_uniqueKey = "nameDictionaryEntry2_uniqueKey";
+	
+	public static final String nameDictionaryEntry2_kanji = "nameDictionaryEntry2_kanji";
+	public static final String nameDictionaryEntry2_kana = "nameDictionaryEntry2_kana";
+	public static final String nameDictionaryEntry2_romaji = "nameDictionaryEntry2_romaji";
+	public static final String nameDictionaryEntry2_translatesList = "nameDictionaryEntry2_translatesList";
+	public static final String nameDictionaryEntry2_info = "nameDictionaryEntry2_info";
 	
 	//
 	
