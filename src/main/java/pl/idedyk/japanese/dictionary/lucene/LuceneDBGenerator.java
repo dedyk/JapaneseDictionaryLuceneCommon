@@ -7,22 +7,30 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.sql.SQLException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -54,7 +62,6 @@ import pl.idedyk.japanese.dictionary.api.example.ExampleManager;
 import pl.idedyk.japanese.dictionary.api.example.dto.ExampleGroupTypeElements;
 import pl.idedyk.japanese.dictionary.api.example.dto.ExampleRequest;
 import pl.idedyk.japanese.dictionary.api.example.dto.ExampleResult;
-import pl.idedyk.japanese.dictionary.api.exception.DictionaryException;
 import pl.idedyk.japanese.dictionary.api.gramma.GrammaConjugaterManager;
 import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateGroupTypeElements;
 import pl.idedyk.japanese.dictionary.api.gramma.dto.GrammaFormConjugateRequest;
@@ -89,8 +96,8 @@ public class LuceneDBGenerator {
 		
 	public static void main(String[] args) throws Exception {
 				
-		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/word2.xml db/name2.xml db-lucene
-		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv word2.xml db/name2.xml db-lucene
+		// android: android db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv db/word2.xml db/name2.xml lastmod db-lucene
+		// web: web db/word.csv db/sentences.csv db/sentences_groups.csv db/kanji2.xml db/radical.csv word2.xml db/name2.xml lastmod db-lucene
 		
 		// parametry
 		String mode = args[0];
@@ -104,7 +111,9 @@ public class LuceneDBGenerator {
 		final String word2XmlFilePath = args[6];
 		final String name2FilePath = args[7];
 		
-		String dbOutDir = args[8];
+		final String lastmodFilePath = args[8];
+		
+		String dbOutDir = args[9];
 		
 		boolean addSugestionList;
 		boolean addGrammaAndExample;		
@@ -162,8 +171,11 @@ public class LuceneDBGenerator {
 			for (File file : dbOutDirFileListFiles) {
 				file.delete();
 			}
-		}		
+		}
 		
+		// wczutanie pliku lastmod (jesli istnieje)
+		Map<String, Date> lastmodMap = readLastmodFile(lastmodFilePath);
+				
 		// tworzenie indeksu lucene
 		Directory index = FSDirectory.open(dbOutDirFile);
 		
@@ -189,7 +201,7 @@ public class LuceneDBGenerator {
 		
 		// dodawanie pliku word2.xml
 		if (addWord2Xml == true) {			
-			addWord2Xml(indexWriter, word2XmlFilePath, addGrammaAndExample, addSugestionList, generateDictionaryEntryPrefixes);
+			addWord2Xml(indexWriter, word2XmlFilePath, addGrammaAndExample, addSugestionList, generateDictionaryEntryPrefixes, lastmodMap);
 		}
 		
 		// otwarcie pliku ze zdaniami
@@ -220,13 +232,13 @@ public class LuceneDBGenerator {
 		FileInputStream kanjiInputStream = new FileInputStream(kanjiFilePath);
 
 		// wczytywanie pliku ze znakami kanji
-		readKanjiDictionaryFile(indexWriter, /* radicalInfoList, */ kanjiInputStream, addSugestionList, generateKanjiEntryPrefixes);
+		readKanjiDictionaryFile(indexWriter, /* radicalInfoList, */ kanjiInputStream, addSugestionList, generateKanjiEntryPrefixes, lastmodMap);
 
 		kanjiInputStream.close();
 		
 		// wczytywanie pliku z nazwami
 		if (generateNamesDictionary == true) {
-			readNames2File(indexWriter, name2FilePath, addSugestionList, generateNameEntryPrefixes);		
+			readNames2File(indexWriter, name2FilePath, addSugestionList, generateNameEntryPrefixes, lastmodMap);		
 		}	
 						
 		// zakonczenie zapisywania indeksu
@@ -239,6 +251,33 @@ public class LuceneDBGenerator {
 		cacheSuggester(dbOutDirFile, analyzer, addSugestionList);
 		
 		System.out.println("DB Generator - done");
+	}
+
+	private static Map<String, Date> readLastmodFile(String lastmodFilePath) throws IOException {
+		Map<String, Date> lastmodMap = new TreeMap<String, Date>();
+		
+		Stream<String> stream = Files.lines(Paths.get(lastmodFilePath));
+		
+		stream.forEach(s -> {
+			String[] sSplited = s.split(",");
+			
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+			
+			String key = sSplited[0];
+			Date value;
+			
+			try {
+				value = sdf.parse(sSplited[1]);
+			} catch (ParseException e) {
+				throw new RuntimeException(e);
+			}
+			
+			lastmodMap.put(key, value);			
+		});
+		
+		stream.close();
+		
+		return lastmodMap;
 	}
 
 	/*
@@ -882,7 +921,8 @@ public class LuceneDBGenerator {
 	*/
 
 	private static void readKanjiDictionaryFile(IndexWriter indexWriter, /* List<RadicalInfo> radicalInfoList, */
-			InputStream kanjiInputStream, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException, JAXBException {
+			InputStream kanjiInputStream, boolean addSugestionList, boolean generatePrefixes,
+			Map<String, Date> lastmodMap) throws Exception {
 
 		/*
 		Map<String, RadicalInfo> radicalListMapCache = new HashMap<String, RadicalInfo>();
@@ -909,6 +949,15 @@ public class LuceneDBGenerator {
 		// chodzimy po znakach kanji i je zapisujemy
 		for (KanjiCharacterInfo kanjiCharacterInfo : kanjidic2.getCharacterList()) {			
 			System.out.println("Add kanji dic 2 entry: " + kanjiCharacterInfo.getKanji() + " (" + kanjiCharacterInfo.getId() + ")");			
+			
+			// uzupelnienie o date modyfikacji (jesli istnieje)
+			if (lastmodMap != null) {
+				String key = "KanjiCharacterInfo_" + kanjiCharacterInfo.getId();
+				
+				Date lastmod = lastmodMap.get(key);
+				
+				kanjiCharacterInfo.getMisc2().setLastModified(createXMlGregorianCalendar(lastmod));
+			}
 			
 			// update radical info
 			if (kanjiCharacterInfo.getMisc2() != null) {
@@ -1055,7 +1104,8 @@ public class LuceneDBGenerator {
 		}
 	}
 	
-	private static void readNames2File(IndexWriter indexWriter, String name2XmlFilePath, boolean addSugestionList, boolean generatePrefixes) throws IOException, DictionaryException, SQLException, JAXBException {
+	private static void readNames2File(IndexWriter indexWriter, String name2XmlFilePath, boolean addSugestionList, boolean generatePrefixes,
+			Map<String, Date> lastmodMap) throws Exception {
 		
 		JAXBContext jaxbContext = JAXBContext.newInstance(JMnedict.class);              
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -1084,6 +1134,15 @@ public class LuceneDBGenerator {
 			for (JMnedict.Entry entry : entryList) {
 			
 				System.out.println("Add name 2 entry: " + entry.getEntryId());
+				
+				// uzupelnienie o date modyfikacji (jesli istnieje)
+				if (lastmodMap != null) {
+					String key = "JMnedict.Entry_" + entry.getEntryId();
+					
+					Date lastmod = lastmodMap.get(key);
+					
+					entry.getMisc().setLastModified(createXMlGregorianCalendar(lastmod));
+				}
 		
 				// dodanie wpisu do bazy danych
 				addNameDictionaryEntry(indexWriter, entry, counter, addSugestionList, generatePrefixes);	
@@ -1348,7 +1407,9 @@ public class LuceneDBGenerator {
 		}
 	}
 	
-	private static void addWord2Xml(IndexWriter indexWriter, String word2XmlFilePath, boolean addGrammaAndExample, boolean addSugestionList, boolean generatePrefixes) throws JAXBException, IOException {
+	private static void addWord2Xml(IndexWriter indexWriter, String word2XmlFilePath, 
+			boolean addGrammaAndExample, boolean addSugestionList, boolean generatePrefixes,
+			Map<String, Date> lastmodMap) throws Exception {
 				
 		JAXBContext jaxbContext = JAXBContext.newInstance(JMdict.class);              
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -1383,6 +1444,15 @@ public class LuceneDBGenerator {
 			for (Entry entry : entryList) {
 			
 				System.out.println("Add word 2 entry: " + entry.getEntryId());
+				
+				// uzupelnienie o date modyfikacji (jesli istnieje)
+				if (lastmodMap != null) {
+					String key = "JMdict.Entry_" + entry.getEntryId();
+					
+					Date lastmod = lastmodMap.get(key);
+					
+					entry.getMisc().setLastModified(createXMlGregorianCalendar(lastmod));
+				}
 			
 				// wyliczenie boost'era
 				Float boostFloat = getBoostFloat(entry);
@@ -1654,5 +1724,17 @@ public class LuceneDBGenerator {
 	
 	private static void addSpellChecker(Document document, String fieldName, String fieldValue) { 		
 		document.add(new StringField(fieldName, fieldValue, Field.Store.YES));
+	}
+	
+	private static XMLGregorianCalendar createXMlGregorianCalendar(Date date) throws Exception {
+		if (date == null) {
+			return null;
+		}
+		
+		GregorianCalendar c = new GregorianCalendar();
+
+		c.setTime(date);
+
+		return DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
 	}
 }
