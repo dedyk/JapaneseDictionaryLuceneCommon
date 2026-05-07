@@ -14,7 +14,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -29,8 +28,6 @@ import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -92,7 +89,9 @@ import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Kanjidic2;
 import com.csvreader.CsvReader;
 import com.google.gson.Gson;
 
-public class LuceneDBGenerator {	
+public class LuceneDBGenerator {
+	
+	private static final SimpleDateFormat lastModifiedSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 		
 	public static void main(String[] args) throws Exception {
 				
@@ -261,13 +260,11 @@ public class LuceneDBGenerator {
 		stream.forEach(s -> {
 			String[] sSplited = s.split(",");
 			
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-			
 			String key = sSplited[0];
 			Date value;
 			
 			try {
-				value = sdf.parse(sSplited[1]);
+				value = lastModifiedSDF.parse(sSplited[1]);
 			} catch (ParseException e) {
 				throw new RuntimeException(e);
 			}
@@ -956,7 +953,7 @@ public class LuceneDBGenerator {
 				
 				Date lastmod = lastmodMap.get(key);
 				
-				kanjiCharacterInfo.getMisc2().setLastModified(createXMlGregorianCalendar(lastmod));
+				kanjiCharacterInfo.getMisc2().setLastModified(lastModifiedSDF.format(lastmod));
 			}
 			
 			// update radical info
@@ -1141,7 +1138,7 @@ public class LuceneDBGenerator {
 					
 					Date lastmod = lastmodMap.get(key);
 					
-					entry.getMisc().setLastModified(createXMlGregorianCalendar(lastmod));
+					entry.getMisc().setLastModified(lastModifiedSDF.format(lastmod));
 				}
 		
 				// dodanie wpisu do bazy danych
@@ -1451,7 +1448,7 @@ public class LuceneDBGenerator {
 					
 					Date lastmod = lastmodMap.get(key);
 					
-					entry.getMisc().setLastModified(createXMlGregorianCalendar(lastmod));
+					entry.getMisc().setLastModified(lastModifiedSDF.format(lastmod));
 				}
 			
 				// wyliczenie boost'era
@@ -1724,17 +1721,5 @@ public class LuceneDBGenerator {
 	
 	private static void addSpellChecker(Document document, String fieldName, String fieldValue) { 		
 		document.add(new StringField(fieldName, fieldValue, Field.Store.YES));
-	}
-	
-	private static XMLGregorianCalendar createXMlGregorianCalendar(Date date) throws Exception {
-		if (date == null) {
-			return null;
-		}
-		
-		GregorianCalendar c = new GregorianCalendar();
-
-		c.setTime(date);
-
-		return DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
 	}
 }
