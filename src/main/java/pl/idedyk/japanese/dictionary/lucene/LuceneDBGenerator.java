@@ -252,8 +252,12 @@ public class LuceneDBGenerator {
 		System.out.println("DB Generator - done");
 	}
 
-	private static Map<String, Date> readLastmodFile(String lastmodFilePath) throws IOException {
+	private static Map<String, Date> readLastmodFile(String lastmodFilePath) throws IOException {		
 		Map<String, Date> lastmodMap = new TreeMap<String, Date>();
+		
+		if (new File(lastmodFilePath).isFile() == false) {
+			return lastmodMap;
+		}
 		
 		Stream<String> stream = Files.lines(Paths.get(lastmodFilePath));
 		
