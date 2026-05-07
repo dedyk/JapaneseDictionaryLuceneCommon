@@ -957,7 +957,9 @@ public class LuceneDBGenerator {
 				
 				Date lastmod = lastmodMap.get(key);
 				
-				kanjiCharacterInfo.getMisc2().setLastModified(lastModifiedSDF.format(lastmod));
+				if (lastmod != null) {
+					kanjiCharacterInfo.getMisc2().setLastModified(lastModifiedSDF.format(lastmod));
+				}
 			}
 			
 			// update radical info
@@ -1142,7 +1144,9 @@ public class LuceneDBGenerator {
 					
 					Date lastmod = lastmodMap.get(key);
 					
-					entry.getMisc().setLastModified(lastModifiedSDF.format(lastmod));
+					if (lastmod != null) {
+						entry.getMisc().setLastModified(lastModifiedSDF.format(lastmod));
+					}
 				}
 		
 				// dodanie wpisu do bazy danych
@@ -1452,7 +1456,9 @@ public class LuceneDBGenerator {
 					
 					Date lastmod = lastmodMap.get(key);
 					
-					entry.getMisc().setLastModified(lastModifiedSDF.format(lastmod));
+					if (lastmod != null) {
+						entry.getMisc().setLastModified(lastModifiedSDF.format(lastmod));
+					}
 				}
 			
 				// wyliczenie boost'era
