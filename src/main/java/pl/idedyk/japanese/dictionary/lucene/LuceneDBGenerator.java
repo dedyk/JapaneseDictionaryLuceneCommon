@@ -69,6 +69,7 @@ import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon;
 import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2HelperCommon.KanjiKanaPair;
 import pl.idedyk.japanese.dictionary2.api.helper.Dictionary2NameHelperCommon;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.Gloss;
+import pl.idedyk.japanese.dictionary2.jmdict.xsd.Info;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.JMdict.Entry;
 import pl.idedyk.japanese.dictionary2.jmdict.xsd.KanjiInfo;
@@ -1538,7 +1539,27 @@ public class LuceneDBGenerator {
 						}
 					}
 				}
-			
+				
+				// dodanie info - FM_FIXME: sprawdzic, czy to dziala
+
+				// info
+				List<Info> polishInfoList = Dictionary2HelperCommon.getPolishInfoList(entry.getInfoList());
+	
+				if (polishInfoList != null && polishInfoList.size() > 0) {
+					
+					for (Info currentPolishInfo : polishInfoList) {
+						document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_info, currentPolishInfo.getValue(), Field.Store.YES), boostFloat));
+						
+						addPrefixes(document, LuceneStatic.dictionaryEntry2_info, currentPolishInfo.getValue(), generatePrefixes, boostFloat);
+	
+						String infoWithoutPolishChars = Utils.removePolishChars(currentPolishInfo.getValue());
+	
+						document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_info, infoWithoutPolishChars, Field.Store.NO), boostFloat));
+	
+						addPrefixes(document, LuceneStatic.dictionaryEntry2_info, infoWithoutPolishChars, generatePrefixes, boostFloat);						
+					}
+				}
+							
 				List<Sense> senseList = entry.getSenseList();
 			
 				for (Sense sense : senseList) {
