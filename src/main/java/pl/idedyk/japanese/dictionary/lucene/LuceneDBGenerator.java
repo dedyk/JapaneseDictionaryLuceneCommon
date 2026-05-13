@@ -1540,8 +1540,6 @@ public class LuceneDBGenerator {
 					}
 				}
 				
-				// dodanie info - FM_FIXME: sprawdzic, czy to dziala
-
 				// info
 				List<Info> polishInfoList = Dictionary2HelperCommon.getPolishInfoList(entry.getInfoList());
 	
