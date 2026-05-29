@@ -1715,7 +1715,7 @@ public class LuceneDBGenerator {
 			document.add(new StringField(fieldName, fieldValue, Field.Store.YES));
 			
 			// usuwamy wartosci w nawiasach
-			String fieldValueWithoutBrackets = fieldValue.replaceAll("\\s*\\([^()]*\\)\\s*", "").trim();
+			String fieldValueWithoutBrackets = fieldValue.replaceAll("\\s*\\([^()]*\\)", "").trim();
 			
 			// dodajemy jesli sa rozne wartosci
 			if (fieldValueWithoutBrackets.equals(fieldValue) == false) {
