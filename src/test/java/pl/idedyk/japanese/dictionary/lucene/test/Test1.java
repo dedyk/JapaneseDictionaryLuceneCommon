@@ -10,6 +10,7 @@ import org.apache.lucene.util.Version;
 import pl.idedyk.japanese.dictionary.api.dictionary.DictionaryManagerAbstract;
 import pl.idedyk.japanese.dictionary.api.dictionary.IDatabaseConnector;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.FindWordRequest;
+import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordCommonList;
 import pl.idedyk.japanese.dictionary.api.dictionary.dto.WordPowerList;
 import pl.idedyk.japanese.dictionary.api.dto.DictionaryEntryType;
 import pl.idedyk.japanese.dictionary.api.dto.RadicalInfo;
@@ -298,6 +299,11 @@ public class Test1 {
 
 		@Override
 		public WordPowerList getWordPowerList() throws DictionaryException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public WordCommonList getWordCommonList() throws DictionaryException {
 			throw new UnsupportedOperationException();
 		}
 	}
