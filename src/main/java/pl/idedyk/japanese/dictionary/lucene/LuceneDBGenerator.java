@@ -26,9 +26,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
-
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntField;
@@ -89,6 +86,9 @@ import pl.idedyk.japanese.dictionary2.kanjidic2.xsd.Kanjidic2;
 
 import com.csvreader.CsvReader;
 import com.google.gson.Gson;
+
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.Unmarshaller;
 
 public class LuceneDBGenerator {
 	
