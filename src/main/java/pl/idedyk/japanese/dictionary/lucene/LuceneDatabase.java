@@ -31,8 +31,6 @@ import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.spans.SpanFirstQuery;
-import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.search.spell.JaroWinklerDistance;
 import org.apache.lucene.search.spell.LuceneDictionary;
 import org.apache.lucene.search.spell.SpellChecker;
@@ -211,7 +209,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		final int maxResult = MAX_DICTIONARY_RESULT;
 		                
 		String[] wordSplited = getTokenizedWords(analyzerWithoutPolishChars, findWordRequest.word);
-		String rejoinedWord = createRejoinedWord(wordSplited);
+		// String rejoinedWord = createRejoinedWord(wordSplited);
 		
 		try {
 			//if (findWordRequest.wordPlaceSearch != WordPlaceSearch.ANY_PLACE) {
@@ -243,27 +241,27 @@ public class LuceneDatabase implements IDatabaseConnector {
 			BooleanQuery wordBooleanQuery = new BooleanQuery();
 
 			if (findWordRequest.searchKanji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_kanji, findWordRequest.wordPlaceSearch/*, false */), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchKana == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_kana, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_kana, findWordRequest.wordPlaceSearch /*, false*/), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_romaji, findWordRequest.wordPlaceSearch/*, true*/), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchTranslate == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_translatesList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_translatesList, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_translatesList, findWordRequest.wordPlaceSearch/*, true*/), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchInfo == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_info, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_info, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_info, findWordRequest.wordPlaceSearch/*, true*/), Occur.SHOULD);
 			}
 
 			query.add(wordBooleanQuery, Occur.MUST);
@@ -872,27 +870,26 @@ public class LuceneDatabase implements IDatabaseConnector {
 	}
 	*/
 
-	private Query createQuery(String rejoinedWord, String[] wordSplited, String fieldName, WordPlaceSearch wordPlaceSearch, boolean useSpanFirstQuery) {
+	private Query createQuery(/* String rejoinedWord, */ String[] wordSplited, String fieldName, WordPlaceSearch wordPlaceSearch) { //, boolean useSpanFirstQuery) {
 
 		if (wordPlaceSearch == WordPlaceSearch.START_WITH) {
 			
 			Query exactQuery;
 			
-			if (useSpanFirstQuery == false) {
-				exactQuery = new BooleanQuery();
+			//if (useSpanFirstQuery == false) {
+			exactQuery = new BooleanQuery();
+			
+			for (String currentWord : wordSplited) {
+				((BooleanQuery)exactQuery).add(new TermQuery(new Term(fieldName, currentWord)), Occur.MUST);
+			}
+			
+			exactQuery.setBoost(2.0f);
 				
-				for (String currentWord : wordSplited) {
-					((BooleanQuery)exactQuery).add(new TermQuery(new Term(fieldName, currentWord)), Occur.MUST);
-					
-					exactQuery.setBoost(2.0f);
-				}
-
+			// } else { UWAGA: to nie dziala
+			//	exactQuery = new SpanFirstQuery(new SpanTermQuery(new Term(fieldName, rejoinedWord)), 100000);
 				
-			} else {
-				exactQuery = new SpanFirstQuery(new SpanTermQuery(new Term(fieldName, rejoinedWord)), 1);
-				
-				exactQuery.setBoost(2.0f);
-			}			
+			//	exactQuery.setBoost(2.0f);
+			// }			
 						
 			BooleanQuery startWithQuery = new BooleanQuery();
 			
@@ -1119,7 +1116,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		final int maxResult = MAX_KANJI_RESULT;
 		
 		String[] wordSplited = getTokenizedWords(analyzerWithoutPolishChars, findKanjiRequest.word);
-		String rejoinedWord = createRejoinedWord(wordSplited);
+		// String rejoinedWord = createRejoinedWord(wordSplited);
 		
 		try {
 			//if (findKanjiRequest.wordPlaceSearch != FindKanjiRequest.WordPlaceSearch.ANY_PLACE) {
@@ -1135,19 +1132,19 @@ public class LuceneDatabase implements IDatabaseConnector {
 			BooleanQuery kanjiBooleanQuery = new BooleanQuery();
 
 			// kanji
-			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry2_kanji, findKanjiRequest.wordPlaceSearch, false), Occur.SHOULD);				
+			kanjiBooleanQuery.add(createQuery(wordSplited, LuceneStatic.kanjiEntry2_kanji, findKanjiRequest.wordPlaceSearch/*, false*/), Occur.SHOULD);				
 
 			// translate
 			//kanjiBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.kanjiEntry_polishTranslatesList, findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
 
-			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry2_polishTranslatesList, 
-					findKanjiRequest.wordPlaceSearch, true), Occur.SHOULD);
+			kanjiBooleanQuery.add(createQuery(wordSplited, LuceneStatic.kanjiEntry2_polishTranslatesList, 
+					findKanjiRequest.wordPlaceSearch/*, true*/), Occur.SHOULD);
 
 			// info
 			//kanjiBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.kanjiEntry_info, findKanjiRequest.wordPlaceSearch), Occur.SHOULD);
 
-			kanjiBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.kanjiEntry2_info, 
-					findKanjiRequest.wordPlaceSearch, true), Occur.SHOULD);
+			kanjiBooleanQuery.add(createQuery(wordSplited, LuceneStatic.kanjiEntry2_info, 
+					findKanjiRequest.wordPlaceSearch/*, true*/), Occur.SHOULD);
 
 			query.add(kanjiBooleanQuery, Occur.MUST);
 			
@@ -1381,7 +1378,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 		
 		String[] wordSplited = getTokenizedWords(analyzerWithoutPolishChars, findWordRequest.word);
-		String rejoinedWord = createRejoinedWord(wordSplited);
+		// String rejoinedWord = createRejoinedWord(wordSplited);
 		
 		try {
 			
@@ -1396,15 +1393,15 @@ public class LuceneDatabase implements IDatabaseConnector {
 			BooleanQuery wordBooleanQuery = new BooleanQuery();
 
 			if (findWordRequest.searchKanji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanji, findWordRequest.wordPlaceSearch/*, false*/), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchKana == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList, findWordRequest.wordPlaceSearch /*, false*/), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, findWordRequest.wordPlaceSearch/*, true*/), Occur.SHOULD);				
 			}
 
 			query.add(wordBooleanQuery, Occur.MUST);
@@ -1530,7 +1527,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		}
 		
 		String[] wordSplited = getTokenizedWords(analyzerWithoutPolishChars, findWordRequest.word);
-		String rejoinedWord = createRejoinedWord(wordSplited);
+		// String rejoinedWord = createRejoinedWord(wordSplited);
 		
 		Gson gson = new Gson();
 		
@@ -1547,29 +1544,29 @@ public class LuceneDatabase implements IDatabaseConnector {
 			BooleanQuery wordBooleanQuery = new BooleanQuery();
 
 			if (findWordRequest.searchKanji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry2_kanji, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.nameDictionaryEntry2_kanji, findWordRequest.wordPlaceSearch/*, false*/), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchKana == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry2_kana, findWordRequest.wordPlaceSearch, false), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.nameDictionaryEntry2_kana, findWordRequest.wordPlaceSearch/*, false*/), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry2_romaji, findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.nameDictionaryEntry2_romaji, findWordRequest.wordPlaceSearch/*, true*/), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchTranslate == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_translatesList, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry2_translatesList, 
-						findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.nameDictionaryEntry2_translatesList, 
+						findWordRequest.wordPlaceSearch/*, true*/), Occur.SHOULD);
 			}
 
 			if (findWordRequest.searchInfo == true) {
 				//wordBooleanQuery.add(createQuery(wordSplitedToLowerCase, LuceneStatic.dictionaryEntry_info, findWordRequest.wordPlaceSearch), Occur.SHOULD);
 
-				wordBooleanQuery.add(createQuery(rejoinedWord, wordSplited, LuceneStatic.nameDictionaryEntry2_info, 
-						findWordRequest.wordPlaceSearch, true), Occur.SHOULD);
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.nameDictionaryEntry2_info, 
+						findWordRequest.wordPlaceSearch/*, true*/), Occur.SHOULD);
 			}
 
 			BooleanQuery dictionaryEntryTypeListFilter = createDictionaryEntryTypeListFilter(LuceneStatic.nameDictionaryEntry2_dictionaryEntryTypeList, findWordRequest.dictionaryEntryTypeList);
@@ -2039,6 +2036,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		return tokenizedWordsList.toArray(new String[tokenizedWordsList.size()]);
 	}
 	
+	/*
 	private String createRejoinedWord(String[] wordSpllited) {
 		
 		StringBuffer result = new StringBuffer();
@@ -2053,6 +2051,7 @@ public class LuceneDatabase implements IDatabaseConnector {
 		
 		return result.toString();
 	}
+	*/
 	
 	private KanjiCharacterInfo createKanjiEntryFromLuceneDocument(Gson gson, Document luceneDocument, boolean addStroke) throws IOException {
 				
