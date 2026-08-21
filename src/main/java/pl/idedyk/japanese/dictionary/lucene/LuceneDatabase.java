@@ -1885,9 +1885,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 	
 	public List<String> getSpellCheckerSuggestion(LuceneDatabaseSuggesterAndSpellCheckerSource source, String term, int limit) throws DictionaryException {
 		
+		List<String> result = new ArrayList<String>();
+		
 		try {		
-			List<String> result = new ArrayList<String>();
-			
 			if (spellCheckerMap == null || term == null || term.length() == 0) {
 				return result;
 			}
@@ -1908,8 +1908,9 @@ public class LuceneDatabase implements IDatabaseConnector {
 			
 			return result;
 			
-		} catch (IOException e) {
-			throw new DictionaryException("Błąd podczas pobierania sugestii w poprawiaczu słów" + e);
+		} catch (Exception e) {
+			// throw new DictionaryException("Błąd podczas pobierania sugestii w poprawiaczu słów" + e);
+			return result;
 		}
 	}	
 	
