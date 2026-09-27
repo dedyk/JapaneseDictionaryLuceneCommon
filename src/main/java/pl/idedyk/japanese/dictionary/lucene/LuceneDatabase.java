@@ -1397,11 +1397,11 @@ public class LuceneDatabase implements IDatabaseConnector {
 			}
 
 			if (findWordRequest.searchKana == true) {
-				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList, findWordRequest.wordPlaceSearch /*, false*/), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kana, findWordRequest.wordPlaceSearch /*, false*/), Occur.SHOULD);				
 			}
 
 			if (findWordRequest.searchRomaji == true) {
-				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, findWordRequest.wordPlaceSearch/*, true*/), Occur.SHOULD);				
+				wordBooleanQuery.add(createQuery(wordSplited, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romaji, findWordRequest.wordPlaceSearch/*, true*/), Occur.SHOULD);				
 			}
 
 			query.add(wordBooleanQuery, Occur.MUST);
