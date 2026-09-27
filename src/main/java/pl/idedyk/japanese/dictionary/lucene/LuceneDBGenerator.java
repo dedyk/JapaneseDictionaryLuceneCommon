@@ -1188,7 +1188,7 @@ public class LuceneDBGenerator {
 		List<pl.idedyk.japanese.dictionary2.jmnedict.xsd.ReadingInfo> readingInfoList = entry.getReadingInfoList();
 		
 		for (pl.idedyk.japanese.dictionary2.jmnedict.xsd.ReadingInfo readingInfo : readingInfoList) {
-			// kanaList
+			// kana
 			String kana = readingInfo.getKana();
 			
 			document.add(new StringField(LuceneStatic.nameDictionaryEntry2_kana, kana, Field.Store.YES));
@@ -1492,7 +1492,7 @@ public class LuceneDBGenerator {
 				List<ReadingInfo> readingInfoList = entry.getReadingInfoList();
 			
 				for (ReadingInfo readingInfo : readingInfoList) {
-					// kanaList
+					// kana
 					String kana = readingInfo.getKana().getValue();
 			
 					document.add(new StringField(LuceneStatic.dictionaryEntry2_kana, kana, Field.Store.YES));
