@@ -77,8 +77,8 @@ public class LuceneStatic {
 	public static final String dictionaryEntry2_groupsList = "dictionaryEntry2_groupsList";
 	
 	public static final String dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanji = "dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanji";
-	public static final String dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList = "dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList";
-	public static final String dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList = "dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList";
+	public static final String dictionaryEntry2_grammaConjufateResult_and_exampleResult_kana = "dictionaryEntry2_grammaConjufateResult_and_exampleResult_kana";
+	public static final String dictionaryEntry2_grammaConjufateResult_and_exampleResult_romaji = "dictionaryEntry2_grammaConjufateResult_and_exampleResult_romaji";
 	
 	/*
 	public static final String dictionaryEntry_prefixKana = "dictionaryEntry_prefixKana";

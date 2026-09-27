@@ -703,29 +703,25 @@ public class LuceneDBGenerator {
 			}
 		}
 				
-		// kanaList
-		List<String> kanaList = grammaFormConjugateResult.getKanaList();
+		// kana
+		String kana = grammaFormConjugateResult.getKana();
+				
+		document.add(new StringField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kana, kana, Field.Store.YES));
 		
-		for (String currentKana : kanaList) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList, currentKana, Field.Store.YES));
-			
-			if (addSugestionList == true) {
-				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentKana), false);
-			}
+		if (addSugestionList == true) {
+			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(kana), false);
 		}
 		
-		// romajiList 
-		List<String> romajiList = grammaFormConjugateResult.getRomajiList();
+		// romaji 
+		String romaji = grammaFormConjugateResult.getRomaji();
+				
+		document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romaji, romaji, Field.Store.YES), boostFloat));
 		
-		for (String currentRomaji : romajiList) {
-			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES), boostFloat));
-			
-			// dodanie alternatyw romaji
-			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, false, boostFloat);
-						
-			if (addSugestionList == true) {
-				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentRomaji), false);
-			}
+		// dodanie alternatyw romaji
+		addAlternativeRomaji(document, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romaji, romaji, false, boostFloat);
+					
+		if (addSugestionList == true) {
+			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(romaji), false);
 		}
 		
 		if (grammaFormConjugateResult.getAlternative() != null) {
@@ -744,29 +740,25 @@ public class LuceneDBGenerator {
 			}
 		}
 		
-		// kanaList
-		List<String> kanaList = exampleResult.getKanaList();
+		// kana
+		String kana = exampleResult.getKana();
+				
+		document.add(new StringField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kana, kana, Field.Store.YES));
 		
-		for (String currentKana : kanaList) {
-			document.add(new StringField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_kanaList, currentKana, Field.Store.YES));
-			
-			if (addSugestionList == true) {
-				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentKana), false);
-			}
+		if (addSugestionList == true) {
+			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(kana), false);
 		}
 		
-		// romajiList 
-		List<String> romajiList = exampleResult.getRomajiList();
+		// romaji
+		String romaji = exampleResult.getRomaji();
 		
-		for (String currentRomaji : romajiList) {
-			document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, Field.Store.YES), boostFloat));
-			
-			// dodanie alternatyw romaji
-			addAlternativeRomaji(document, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romajiList, currentRomaji, false, boostFloat);
-			
-			if (addSugestionList == true) {
-				addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(currentRomaji), false);
-			}
+		document.add(setBoost(new TextField(LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romaji, romaji, Field.Store.YES), boostFloat));
+		
+		// dodanie alternatyw romaji
+		addAlternativeRomaji(document, LuceneStatic.dictionaryEntry2_grammaConjufateResult_and_exampleResult_romaji, romaji, false, boostFloat);
+		
+		if (addSugestionList == true) {
+			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(romaji), false);
 		}
 		
 		if (exampleResult.getAlternative() != null) {
