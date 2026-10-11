@@ -761,9 +761,11 @@ public class LuceneDBGenerator {
 			addSuggestion(document, LuceneStatic.dictionaryEntry_web_sugestionList, emptyIfNull(romaji), false);
 		}
 		
+		/*
 		if (exampleResult.getAlternative() != null) {
 			addExampleResult(document, exampleResult.getAlternative(), addSugestionList, boostFloat);
-		}		
+		}
+		*/		
 	}
 	
 	private static void readSentenceFile(IndexWriter indexWriter, FileInputStream sentencesInputStream) throws IOException {
